@@ -1,41 +1,71 @@
-module shifter(
-    input logic [31:0] data_i,
-    input logic [4:0] shift_value_i,
-    input logic [1:0] cmd_i,
-    output logic [31:0] data_o
+import riscv::*;
+
+module shifter
+(
+    input  logic[XLEN-1:0]          rs1_data_i,
+    input  logic[XLEN-1:0]          rs2_data_i,
+    input  logic                    shifter_en_i,
+    input  logic[NB_OPERATION-1:0]  cmd_i,
+    output logic[XLEN-1:0]          data_o
 );
+// --------------------------------
+//      Signals declaration
+// --------------------------------
+logic [XLEN-1:0]    l_shift16;
+logic [XLEN-1:0]    l_shift8;
+logic [XLEN-1:0]    l_shift4;
+logic [XLEN-1:0]    l_shift2;
+logic [XLEN-1:0]    l_shift1;
 
-    logic [31:0] lshift16, lshift8, lshift4, lshift2, lshift1;
-    logic [31:0] rshift16, rshift8, rshift4, rshift2, rshift1;
+logic [XLEN-1:0]    r_shift16;
+logic [XLEN-1:0]    r_shift8;
+logic [XLEN-1:0]    r_shift4;
+logic [XLEN-1:0]    r_shift2;
+logic [XLEN-1:0]    r_shift1;
 
-    logic [15:0] bits16;
-    logic [7:0] bits8;
-    logic [3:0] bits4;
-    logic [1:0] bits2;
-    logic bit1;
+logic               sign_extension;
 
-    // select right shifting bits in case of arithmetic shift
-    assign bits16   = (cmd_i[1])       ? {16{data_i[31]}}          : 16'h0000;
-    assign bits8    = (cmd_i[1])       ? {8{data_i[31]}}           : 8'h00;
-    assign bits4    = (cmd_i[1])       ? {4{data_i[31]}}           : 4'h0;
-    assign bits2    = (cmd_i[1])       ? {2{data_i[31]}}           : 2'h0;
-    assign bit1     = (cmd_i[1])       ? data_i[31]                : 1'b0;
+// Sign extension for SRA
+assign sign_extension  = rs1_data_i[XLEN-1] & cmd_i[SRA];
 
-    // Shift Right
-    assign rshift16 = (shift_value_i[4]) ? {bits16, data_i[31:16]}   : data_i;
-    assign rshift8  = (shift_value_i[3]) ? {bits8, rshift16[31:8]}   : rshift16;
-    assign rshift4  = (shift_value_i[2]) ? {bits4, rshift8[31:4]}    : rshift8;
-    assign rshift2  = (shift_value_i[1]) ? {bits2, rshift4[31:2]}    : rshift4;
-    assign rshift1  = (shift_value_i[0]) ? {bit1, rshift2[31:1]}     : rshift2;
+// Shift right
+assign r_shift16 = {XLEN{ rs2_data_i[4]}} & {{16{sign_extension}}, rs1_data_i[XLEN-1:16]}
+                 | {XLEN{~rs2_data_i[4]}} & rs1_data_i;
 
-    // Shift Left
-    assign lshift16 = (shift_value_i[4]) ? {data_i[15:0], 16'h0000}  : data_i;
-    assign lshift8  = (shift_value_i[3]) ? {lshift16[23:0], 8'h00}   : lshift16;
-    assign lshift4  = (shift_value_i[2]) ? {lshift8[27:0], 4'h0}     : lshift8;
-    assign lshift2  = (shift_value_i[1]) ? {lshift4[29:0], 2'h0}     : lshift4;
-    assign lshift1  = (shift_value_i[0]) ? {lshift2[30:0], 1'b0}     : lshift2;
+assign r_shift8  = {XLEN{ rs2_data_i[3]}} & { {8{sign_extension}}, r_shift16[XLEN-1:8]}
+                 | {XLEN{~rs2_data_i[3]}} & r_shift16;
 
-    // Output selection
-    assign data_o = (cmd_i == 2'b00) ? lshift1 : rshift1;
+assign r_shift4  = {XLEN{ rs2_data_i[2]}} & { {4{sign_extension}}, r_shift8 [XLEN-1:4]}
+                 | {XLEN{~rs2_data_i[2]}} & r_shift8;
 
+assign r_shift2  = {XLEN{ rs2_data_i[1]}} & { {2{sign_extension}}, r_shift4 [XLEN-1:2]}
+                 | {XLEN{~rs2_data_i[1]}} & r_shift4;
+
+assign r_shift1  = {XLEN{ rs2_data_i[0]}} & {   sign_extension, r_shift2 [XLEN-1:1]}
+                 | {XLEN{~rs2_data_i[0]}} & r_shift2;
+
+// Shift left
+assign l_shift16 = {XLEN{ rs2_data_i[4]}} & {rs1_data_i[15:0], {16{sign_extension}}}
+                 | {XLEN{~rs2_data_i[4]}} & rs1_data_i;
+
+assign l_shift8  = {XLEN{ rs2_data_i[3]}} & {l_shift16[23:0], {8{sign_extension}}}
+                 | {XLEN{~rs2_data_i[3]}} & l_shift16;
+
+assign l_shift4  = {XLEN{ rs2_data_i[2]}} & {l_shift8[27:0], {4{sign_extension}}}
+                 | {XLEN{~rs2_data_i[2]}} & l_shift8;
+
+assign l_shift2  = {XLEN{ rs2_data_i[1]}} & {l_shift4[29:0], {2{sign_extension}}}
+                 | {XLEN{~rs2_data_i[1]}} & l_shift4;
+
+assign l_shift1  = {XLEN{ rs2_data_i[0]}} & {l_shift2[30:0],    sign_extension}
+                 | {XLEN{~rs2_data_i[0]}} & l_shift2;
+
+// Output selection
+
+assign data_o = {XLEN{shifter_en_i & cmd_i[SLL]}}                & l_shift1
+              | {XLEN{shifter_en_i & (cmd_i[SRL] | cmd_i[SRA])}} & r_shift1;
+
+//assign data_o = {XLEN{shifter_en_i & cmd_i[SLL]}} & (rs1_data_i << rs2_data_i[4:0])
+//              | {XLEN{shifter_en_i & cmd_i[SRL]}} & (rs1_data_i >> rs2_data_i[4:0])
+//              | {XLEN{shifter_en_i & cmd_i[SRA]}} & (rs1_data_i >> rs2_data_i[4:0]);
 endmodule

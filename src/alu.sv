@@ -1,18 +1,17 @@
-module ALU #(parameter int bitWidth = 32) 
+import riscv::*;
+
+module alu
 (
-    input logic[bitWidth-1:0]  rs1_data_i,
-    input logic[bitWidth-1:0]  rs2_data_i,
-    input logic                Cin_i,
-    input logic[1:0]           cmd_i,
-    output logic[bitWidth-1:0] data_o
+    input  logic[XLEN-1:0]          rs1_data_i,
+    input  logic[XLEN-1:0]          rs2_data_i,
+    input  logic                    alu_en_i,
+    input  logic[NB_OPERATION-1:0]  cmd_i,
+    output logic[XLEN-1:0]          data_o
 );
 
-always_comb begin
-    case(cmd)
-    2'b00: out = rs1 + rs2 + Cin; //add
-    2'b01: out = rs1 & rs2; //and
-    2'b10: out = rs1 | rs2; //OR
-    2'b11: out = rs1 ^ rs2; //XOR  
-    endcase
-end
+// Output selection
+assign data_o = {XLEN{alu_en_i     & (cmd_i[ADD] | cmd_i[SLT])}} & (rs1_data_i + rs2_data_i) // add / slt
+              | {XLEN{alu_en_i     & cmd_i[AND]}}                & (rs1_data_i & rs2_data_i) // and
+              | {XLEN{alu_en_i     & cmd_i[OR]}}                 & (rs1_data_i | rs2_data_i) // or
+              | {XLEN{alu_en_i     & cmd_i[XOR]}}                & (rs1_data_i ^ rs2_data_i);
 endmodule
