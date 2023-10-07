@@ -51,6 +51,7 @@ riscof_build: core_tb
 riscof_run: core_tb
 	cd riscof && ./lanch-riscof.sh build run && cd ..
 sv2v:
+	mkdir -p $(SRC_V)
 	$(SV2V) --verbose -I --incidr=$(SRC) $(PKG) --write=adjacent --write=$(SRC_V)
 
 synth: sv2v

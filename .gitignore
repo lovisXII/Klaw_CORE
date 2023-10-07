@@ -6,7 +6,6 @@ sv_generator/
 obj_dir/
 logs/
 *.log
-synth/
 logs/
 *.elf
 *.txt
@@ -31,3 +30,4 @@ riscof/sail_cSim/__pycache__/__init__.cpython-310.pyc
 riscof/sail_cSim/__pycache__/riscof_sail_cSim.cpython-310.pyc
 riscof/spike/__pycache__/riscof_model.cpython-310.pyc
 riscof/spike/__pycache__/riscof_spike.cpython-310.pyc
+synth/*.v

@@ -22,8 +22,13 @@ enum error_type {HELP = 0, ARG_MISS = 1, OV_CYCLES, DEBUG};
 void helper(int error){
     cout << endl << endl;
     if(error == ARG_MISS){
-        cerr << "[Error] Wrong or missing argument" << endl;
-        cerr << "[info] run --help to see the options" << endl ;
+        cerr << "Usage: obj_dir/Vcore test_filename [options] ..." << endl;
+        cerr << "file_name type accepted are .s, .S, .c or elf file" << endl;
+        cerr << "Options:" << endl << endl;
+        cerr << "-O                          \t Compile test_filename with -O option" << endl;
+        cerr << "--riscof signature_filename \t Allow to enable the riscof gestion and store the signature in the file named signature_filename" << endl ;
+        cerr << "--riscof signature_filename --debug \t Allow to visualise all the store made by the cpu" << endl;
+        cerr << "--stats                     \t Allow to use the statistic such as the number of cycle needed to end the program" << endl;
         exit(0);
     }
     else if (error == OV_CYCLES){

@@ -1,0 +1,7 @@
+read_verilog synth/*
+proc; opt; fsm; opt; memory; opt
+techmap; opt
+dfflibmap -liberty yosys.lib
+abc -liberty yosys.lib
+clean
+write_verilog synth.v
