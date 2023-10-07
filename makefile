@@ -22,7 +22,7 @@ TOP=core
 
 
 # G++
-INCLUDE_PATH= -I../ELFIO/
+INCLUDE_PATH= -I../include/ELFIO/
 LIBS=-lsystemc -lm
 C_ARGS=$(INCLUDE_PATH) -Wl, $(LIBS) -g
 
