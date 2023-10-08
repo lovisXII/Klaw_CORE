@@ -472,18 +472,25 @@ int sc_main(int argc, char* argv[]) {
                     MEMORY ACCESS GESTION
     ##############################################################
 */
+  int phys_adr = adr & 0xFFFFFFFC;
+  // Store always store the lsb of the register into the proper part of the adress
+  // May be done directly by the core -> to discuss
   if (is_store.read() && adr_v.read()) {
-    if ((adr & 0b11 == 0) & access_size.read() == 1) ram[adr & 0xFFFFFFFC] = (ram[adr] & 0xFFFFFF00) | (store_data.read()         & 0x000000FF);
-    if ((adr & 0b11 == 1) & access_size.read() == 1) ram[adr & 0xFFFFFFFC] = (ram[adr] & 0xFFFF00FF) | ((store_data.read() << 8)  & 0x0000FF00);
-    if ((adr & 0b11 == 2) & access_size.read() == 1) ram[adr & 0xFFFFFFFC] = (ram[adr] & 0xFF00FFFF) | ((store_data.read() << 16) & 0x00FF0000);
-    if ((adr & 0b11 == 3) & access_size.read() == 1) ram[adr & 0xFFFFFFFC] = (ram[adr] & 0x00FFFFFF) | ((store_data.read() << 24) & 0xFF000000);
+    if(access_size.read() == 1){
+        if ((adr & 0b11) == 0) ram[phys_adr] = (ram[phys_adr] & 0xFFFFFF00) | (store_data.read() & 0x000000FF);
+        if ((adr & 0b11) == 1) ram[phys_adr] = (ram[phys_adr] & 0xFFFF00FF) | ((store_data.read() & 0x000000FF) << 8);
+        if ((adr & 0b11) == 2) ram[phys_adr] = (ram[phys_adr] & 0xFF00FFFF) | ((store_data.read() & 0x000000FF) << 16);
+        if ((adr & 0b11) == 3) ram[phys_adr] = (ram[phys_adr] & 0x00FFFFFF) | ((store_data.read() & 0x000000FF) << 24);
+    }
 // store half word
-    if ((adr & 0b11 == 0) & access_size.read() == 2) ram[adr & 0xFFFFFFFC] = (ram[adr] & 0xFFFF0000) | (store_data.read()         & 0x0000FFFF);
-    if ((adr & 0b10 == 1) & access_size.read() == 2) ram[adr & 0xFFFFFFFC] = (ram[adr] & 0x0000FFFF) | ((store_data.read() << 16) & 0xFFFF0000);
+    else if(access_size.read() == 2){
+        if ((adr & 0b11) == 0) ram[phys_adr] = (ram[phys_adr] & 0xFFFF0000) | (store_data.read()  & 0x0000FFFF);
+        if ((adr & 0b10) == 2) ram[phys_adr] = (ram[phys_adr] & 0x0000FFFF) | ((store_data.read() & 0x0000FFFF) << 16);
+    }
 // store word
-    if (access_size.read() == 4) ram[adr & 0xFFFFFFFC] = store_data.read();
+    else if (access_size.read() == 4) ram[phys_adr] = store_data.read();
 }
-        load_data    = ram[adr & 0xFFFFFFFC];
+        load_data    = ram[phys_adr];
         icache_instr = ram[if_adr];
         sc_start(500, SC_PS);
     }

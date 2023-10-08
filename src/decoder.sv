@@ -335,7 +335,7 @@ assign immediat_o          = {32{i_type | jalr | l_type }} & {{20{instr_i[31]}},
 // We will perform :
 // res = rs2 - rs1
 // If res[31] = 1 => rs2 - rs1 > 0, ie rs2 > rs1
-assign rs2_ca2_v_o         = sub | bge | blt | slt  | sltu | slti | sltiu;
+assign rs2_ca2_v_o         = sub | bge | blt | slt | sltu | slti | sltiu;
 // should encode the operation, add, sub, sll, slr, sra...etc
 // msb encodes the unit, lsb encodes the operation
 // 00001 xxx : alu
