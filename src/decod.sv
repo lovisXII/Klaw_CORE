@@ -40,8 +40,8 @@ module dec (
   output logic                       rd_v_q_o,
   output logic [4:0]                 rd_adr_q_o,
   // Source registers
-  output logic [XLEN-1:0]            rs1_data_qual_q_o,
-  output logic [XLEN-1:0]            rs2_data_qual_q_o,
+  output logic [XLEN:0]              rs1_data_qual_q_o,
+  output logic [XLEN:0]              rs2_data_qual_q_o,
   // Execution Unit useful information
   output logic [XLEN-1:0]            branch_imm_q_o,
   output logic [2:0]                 access_size_q_o,
@@ -69,12 +69,14 @@ module dec (
   // rs1
   logic                       rs1_v;
   logic [4:0]                 rs1_adr;
-  logic [XLEN-1:0]            rs1_data_nxt;
+  logic [XLEN-1:0]            rs1_data;
+  logic [XLEN:0]              rs1_data_nxt;
   // rs2
   logic                       rs2_v;
   logic [4:0]                 rs2_adr;
   logic [XLEN-1:0]            rs2_data;
-  logic [XLEN-1:0]            rs2_data_nxt;
+  logic [XLEN:0]              rs2_data_extended;
+  logic [XLEN:0]              rs2_data_nxt;
   // Flush
   logic                       flush_v;
   // EXE ff
@@ -98,9 +100,9 @@ module dec (
   logic                       rs2_ca2_v;
   // Flops
   logic                       rd_v_q;
-  logic [XLEN-1:0]            rs1_data_q;
+  logic [XLEN:0]              rs1_data_q;
   logic                       instr_rs2_v_q;
-  logic [XLEN-1:0]            rs2_data_q;
+  logic [XLEN:0]              rs2_data_q;
   logic                       instr_rs2_is_immediat_q;
   logic                       instr_is_st_q;
   logic                       instr_is_lq;
@@ -153,19 +155,19 @@ assign rf_ff_rs1_adr_match    = (rs1_adr == rf_ff_rd_adr_q_i) & rf_write_v_q_i &
 assign rf_ff_rs2_adr_match    = (rs2_adr == rf_ff_rd_adr_q_i) & rf_write_v_q_i & ~exe_ff_rs2_adr_match & ~flush_v;
 
 // Operand 1 value
-assign rs1_data_nxt       = {XLEN{rs1_v}} & ({XLEN{~exe_ff_rs1_adr_match & ~rf_ff_rs1_adr_match}} & rf_rs1_data_i
-                                           | {XLEN{ exe_ff_rs1_adr_match}}                        & exe_ff_res_data_i
-                                           | {XLEN{ rf_ff_rs1_adr_match}}                         & rf_ff_res_data_i)
-                          | {XLEN{auipc}} & pc0_q_i;
-
+assign rs1_data       = {XLEN{rs1_v}} & ({XLEN{~exe_ff_rs1_adr_match & ~rf_ff_rs1_adr_match}} & rf_rs1_data_i
+                                       | {XLEN{ exe_ff_rs1_adr_match}}                        & exe_ff_res_data_i
+                                       | {XLEN{ rf_ff_rs1_adr_match}}                         & rf_ff_res_data_i)
+                      | {XLEN{auipc}} & pc0_q_i;
+assign rs1_data_nxt   = {rs1_data[31], rs1_data};
 // Operand 2 value
 assign rs2_data           = {XLEN{rs2_v & ~exe_ff_rs2_adr_match & ~rf_ff_rs2_adr_match}} & rf_rs2_data_i     // no ff, no imm, data from RF
                           | {XLEN{rs2_v &  exe_ff_rs2_adr_match}}                        & exe_ff_res_data_i // exe ff
                           | {XLEN{rs2_v &  rf_ff_rs2_adr_match}}                         & rf_ff_res_data_i  // rf ff
                           | {XLEN{instr_rs2_is_immediat}}                                & instr_immediat;   // immediat
-
-assign rs2_data_nxt       = {XLEN{ rs2_ca2_v}} & ~rs2_data + 32'b1
-                          | {XLEN{~rs2_ca2_v}} &  rs2_data;
+assign rs2_data_extended  = {rs2_data[31], rs2_data};
+assign rs2_data_nxt       = {XLEN+1{ rs2_ca2_v}} & ~rs2_data_extended + 32'b1
+                          | {XLEN+1{~rs2_ca2_v}} &  rs2_data_extended;
 
 // Branch immediat
 assign immediat    = {XLEN{unit_nxt[2] | unit_nxt[3]}} & instr_immediat;

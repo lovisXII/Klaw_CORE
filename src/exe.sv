@@ -15,9 +15,9 @@ module exe
   input logic                       rd_v_q_i,
   input logic [4:0]                 rd_adr_q_i,
   // Source 1
-  input logic [XLEN-1:0]            rs1_data_qual_q_i,
+  input logic [XLEN:0]              rs1_data_qual_q_i,
   // Source 2
-  input logic [XLEN-1:0]            rs2_data_qual_q_i,
+  input logic [XLEN:0]              rs2_data_qual_q_i,
   // Additionnal informations
   input logic [XLEN-1:0]            immediat_q_i,
   input logic [2:0]                 access_size_q_i,
@@ -94,8 +94,8 @@ alu u_alu(
 );
 
 shifter u_shifter(
-    .rs1_data_i     (rs1_data_qual_q_i),
-    .rs2_data_i     (rs2_data_qual_q_i),
+    .rs1_data_i     (rs1_data_qual_q_i[XLEN-1:0]),
+    .rs2_data_i     (rs2_data_qual_q_i[XLEN-1:0]),
     .shifter_en_i   (shifter_en),
     .cmd_i          (operation_q_i),
     .data_o         (shifter_res_data)
@@ -113,8 +113,8 @@ bu u_bu(
     .data_o         (bu_data_res)
 );
 lsu u_lsu(
-    .rs1_data_i         (rs1_data_qual_q_i),
-    .rs2_data_i         (rs2_data_qual_q_i),
+    .rs1_data_i         (rs1_data_qual_q_i[XLEN-1:0]),
+    .rs2_data_i         (rs2_data_qual_q_i[XLEN-1:0]),
     .immediat_i         (immediat_q_i),
     .lsu_en_i           (lsu_en),
     .cmd_i              (operation_q_i),
@@ -154,8 +154,7 @@ assign branch_v_nxt = branch_v;
 assign pc_data_nxt  = bu_pc_res;
 
 assign rd_v_nxt     = rd_v_q_i & ~flush_v_q & ~flush_v_dly1_q;
-assign res_data_nxt = {XLEN{alu_en & ~operation_q_i[SLT]}} & alu_res_data               // normal operation
-                    | {XLEN{alu_en &  operation_q_i[SLT]}} & {31'b0, alu_res_data[31]} // slt
+assign res_data_nxt = {XLEN{alu_en}}                       & alu_res_data
                     | {XLEN{shifter_en}}                   & shifter_res_data
                     | {XLEN{bu_en  &  operation_q_i[JAL]}} & bu_data_res
                     | {XLEN{lsu_en &  operation_q_i[LD]}}  & {lsu_res_data};

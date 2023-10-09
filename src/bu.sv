@@ -7,8 +7,8 @@ import riscv::*;
 
 module bu
 (
-    input  logic[XLEN-1:0]          rs1_data_i,
-    input  logic[XLEN-1:0]          rs2_data_i,
+    input  logic[XLEN:0]            rs1_data_i,
+    input  logic[XLEN:0]            rs2_data_i,
     input  logic[XLEN-1:0]          immediat_i,
     input  logic[XLEN-1:0]          pc_data_i,
     input  logic                    bu_en_i,
@@ -19,21 +19,21 @@ module bu
 );
 // Output selection
 logic            data_eq;
-logic [XLEN-1:0] data_cmp;
+logic [XLEN:0]   data_cmp;
 
-assign data_eq  = (cmd_i[BEQ] | cmd_i[BNE])       & ~|(rs1_data_i ^ rs2_data_i);
+assign data_eq  = (cmd_i[BEQ] | cmd_i[BNE])       & ~|(rs1_data_i[XLEN-1:0] ^ rs2_data_i[XLEN-1:0]);
 assign data_cmp = {XLEN{cmd_i[BLT] | cmd_i[BGE]}} &   (rs1_data_i + rs2_data_i);
 
 assign branch_v = bu_en_i & (
-                  cmd_i[BEQ] &  data_eq       // beq
-                | cmd_i[BNE] & ~data_eq       // bne
-                | cmd_i[BLT] &  data_cmp[31]  // blt
-                | cmd_i[BGE] & ~data_cmp[31]  // bge
-                | cmd_i[JAL] | cmd_i[JALR]    // jal jalr
+                  cmd_i[BEQ] &  data_eq        // beq
+                | cmd_i[BNE] & ~data_eq        // bne
+                | cmd_i[BLT] &  data_cmp[XLEN] // blt
+                | cmd_i[BGE] & ~data_cmp[XLEN] // bge
+                | cmd_i[JAL] | cmd_i[JALR]     // jal jalr
                 );
 
 assign branch_v_o = branch_v;
 assign data_o     = {XLEN{cmd_i[JAL]}}              & pc_data_i + 32'd4;
 assign pc_nxt_o   = {XLEN{branch_v & ~cmd_i[JALR]}} & pc_data_i  + immediat_i
-                  | {XLEN{branch_v &  cmd_i[JALR]}} & rs1_data_i + immediat_i; // when no operation performed must still increment pc
+                  | {XLEN{branch_v &  cmd_i[JALR]}} & rs1_data_i[XLEN-1:0] + immediat_i; // when no operation performed must still increment pc
 endmodule
