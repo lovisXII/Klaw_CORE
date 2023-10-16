@@ -128,12 +128,12 @@ lsu u_lsu(
 //      Internal architecture
 // --------------------------------
 // ALU
-assign alu_en           = unit_q_i[0] & ~flush_v_q & ~flush_v_dly1_q;
-assign shifter_en       = unit_q_i[1] & ~flush_v_q & ~flush_v_dly1_q;
+assign alu_en           = unit_q_i[ALU] & ~flush_v_q & ~flush_v_dly1_q;
+assign shifter_en       = unit_q_i[SFT] & ~flush_v_q & ~flush_v_dly1_q;
 // Branch Units
-assign bu_en            = unit_q_i[2] & ~flush_v_q & ~flush_v_dly1_q;
+assign bu_en            = unit_q_i[BU]  & ~flush_v_q & ~flush_v_dly1_q;
 // Load/Store Units
-assign lsu_en           = unit_q_i[3] & ~flush_v_q & ~flush_v_dly1_q;
+assign lsu_en           = unit_q_i[LSU] & ~flush_v_q & ~flush_v_dly1_q;
 assign adr_v_o          = lsu_en;
 assign is_store_o       = lsu_en & operation_q_i[ST];
 assign store_data_o     = {XLEN{lsu_en}} & rs2_data_qual_q_i ;
