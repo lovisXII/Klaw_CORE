@@ -9,6 +9,7 @@ module bu
 (
     input  logic[XLEN:0]            rs1_data_i,
     input  logic[XLEN:0]            rs2_data_i,
+    input   logic                   unsign_cmp_i,
     input  logic[XLEN-1:0]          immediat_i,
     input  logic[XLEN-1:0]          pc_data_i,
     input  logic                    bu_en_i,
@@ -23,15 +24,15 @@ logic [XLEN:0]   addition_res;
 
 // Perform rs1 - rs2
 // addition_res[XLEN] = 1 <=> rs1 - rs2 < 0 <=> rs1 < rs2
-assign data_eq      = ~|(rs1_data_i[XLEN-1:0] ^ rs2_data_i[XLEN-1:0]);
+assign data_eq      = ~|(rs1_data_i[XLEN:0] ^ rs2_data_i[XLEN:0]);
 assign addition_res = rs1_data_i + rs2_data_i;
 
 assign branch_v = bu_en_i & (
-                  cmd_i[BEQ] &  data_eq            // beq
-                | cmd_i[BNE] & ~data_eq            // bne
-                | cmd_i[BLT] &  addition_res[XLEN] // blt
-                | cmd_i[BGE] & ~addition_res[XLEN] // bge
-                | cmd_i[JAL] | cmd_i[JALR]         // jal jalr
+                  cmd_i[BEQ] &  data_eq                                          // beq
+                | cmd_i[BNE] & ~data_eq                                          // bne
+                | cmd_i[BLT] &   addition_res[XLEN]                              // blt
+                | cmd_i[BGE] & (~addition_res[XLEN]  | (unsign_cmp_i & data_eq)) // bge
+                | cmd_i[JAL] | cmd_i[JALR]                                       // jal jalr
                 );
 
 assign branch_v_o = branch_v;

@@ -102,15 +102,16 @@ shifter u_shifter(
 );
 
 bu u_bu(
-    .rs1_data_i     (rs1_data_qual_q_i),
-    .rs2_data_i     (rs2_data_qual_q_i),
-    .immediat_i     (immediat_q_i),
-    .pc_data_i      (dec_pc0_q_i),
-    .bu_en_i        (bu_en),
-    .cmd_i          (operation_q_i ),
-    .branch_v_o     (branch_v),
-    .pc_nxt_o       (bu_pc_res),
-    .data_o         (bu_data_res)
+    .rs1_data_i         (rs1_data_qual_q_i),
+    .rs2_data_i         (rs2_data_qual_q_i),
+    .unsign_cmp_i       (unsign_extension_q_i),
+    .immediat_i         (immediat_q_i),
+    .pc_data_i          (dec_pc0_q_i),
+    .bu_en_i            (bu_en),
+    .cmd_i              (operation_q_i ),
+    .branch_v_o         (branch_v),
+    .pc_nxt_o           (bu_pc_res),
+    .data_o             (bu_data_res)
 );
 lsu u_lsu(
     .rs1_data_i         (rs1_data_qual_q_i[XLEN-1:0]),

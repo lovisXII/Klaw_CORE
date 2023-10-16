@@ -186,7 +186,7 @@ always_ff @(posedge clk, negedge reset_n)
               rs1_data_q               <= '0;
               rs2_data_q               <= '0;
               instr_access_size_q      <= '0;
-              unsign_extension_q <= '0;
+              unsign_extension_q       <= '0;
               instr_unit_q             <= '0;
               instr_operation_q        <= '0;
               pc_q_o                   <= '0;

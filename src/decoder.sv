@@ -337,7 +337,7 @@ assign immediat_o          = {32{(i_type | jalr | l_type)}}  & {{20{instr_i[31]}
 // We will perform :
 // res = rs2 - rs1
 // If res[31] = 1 => rs2 - rs1 > 0, ie rs2 > rs1
-assign rs2_ca2_v_o         = sub | bge | blt | slt | sltu | slti | sltiu;
+assign rs2_ca2_v_o         = sub | bge | blt | bgeu | bltu | slt | sltu | slti | sltiu;
 // should encode the operation, add, sub, sll, slr, sra...etc
 // msb encodes the unit, lsb encodes the operation
 // 00001 xxx : alu
@@ -369,8 +369,8 @@ assign rs2_ca2_v_o         = sub | bge | blt | slt | sltu | slti | sltiu;
 assign unit_o           = {1'b0, 1'b0, is_load | is_store, is_branch, is_shift, is_arithm};
 assign operation_o[5]   = jalr;
 assign operation_o[4]   = slt  | sltu | slti | sltiu | jal;
-assign operation_o[3]   = xorr | xori | bge;
-assign operation_o[2]   = orr  | ori  | sra  | srai | blt;
+assign operation_o[3]   = xorr | xori | bge  | bgeu;
+assign operation_o[2]   = orr  | ori  | sra  | srai | blt | bltu;
 assign operation_o[1]   = andd | andi | srl  | srli | bne   | is_load;
 assign operation_o[0]   = add  | sub  | addi | sll  | slli  | lui  | auipc | beq | s_type;
 // Access size :
