@@ -1,7 +1,7 @@
-In progress
 # What holds this git
 
-This git will hold the description of an RV32I core designed using system verilog
+On this git you will find a RISCV RV32I (Riscv 32 bits with the integer extension).\
+The purpose of this git is to introduce a pedagogic CPU which would lead people to learn micro-architecture.
 
 # Setup
 

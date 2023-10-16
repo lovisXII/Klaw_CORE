@@ -43,7 +43,7 @@ logic [XLEN:0]              dec_exe_rs2_data_q;
 logic [XLEN-1:0]            immediat_q_i;
 logic [XLEN-1:0]            exe_immediat_q;
 logic [2:0]                 dec_exe_instr_access_size_q;
-logic                       dec_exe_instr_unsign_extension_q;
+logic                       dec_exe_unsign_extension_q;
 logic [NB_UNIT-1:0]         dec_exe_instr_unit_q;
 logic [NB_OP_DECODED-1:0]   dec_exe_instr_operation_dec_q;
 logic [NB_OP_DECODED-1:0]   dec_exe_instr_operation_q;
@@ -96,7 +96,7 @@ dec u_decod(
   .rs2_data_qual_q_o    ( dec_exe_rs2_data_q),
   .branch_imm_q_o       ( exe_immediat_q),
   .access_size_q_o      ( dec_exe_instr_access_size_q),
-  .unsign_ext_q_o       ( dec_exe_instr_unsign_extension_q),
+  .unsign_ext_q_o       ( dec_exe_unsign_extension_q),
   .unit_q_o             ( dec_exe_instr_unit_q),
   .operation_q_o        ( dec_exe_instr_operation_q),
   .flush_v_q_i          ( flush_v_q),
@@ -115,7 +115,7 @@ exe u_exe(
   .rs2_data_qual_q_i    ( dec_exe_rs2_data_q),
   .immediat_q_i         ( exe_immediat_q),
   .access_size_q_i      ( dec_exe_instr_access_size_q),
-  .unsign_extension_q_i ( dec_exe_instr_unsign_extension_q),
+  .unsign_extension_q_i ( dec_exe_unsign_extension_q),
   .unit_q_i             ( dec_exe_instr_unit_q),
   .operation_q_i        ( dec_exe_instr_operation_q),
   .adr_v_o              ( adr_v_o),

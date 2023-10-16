@@ -87,14 +87,14 @@ module dec (
   logic                       rf_ff_rs2_adr_match;
   // Additionnal informations
   logic                       auipc;
-  logic                       instr_rs2_is_immediat;
+  logic                       rs2_is_immediat;
   logic                       is_store;
   logic                       instr_is_load;
   logic                       instr_is_branch;
-  logic [31:0]                instr_immediat;
   logic [2:0]                 instr_access_size_nxt;
   logic [12:0]                instr_instr_type;
-  logic                       instr_unsign_extension_nxt;
+  logic                       unsign_extension;
+  logic                       unsign_extension_nxt;
   logic [NB_UNIT-1:0]         unit_nxt;
   logic [NB_OPERATION-1:0]    operation;
   logic                       rs2_ca2_v;
@@ -103,16 +103,15 @@ module dec (
   logic [XLEN:0]              rs1_data_q;
   logic                       instr_rs2_v_q;
   logic [XLEN:0]              rs2_data_q;
-  logic                       instr_rs2_is_immediat_q;
+  logic                       rs2_is_immediat_q;
   logic                       instr_is_st_q;
   logic                       instr_is_lq;
   logic                       instr_is_braq;
-  logic [XLEN-1:0]            instr_immediat_q;
   logic [XLEN-1:0]            immediat;
   logic [XLEN-1:0]            immediat_q;
   logic [2:0]                 instr_access_size_q;
   logic [12:0]                instr_instr_q;
-  logic                       instr_unsign_extension_q;
+  logic                       unsign_extension_q;
   logic [NB_UNIT-1:0]         instr_unit_q;
   logic [NB_OP_DECODED-1:0]   instr_operation_q;
   logic [NB_OP_DECODED-1:0]   instr_operation_dec_q;
@@ -130,10 +129,10 @@ decoder dec0(
     .rs2_v_o              (rs2_v),
     .rs2_adr_o            (rs2_adr),
     .auipc_o              (auipc),
-    .rs2_is_immediat_o    (instr_rs2_is_immediat),
-    .immediat_o           (instr_immediat),
+    .rs2_is_immediat_o    (rs2_is_immediat),
+    .immediat_o           (immediat),
     .access_size_o        (instr_access_size_nxt),
-    .unsign_extension_o   (instr_unsign_extension_nxt),
+    .unsign_extension_o   (unsign_extension),
     .unit_o               (unit_nxt),
     .operation_o          (operation),
     .rs2_ca2_v_o          (rs2_ca2_v)
@@ -154,23 +153,25 @@ assign exe_ff_rs2_adr_match    = (rs2_adr == exe_ff_rd_adr_q_i) & exe_ff_write_v
 assign rf_ff_rs1_adr_match    = (rs1_adr == rf_ff_rd_adr_q_i) & rf_write_v_q_i & ~exe_ff_rs1_adr_match & ~flush_v;
 assign rf_ff_rs2_adr_match    = (rs2_adr == rf_ff_rd_adr_q_i) & rf_write_v_q_i & ~exe_ff_rs2_adr_match & ~flush_v;
 
+// Sign extension
+assign unsign_extension_nxt = unsign_extension;
 // Operand 1 value
 assign rs1_data       = {XLEN{rs1_v}} & ({XLEN{~exe_ff_rs1_adr_match & ~rf_ff_rs1_adr_match}} & rf_rs1_data_i
                                        | {XLEN{ exe_ff_rs1_adr_match}}                        & exe_ff_res_data_i
                                        | {XLEN{ rf_ff_rs1_adr_match}}                         & rf_ff_res_data_i)
                       | {XLEN{auipc}} & pc0_q_i;
-assign rs1_data_nxt   = {rs1_data[31], rs1_data};
+
+assign rs1_data_nxt   = {~unsign_extension & rs1_data[31], rs1_data};
 // Operand 2 value
 assign rs2_data           = {XLEN{rs2_v & ~exe_ff_rs2_adr_match & ~rf_ff_rs2_adr_match}} & rf_rs2_data_i     // no ff, no imm, data from RF
                           | {XLEN{rs2_v &  exe_ff_rs2_adr_match}}                        & exe_ff_res_data_i // exe ff
                           | {XLEN{rs2_v &  rf_ff_rs2_adr_match}}                         & rf_ff_res_data_i  // rf ff
-                          | {XLEN{instr_rs2_is_immediat}}                                & instr_immediat;   // immediat
-assign rs2_data_extended  = {rs2_data[31], rs2_data};
+                          | {XLEN{rs2_is_immediat}}                                      & immediat;   // immediat
+
+assign rs2_data_extended  = {~unsign_extension & rs2_data[31], rs2_data};
 assign rs2_data_nxt       = {XLEN+1{ rs2_ca2_v}} & ~rs2_data_extended + 32'b1
                           | {XLEN+1{~rs2_ca2_v}} &  rs2_data_extended;
 
-// Branch immediat
-assign immediat    = {XLEN{unit_nxt[2] | unit_nxt[3]}} & instr_immediat;
 
 // --------------------------------
 //      Flopping outputs
@@ -185,7 +186,7 @@ always_ff @(posedge clk, negedge reset_n)
               rs1_data_q               <= '0;
               rs2_data_q               <= '0;
               instr_access_size_q      <= '0;
-              instr_unsign_extension_q <= '0;
+              unsign_extension_q <= '0;
               instr_unit_q             <= '0;
               instr_operation_q        <= '0;
               pc_q_o                   <= '0;
@@ -198,7 +199,7 @@ always_ff @(posedge clk, negedge reset_n)
               rs2_data_q                  <= rs2_data_nxt;
               immediat_q                  <= immediat;
               instr_access_size_q         <= instr_access_size_nxt;
-              instr_unsign_extension_q    <= instr_unsign_extension_nxt;
+              unsign_extension_q          <= unsign_extension_nxt;
               instr_unit_q                <= unit_nxt;
               instr_operation_q           <= operation;
               pc_q_o                      <= pc0_q_i;
@@ -216,7 +217,7 @@ assign rs1_data_qual_q_o = rs1_data_q;
 assign rs2_data_qual_q_o = rs2_data_q;
 assign branch_imm_q_o    = immediat_q;
 assign access_size_q_o   = instr_access_size_q;
-assign unsign_ext_q_o    = instr_unsign_extension_q;
+assign unsign_ext_q_o    = unsign_extension_q;
 assign unit_q_o          = instr_unit_q;
 assign operation_q_o     = instr_operation_q;
 

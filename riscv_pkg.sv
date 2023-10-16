@@ -204,13 +204,19 @@ typedef enum logic [11:0] {
 // lsu unit :
   // 01000 000001 : store
   // 01000 000010 : load
-
 typedef enum logic [5:0]{
     ADD   = 6'd0,
     AND   = 6'd1,
     OR    = 6'd2,
     XOR   = 6'd3, // loads
     SLT   = 6'd4
+} unit_enc_t;
+
+typedef enum logic [5:0]{
+    ALU   = 6'd0, // Arithmetic logic unit
+    SFT   = 6'd1, // Shifter
+    BU    = 6'd2, // Branch unit
+    LSU   = 6'd3  // Load store unit
 } alu_instr_enc_t;
 
 typedef enum logic [5:0]{

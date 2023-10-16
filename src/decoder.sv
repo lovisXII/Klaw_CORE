@@ -328,12 +328,11 @@ assign is_div              = div | divu | rem | remu;
 assign is_arithm           = (r_type | i_type) & ~(sll | srl | sra | slli | srli | srai) | lui | auipc;
 assign is_shift            = (r_type | i_type) & (sll | srl | sra | slli | srli | srai);
 assign unsign_extension    = bltu | bgeu | lbu | lhu | sltiu | sltu;
-assign immediat_o          = {32{(i_type | jalr | l_type) & ~unsign_extension}} & {{20{instr_i[31]}}, instr_i[31:20]}
-                           | {32{(i_type | jalr | l_type) &  unsign_extension}} & {{20'b0}, instr_i[31:20]}
-                           | {32{s_type}}                                       & {{20{instr_i[31]}}, instr_i[31:25],instr_i[11:7]}
-                           | {32{b_type}}                                       & {{19{instr_i[31]}}, instr_i[31],instr_i[7],instr_i[30:25],instr_i[11:8],1'b0}
-                           | {32{jal}}                                          & {{11{instr_i[31]}}, instr_i[31],instr_i[19:12],instr_i[20],instr_i[30:21],1'b0}
-                           | {32{auipc | lui}}                                  & {instr_i[31:12], 12'b0};
+assign immediat_o          = {32{(i_type | jalr | l_type)}}  & {{20{instr_i[31]}}, instr_i[31:20]}
+                           | {32{s_type}}                    & {{20{instr_i[31]}}, instr_i[31:25],instr_i[11:7]}
+                           | {32{b_type}}                    & {{19{instr_i[31]}}, instr_i[31],instr_i[7],instr_i[30:25],instr_i[11:8],1'b0}
+                           | {32{jal}}                       & {{11{instr_i[31]}}, instr_i[31],instr_i[19:12],instr_i[20],instr_i[30:21],1'b0}
+                           | {32{auipc | lui}}               & {instr_i[31:12], 12'b0};
 // slt will be treated as an addition
 // We will perform :
 // res = rs2 - rs1
