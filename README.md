@@ -34,3 +34,18 @@ make core_tb
 obj_dir/Vcore test_name
 ```
 By default the waves will be generated in ``logs/`` directory
+
+
+# Micro architecture specification
+
+![](doc/img/pipeline.png)
+
+This core is a scalar in order pipeline containing 3 stages which are :
+
+- **Ifetch** : Generates the PC (Program Counter) and fetch the next instruction from the I$.
+- **Decod** : Decodes the instruction and will get if needed the source registers from register file and generate the control signals for the execute stage. And thus select the right unit which will execute the instruction.
+- **Execute** : Contains multiple units to execute instructions and write if needed the destination register.
+    * ALU : Arithmetic and logic computation (ADD, AND, OR, XOR, SLT).
+    * Shifter : Logics and arihmetic shifts (shift logical right or left and shift arithmetic right)
+    * BU : Branch Unit, which computes the branches and jumps instructions.
+    * LSU : Load Store Unit, which handles all memory accesses by the D$.
