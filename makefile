@@ -1,16 +1,16 @@
 # Compilers
-VERILATOR=verilator
-RISC=riscv32-unknown-elf-gcc
-SV2V=bin/sv2v
+VERILATOR?=verilator
+RISC?=riscv32-unknown-elf-gcc
+SV2V?=bin/sv2v
 
 # SRC RTL
 SRC=$(wildcard src/*.sv)
-ODIR = obj_dir
-TEST=sw/tests/I/add/add_0.S
+ODIR= obj_dir
+TEST?=sw/tests/I/add/add_0.S
 DEBUG?=
 
 # Implementation
-SYNTH=yosys
+SYNTH?=yosys
 SRC_V=synth/
 YO_SCRIPT=$(SRC_V)scripts/synth.ys
 
@@ -53,7 +53,7 @@ riscof_run: core_tb
 	cd riscof && ./lanch-riscof.sh build run && cd ..
 # Checker
 spike:
-	spike -p1 -g -l --log=spike.log --isa=rv32i --log-commits
+	spike -p1 -g -l --log=spike.log --isa=rv32i --log-commits a.out
 # Synthesis
 sv2v:
 	mkdir -p $(SRC_V)
