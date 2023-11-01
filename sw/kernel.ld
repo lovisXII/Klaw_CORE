@@ -1,34 +1,20 @@
-
-/**********************************************************
-        File : 
-        Author : 
-        Date : 
-**********************************************************/
-
-/* Grouping sections into segments for the link editor. */
-
-
 SECTIONS
 {
-    . = 0x01800 ;
-    seg_exit :
-    {
-        *(.exit)
-    }
-    . = 0x10054 ;
-    seg_text :
-    {
-        *(.text)
-    }
-    . = 0x80000000 ;
-    seg_reset :
-    {
-        *(.reset)
-    }
-    . = 0x81000000 ;
-    seg_kernel :
-    {
-        *(.kernel) 
-    }
+  . = 0x80000000;
+  .text.init : { *(.reset) }
+  . = ALIGN(0x1000);
+  .text.init : { *(.kernel) }
+  . = ALIGN(0x1000);
+  .text.init : { *(.exit) }
+  . = ALIGN(0x1000);
+  .text.init : { *(.text.init) }
+  . = ALIGN(0x1000);
+  .tohost : { *(.tohost) }
+  . = ALIGN(0x1000);
+  .text : { *(.text) }
+  . = ALIGN(0x1000);
+  .data : { *(.data) }
+  .data.string : { *(.data.string)}
+  .bss : { *(.bss) }
+  _end = .;
 }
-

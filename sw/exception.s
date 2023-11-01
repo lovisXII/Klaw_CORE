@@ -5,17 +5,25 @@
 .space 16
 
 _bad :
-    j _bad
-    nop
-    nop
+    j write_tohost
 _good :
-    j _good
-    nop
-    nop
+    j write_tohost
 _exception_occur :
-    j _exception_occur
-    nop
-    nop
+    j write_tohost
+
+.space 32
+write_tohost:
+    li t1, 1
+    la t5, .tohost
+    sw	t1,0(t5)
+
+.section .tohost, "aw", @progbits
+.globl tohost
+.align 4
+tohost: .dword 0
+.globl fromhost
+.align 4
+fromhost: .dword 0
 
 .section .kernel
 .global _exception

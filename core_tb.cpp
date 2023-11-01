@@ -405,11 +405,28 @@ int sc_main(int argc, char* argv[]) {
             core.final();
             helper(OV_CYCLES);
         }
-        // starting the countdown
-        if(!riscof && !start_countdown && signature_name == "" && (pc_adr == bad_adr || pc_adr == good_adr
-        || pc_adr == exception_occur && if_afr_valid)){
+        // Exit
+        if(!riscof && signature_name == "" && pc_adr == bad_adr && if_afr_valid){
             cout << "Reaching ending point, starting countdown" << endl;
-            start_countdown = true;
+            cout << FRED("Error ! ") << "Found bad at adr 0x" << std::hex << pc_adr << endl;
+            sc_start(3, SC_NS);
+            cleanup(core, tfp,1);
+        }
+        else if(!riscof && signature_name == "" && pc_adr == good_adr && if_afr_valid){
+            cout << "Reaching ending point, starting countdown" << endl;
+            if(stats){
+                test_stats << test_filename << " " << NB_CYCLES  << " " << "SCALAR" << endl;
+                test_stats.close();
+            }
+            cout << FGRN("Success ! ") << "Found good at adr 0x" << std::hex << pc_adr << endl;
+            sc_start(3, SC_NS);
+            cleanup(core, tfp, 0);
+        }
+        else if(!riscof && signature_name == "" && pc_adr == exception_occur && if_afr_valid){
+            cout << "Reaching ending point, starting countdown" << endl;
+            cout << FYEL("Error ! ") << "Found exception_occur at adr 0x" << std::hex << pc_adr << endl;
+            sc_start(3, SC_NS);
+            cleanup(core, tfp, 2);
         }
         // riscof :
         else if(((riscof && !start_countdown && pc_adr == rvtest_code_end) || (pc_adr ==  rvtest_end)) && if_afr_valid){
@@ -417,32 +434,7 @@ int sc_main(int argc, char* argv[]) {
             start_countdown = true;
         }
 
-        // Exciting when countdown reach 0
-        if(!riscof && countdown == 0){
-            cout << "countdown reach 0"<<endl;
-            if (signature_name == "" && (pc_adr == bad_adr || pc_adr == bad_adr +4 || pc_adr == bad_adr +8)) {
-                cout << FRED("Error ! ") << "Found bad at adr 0x" << std::hex << pc_adr << endl;
-                sc_start(3, SC_NS);
-                cleanup(core, tfp,1);
-            }
-            else if(signature_name == "" && (pc_adr == exception_occur || pc_adr == exception_occur + 4 || pc_adr == exception_occur + 8)){
-                cout << FYEL("Error ! ") << "Found exception_occur at adr 0x" << std::hex << pc_adr << endl;
-                sc_start(3, SC_NS);
-                cleanup(core, tfp, 2);
-            }
-            else if (signature_name == "" && (pc_adr == good_adr || pc_adr == good_adr +4 || pc_adr == good_adr + 8)) {
-                if(stats)
-                {
-                    test_stats << test_filename << " " << NB_CYCLES  << " " << "SCALAR" << endl;
-                    test_stats.close();
-                }
-
-                cout << FGRN("Success ! ") << "Found good at adr 0x" << std::hex << pc_adr << endl;
-                sc_start(3, SC_NS);
-                cleanup(core, tfp, 0);
-            }
-        }
-        else if (riscof && countdown == 0)
+        if (riscof && countdown == 0)
         {
             cout << "Test ended at " << std::hex << pc_adr << endl;
             sc_start(3, SC_NS);

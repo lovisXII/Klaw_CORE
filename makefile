@@ -33,6 +33,7 @@ RISC_FLAGS= -nostdlib -march=rv32izicsr $(LD_SCRIPT)
 
 all: core_tb
 
+# Simulation
 run:core_tb
 	obj_dir/Vcore $(TEST) $(DEBUG)
 
@@ -50,6 +51,10 @@ riscof_build: core_tb
 	cd riscof && ./lanch-riscof.sh build && cd ..
 riscof_run: core_tb
 	cd riscof && ./lanch-riscof.sh build run && cd ..
+# Checker
+spike:
+	spike -p1 -g -l --log=spike.log --isa=rv32i --log-commits
+# Synthesis
 sv2v:
 	mkdir -p $(SRC_V)
 	$(SV2V) --verbose -I --incidr=$(SRC) $(PKG) --write=adjacent --write=$(SRC_V)
