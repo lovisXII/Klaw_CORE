@@ -3,15 +3,18 @@ import riscv::*;
 module register_file(
     input logic clk,
     input logic reset_n,
-    // read ports
+    //----------------------------------------
+    // Inputs
+    //----------------------------------------
     input  logic               rs1_v_i,
     input  logic [NB_REGS-1:0] rs1_adr_i,
     output logic [XLEN-1:0]    rs1_data_o,
     input  logic               rs2_v_i,
     input  logic [NB_REGS-1:0] rs2_adr_i,
     output logic [XLEN-1:0]    rs2_data_o,
-
-    // write ports
+    //----------------------------------------
+    // Outputs
+    //----------------------------------------
     input logic               write_valid_i,
     input logic [NB_REGS-1:0] write_adr_i,
     input logic [XLEN-1:0]    write_data_i

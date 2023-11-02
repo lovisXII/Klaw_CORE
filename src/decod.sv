@@ -54,9 +54,6 @@ module dec (
 // --------------------------------
 //      Signals declaration
 // --------------------------------
-// -----------------------
-//      LINE 0
-// -----------------------
   logic                       instr_illegal_inst_nxt;
   logic                       instr_illegal_inst_q;
   logic                       valid_instr_q;
@@ -116,7 +113,7 @@ module dec (
   logic [NB_OP_DECODED-1:0]   instr_operation_dec_q;
 
 // --------------------------------
-//      Decoder instanciation
+//      Decoder
 // --------------------------------
 decoder dec0(
     .instr_i              (instr_q_i),
@@ -204,6 +201,9 @@ always_ff @(posedge clk, negedge reset_n)
               pc_q_o                      <= pc0_q_i;
   end
 
+// --------------------------------
+//      Ouputs
+// --------------------------------
 assign rf_rs1_v_o        = rs1_v;
 assign rfr_rs1_adr_o     = rs1_adr;
 assign rf_rs2_v_o        = rs2_v;

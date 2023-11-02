@@ -7,6 +7,9 @@ import riscv::*;
 
 module lsu
 (
+    //----------------------------------------
+    // Inputs
+    //----------------------------------------
     input   logic [XLEN-1:0]         rs1_data_i,
     input   logic [XLEN-1:0]         rs2_data_i,
     input   logic [XLEN-1:0]         immediat_i,
@@ -15,6 +18,9 @@ module lsu
     input   logic [2:0]              access_size_q_i,
     input   logic                    unsign_extension_i,
     input   logic [XLEN-1:0]         load_data_i,
+    //----------------------------------------
+    // Outputs
+    //----------------------------------------
     output  logic [XLEN-1:0]         adr_o,
     output  logic [XLEN-1:0]         lsu_data_o,
     output  logic [XLEN-1:0]         store_data_o

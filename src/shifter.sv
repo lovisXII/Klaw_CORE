@@ -2,10 +2,16 @@ import riscv::*;
 
 module shifter
 (
+    //----------------------------------------
+    // Inputs
+    //----------------------------------------
     input  logic[XLEN-1:0]          rs1_data_i,
     input  logic[XLEN-1:0]          rs2_data_i,
     input  logic                    shifter_en_i,
     input  logic[NB_OPERATION-1:0]  cmd_i,
+    //----------------------------------------
+    // Outputs
+    //----------------------------------------
     output logic[XLEN-1:0]          data_o
 );
 // --------------------------------
@@ -65,7 +71,4 @@ assign l_shift1  = {XLEN{ rs2_data_i[0]}} & {l_shift2[30:0],    sign_extension}
 assign data_o = {XLEN{shifter_en_i & cmd_i[SLL]}}                & l_shift1
               | {XLEN{shifter_en_i & (cmd_i[SRL] | cmd_i[SRA])}} & r_shift1;
 
-//assign data_o = {XLEN{shifter_en_i & cmd_i[SLL]}} & (rs1_data_i << rs2_data_i[4:0])
-//              | {XLEN{shifter_en_i & cmd_i[SRL]}} & (rs1_data_i >> rs2_data_i[4:0])
-//              | {XLEN{shifter_en_i & cmd_i[SRA]}} & (rs1_data_i >> rs2_data_i[4:0]);
 endmodule

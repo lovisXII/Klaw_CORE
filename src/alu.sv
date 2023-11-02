@@ -2,10 +2,16 @@ import riscv::*;
 
 module alu
 (
+    //----------------------------------------
+    // Inputs
+    //----------------------------------------
     input  logic[XLEN:0]           rs1_data_i,
     input  logic[XLEN:0]           rs2_data_i,
     input  logic                   alu_en_i,
     input  logic[NB_OPERATION-1:0] cmd_i,
+    //----------------------------------------
+    // Outputs
+    //----------------------------------------
     output logic[XLEN-1:0]         data_o
 );
 

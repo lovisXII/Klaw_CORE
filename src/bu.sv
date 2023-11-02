@@ -1,12 +1,10 @@
-// The branch unit must be able to execute the following operation :
-// * Check if the data of rs1 and rs2 are equals (beq, bne)  : performed throw rs1 & rs2
-// * Check if data of rs1 < rs2 (blt, bge)                   : performed throw rs1 - rs2
-// * Add immediat to pc                                      : performed throw an addition
-
 import riscv::*;
 
 module bu
 (
+    //----------------------------------------
+    // Inputs
+    //----------------------------------------
     input  logic[XLEN:0]            rs1_data_i,
     input  logic[XLEN:0]            rs2_data_i,
     input   logic                   unsign_cmp_i,
@@ -14,6 +12,9 @@ module bu
     input  logic[XLEN-1:0]          pc_data_i,
     input  logic                    bu_en_i,
     input  logic[NB_OPERATION-1:0]  cmd_i,
+    //----------------------------------------
+    // Outputs
+    //----------------------------------------
     output logic                    branch_v_o,
     output logic[XLEN-1:0]          pc_nxt_o,
     output logic[XLEN-1:0]          data_o

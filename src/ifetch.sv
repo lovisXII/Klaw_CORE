@@ -1,5 +1,3 @@
-// This module must instanciate the interface between the fetch unit and the caches
-// It can fetch several instruction at the same cycle so it must be parametrizable
 import riscv::*;
 
 module ifetch(
@@ -8,17 +6,17 @@ module ifetch(
     input logic reset_n,
     input logic [XLEN-1:0] reset_adr_i,
     // --------------------------------
-    //     Icache Interface line {<i>}
+    //     Icache
     // --------------------------------
     input logic [31:0]      icache_instr_i,
     output logic [XLEN-1:0] icache_adr_o,
     // --------------------------------
-    //      EXE Interface
+    //      EXE
     // --------------------------------
     input  logic            flush_v_q_i,
     input  logic[XLEN-1:0]  pc_data_q_i,
     // --------------------------------
-    //      DEC Interface
+    //      DEC
     // --------------------------------
     output logic            instr_v_q_o,
     output logic[31:0]      instr_q_o,
@@ -35,12 +33,10 @@ logic            end_reset_valid;
 logic [XLEN-1:0] reset_adr;
 logic [XLEN-1:0] pc_fetched_nxt;
 
-// D pin of internals flops
 logic            instr_v_nxt;
 logic [31:0]     instr_nxt;
 logic [XLEN-1:0] pc_nxt;
 
-// Q pin of internals flops
 logic            instr_v_q;
 logic [31:0]     instr_q;
 logic [XLEN-1:0] pc_q;
@@ -57,7 +53,7 @@ always_ff @(posedge clk, negedge reset_n)
     reset_n_q <= reset_n;
 end
 
-// Reset adress
+// Reset address
 assign end_reset_valid = reset_n & ~reset_n_q ;
 
 assign reset_adr       = {XLEN{end_reset_valid}} & reset_adr_i;
