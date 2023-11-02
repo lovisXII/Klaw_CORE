@@ -55,18 +55,26 @@ This will run the elf file in the test directory and generate a signature file n
  To verify the test ran successfully, riscof compared the generated file ``signature.txt`` with the one in ``riscof/riscof_work/rv32i/I/src/test_name/ref/Reference-spike.signature ``
 
 # Design
-
-![](doc/img/pipeline.png)
-
 This core is a scalar in order pipeline containing 3 stages which are :
 
-- **Ifetch** : Generates the PC (Program Counter) and fetch the next instruction from the I$.
-- **Decod** : Decodes the instruction and will get if needed the source registers from register file and generate the control signals for the execute stage. And thus select the right unit which will execute the instruction.
+- **Ifetch** : Receive the PC from exe and fetch the associated instruction from the memory
+- **Decode** : Decodes the instruction, collect the source registers values (from register file or from forwards) and generate the control signals for the execute stage.
 - **Execute** : Contains multiple units to execute instructions and write if needed the destination register.
     * ALU : Arithmetic and logic computation (ADD, AND, OR, XOR, SLT).
-    * Shifter : Logics and arihmetic shifts (shift logical right or left and shift arithmetic right)
+    * Shifter : Logics and arihmetic shifts (Sll, Slr, sra)
     * BU : Branch Unit, which computes the branches and jumps instructions.
-    * LSU : Load Store Unit, which handles all memory accesses by the D$.
+    * LSU : Load Store Unit, which handles all memory accesses
+
+![](doc/img/pipeline.png)
+## Ifetch
+The stage receive the PC (program counter) from the exe stage and fetch the associate instruction. It is also responsible of the boot process, when the reset is done it fetch the instruction at the address received by ``reset_adr``.\
+In case of a flush coming from exe the next PC taken will be the one calculated by the branch unit.
+## Decode
+In progress
+## Exe
+In progress
+## Register file
+In progress
 
 # Verification
 

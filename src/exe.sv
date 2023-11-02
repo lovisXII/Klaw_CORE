@@ -25,7 +25,7 @@ module exe
   input logic [NB_UNIT-1:0]         unit_q_i,
   input logic [NB_OPERATION-1:0]    operation_q_i,
 // --------------------------------
-//      MEM 
+//      MEM
 // --------------------------------
   output logic                     adr_v_o,
   output logic [XLEN-1:0]          adr_o,
@@ -34,7 +34,7 @@ module exe
   input  logic  [XLEN-1:0]          load_data_i,
   output logic [2:0]                access_size_o,
 // --------------------------------
-//      WBK 
+//      WBK
 // --------------------------------
   output logic                      exe_ff_write_v_q_o,
   output logic [NB_REGS-1:0]        exe_ff_rd_adr_q_o,

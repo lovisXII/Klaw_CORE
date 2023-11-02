@@ -39,5 +39,5 @@ assign branch_v = bu_en_i & (
 assign branch_v_o = branch_v;
 assign data_o     = pc_data_i + 32'd4;
 assign pc_nxt_o   = {XLEN{branch_v & ~cmd_i[JALR]}}  & pc_data_i  + immediat_i
-                  | {XLEN{branch_v &  cmd_i[JALR]}}  & rs1_data_i[XLEN-1:0] + immediat_i; // when no operation performed must still increment pc
+                  | {XLEN{branch_v &  cmd_i[JALR]}}  & rs1_data_i[XLEN-1:0] + immediat_i;
 endmodule
