@@ -49,8 +49,7 @@ module dec (
   output logic [NB_UNIT-1:0]         unit_q_o,
   output logic [NB_OP_DECODED-1:0]   operation_q_o,
   // Flush signals
-  input logic                        flush_v_q_i,
-  input logic                        flush_v_q_dly1_i
+  input logic                        flush_v_q_i
 );
 // --------------------------------
 //      Signals declaration
@@ -144,7 +143,7 @@ decoder dec0(
 assign valid_instr_nxt = instr_v_q_i;
 assign rd_v_nxt        = instr_rd_v;
 // Flush
-assign flush_v = flush_v_q_i | flush_v_q_dly1_i;
+assign flush_v = flush_v_q_i;
 // EXE ff
 assign exe_ff_rs1_adr_match    = (rs1_adr == exe_ff_rd_adr_q_i) & exe_ff_write_v_q_i & ~flush_v;
 assign exe_ff_rs2_adr_match    = (rs2_adr == exe_ff_rd_adr_q_i) & exe_ff_write_v_q_i & ~flush_v;

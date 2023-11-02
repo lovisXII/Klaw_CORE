@@ -34,5 +34,5 @@ assign load_data = {XLEN{access_size_q_i[0] & adr[1:0] == 2'b00}} & {{24{~unsign
                  | {XLEN{access_size_q_i[2]}} & load_data_i;
 assign adr_o        = adr;
 assign store_data_o = rs2_data_i;
-assign lsu_data_o  = load_data;
+assign lsu_data_o   = load_data;
 endmodule

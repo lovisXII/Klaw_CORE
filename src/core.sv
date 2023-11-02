@@ -99,8 +99,7 @@ dec u_decod(
   .unsign_ext_q_o       ( dec_exe_unsign_extension_q),
   .unit_q_o             ( dec_exe_instr_unit_q),
   .operation_q_o        ( dec_exe_instr_operation_q),
-  .flush_v_q_i          ( flush_v_q),
-  .flush_v_q_dly1_i     ( flush_v_dly1_q)
+  .flush_v_q_i          ( flush_v_q)
 
 );
 
@@ -131,7 +130,6 @@ exe u_exe(
   .instr_write_adr_q_o  ( exe_rf_instr_write_adr),
   .instr_wbk_data_q_o   ( exe_rf_instr_write_data),
   .flush_v_q_o          ( flush_v_q),
-  .flush_v_dly1_q_o     ( flush_v_dly1_q),
   .pc_data_q_o          ( exe_if_pc0_write_data)
 );
 
