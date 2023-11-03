@@ -6,7 +6,6 @@ module dec (
 // --------------------------------
 //      Ifetch Interface
 // --------------------------------
-  input logic                        instr_v_q_i,
   input logic [XLEN-1:0]             instr_q_i,
   input logic [XLEN-1:0]             pc0_q_i,
   // Exception
@@ -56,7 +55,6 @@ module dec (
 // --------------------------------
   logic                       instr_illegal_inst_nxt;
   logic                       instr_illegal_inst_q;
-  logic                       valid_instr_q;
   logic                       instr_rd_v;
   // rd
   logic                       rd_v_nxt;
@@ -84,33 +82,24 @@ module dec (
   // Additionnal informations
   logic                       auipc;
   logic                       rs2_is_immediat;
-  logic                       is_store;
-  logic                       instr_is_load;
-  logic                       instr_is_branch;
   logic [2:0]                 instr_access_size_nxt;
-  logic [12:0]                instr_instr_type;
   logic                       unsign_extension;
   logic                       unsign_extension_nxt;
   logic [NB_UNIT-1:0]         unit_nxt;
-  logic [NB_OPERATION-1:0]    operation;
+  logic [NB_OP_DECODED-1:0]   operation;
   logic                       rs2_ca2_v;
   // Flops
   logic                       rd_v_q;
   logic [XLEN:0]              rs1_data_q;
-  logic                       instr_rs2_v_q;
   logic [XLEN:0]              rs2_data_q;
-  logic                       rs2_is_immediat_q;
   logic                       instr_is_st_q;
-  logic                       instr_is_lq;
   logic                       instr_is_braq;
   logic [XLEN-1:0]            immediat;
   logic [XLEN-1:0]            immediat_q;
   logic [2:0]                 instr_access_size_q;
-  logic [12:0]                instr_instr_q;
   logic                       unsign_extension_q;
   logic [NB_UNIT-1:0]         instr_unit_q;
   logic [NB_OP_DECODED-1:0]   instr_operation_q;
-  logic [NB_OP_DECODED-1:0]   instr_operation_dec_q;
 
 // --------------------------------
 //      Decoder
@@ -137,7 +126,6 @@ decoder dec0(
 // --------------------------------
 //      Internal architecture
 // --------------------------------
-assign valid_instr_nxt = instr_v_q_i;
 assign rd_v_nxt        = instr_rd_v;
 // Flush
 assign flush_v = flush_v_q_i;
@@ -175,7 +163,6 @@ assign rs2_data_nxt       = {XLEN+1{ rs2_ca2_v}} & ~rs2_data_extended + 32'b1
 
 always_ff @(posedge clk, negedge reset_n)
   if (!reset_n) begin
-              valid_instr_q            <= '0;
               instr_illegal_inst_q     <= '0;
               rd_v_q                   <= '0;
               rd_adr_q                 <= '0;
@@ -187,7 +174,6 @@ always_ff @(posedge clk, negedge reset_n)
               instr_operation_q        <= '0;
               pc_q_o                   <= '0;
   end else begin
-              valid_instr_q               <= valid_instr_nxt;
               instr_illegal_inst_q        <= instr_illegal_inst_nxt;
               rd_v_q                      <= rd_v_nxt;
               rd_adr_q                    <= rd_adr_nxt;
@@ -208,7 +194,6 @@ assign rf_rs1_v_o        = rs1_v;
 assign rfr_rs1_adr_o     = rs1_adr;
 assign rf_rs2_v_o        = rs2_v;
 assign rfr_rs2_adr_o     = rs2_adr;
-assign instr_v_q_o       = valid_instr_q;
 assign rd_v_q_o          = rd_v_q;
 assign instr_illegal_q_o = instr_illegal_inst_q;
 assign rd_adr_q_o        = rd_adr_q;

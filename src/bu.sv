@@ -21,6 +21,7 @@ module bu
 );
 // Output selection
 logic            data_eq;
+logic            branch_v;
 logic [XLEN:0]   addition_res;
 
 // Perform rs1 - rs2

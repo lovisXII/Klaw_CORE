@@ -8,7 +8,6 @@ module exe
 //      DEC
 // --------------------------------
   // PC
-  input logic                       v_q_i,
   input logic [XLEN-1:0]            dec_pc0_q_i,
   // Registers
   // Destination
@@ -56,17 +55,12 @@ logic [XLEN-1:0]          alu_res_data;
 logic                     shifter_en;
 logic [XLEN-1:0]          shifter_res_data;
 // Branch Unit (BU)
-logic [XLEN-1:0]          bu_op1_data;
-logic [XLEN-1:0]          bu_op2_data;
 logic                     bu_en;
 logic                     branch_v;
 logic [XLEN-1:0]          bu_pc_res;
 logic [XLEN-1:0]          bu_data_res;
 // Load-store unit (LSU)
-logic [XLEN-1:0]          lsu_op2_data;
-logic [XLEN-1:0]          lsu_op1_data;
 logic                     lsu_en;
-logic [NB_OPERATION-1:0]  lsu_cmd;
 logic [XLEN-1:0]          lsu_res_data;
 // Wbk signals
 logic                     rd_v_nxt;
@@ -136,7 +130,7 @@ assign bu_en            = unit_q_i[BU]  & ~flush_v_q & ~flush_v_dly1_q;
 assign lsu_en           = unit_q_i[LSU] & ~flush_v_q & ~flush_v_dly1_q;
 assign adr_v_o          = lsu_en;
 assign is_store_o       = lsu_en & operation_q_i[ST];
-assign store_data_o     = {XLEN{lsu_en}} & rs2_data_qual_q_i ;
+assign store_data_o     = {XLEN{lsu_en}} & rs2_data_qual_q_i[XLEN-1:0] ;
 assign access_size_o    = access_size_q_i;
 // --------------------------------
 //      Write back data

@@ -13,17 +13,14 @@ module core (
     // --------------------------------
     //     Memory data interface
     // --------------------------------
-    output logic                     adr_v_o,
-    output logic [XLEN-1:0]          adr_o,
-    output logic [XLEN-1:0]          is_store_o,
-    output logic [XLEN-1:0]          store_data_o,
-    input logic  [XLEN-1:0]          load_data_i,
-    output logic [2:0]               access_size_o
+    output logic            adr_v_o,
+    output logic [XLEN-1:0] adr_o,
+    output logic            is_store_o,
+    output logic [XLEN-1:0] store_data_o,
+    input logic  [XLEN-1:0] load_data_i,
+    output logic [2:0]      access_size_o
 );
-
-logic                       pc0_v;
 logic                       flush_v_q;
-logic                       flush_v_dly1_q;
 logic[31:0]                 if_dec_instr_q;
 logic[31:0]                 if_dec_pc0_q;
 logic                       dec_exe_illegal_inst0_q;
@@ -38,14 +35,11 @@ logic                       dec_exe_instr_rd_v_q;
 logic[NB_REGS-1:0]          dec_exe_rd_adr_q;
 logic                       dec_exe_instr_rs1_v_q;
 logic [XLEN:0]              dec_exe_rs1_data_q;
-logic                       dec_exe_instr_rs2_v_q;
 logic [XLEN:0]              dec_exe_rs2_data_q;
-logic [XLEN-1:0]            immediat_q_i;
 logic [XLEN-1:0]            exe_immediat_q;
 logic [2:0]                 dec_exe_instr_access_size_q;
 logic                       dec_exe_unsign_extension_q;
 logic [NB_UNIT-1:0]         dec_exe_instr_unit_q;
-logic [NB_OP_DECODED-1:0]   dec_exe_instr_operation_dec_q;
 logic [NB_OP_DECODED-1:0]   dec_exe_instr_operation_q;
 logic                       exe_ff_write_v_q;
 logic [NB_REGS-1:0]         exe_ff_rd_adr_q;
@@ -64,7 +58,6 @@ ifetch u_ifetch (
     .icache_adr_o   ( icache_adr_o),
     .flush_v_q_i    ( flush_v_q),
     .pc_data_q_i    ( exe_if_pc0_write_data),
-    .instr_v_q_o    ( if_instr_v_q),
     .instr_q_o      ( if_dec_instr_q),
     .pc_q_o         ( if_dec_pc0_q)
 
@@ -72,7 +65,6 @@ ifetch u_ifetch (
 dec u_decod(
   .clk                  ( clk),
   .reset_n              ( reset_n),
-  .instr_v_q_i          ( if_instr_v_q),
   .instr_q_i            ( if_dec_instr_q),
   .pc0_q_i              ( if_dec_pc0_q),
   .instr_illegal_q_o    ( dec_exe_illegal_inst0_q),
@@ -88,7 +80,6 @@ dec u_decod(
   .rf_write_v_q_i       ( exe_rf_instr_write_valid),
   .rf_ff_rd_adr_q_i     ( exe_rf_instr_write_adr),
   .rf_ff_res_data_i     ( exe_rf_instr_write_data),
-  .instr_v_q_o          ( exe_valid_instr_q),
   .pc_q_o               ( dec_exe_pc0_q),
   .rd_v_q_o             ( dec_exe_instr_rd_v_q),
   .rd_adr_q_o           ( dec_exe_rd_adr_q),
@@ -106,7 +97,6 @@ dec u_decod(
 exe u_exe(
   .clk                  ( clk),
   .reset_n              ( reset_n),
-  .v_q_i                ( exe_valid_instr_q),
   .dec_pc0_q_i          ( dec_exe_pc0_q),
   .rd_v_q_i             ( dec_exe_instr_rd_v_q),
   .rd_adr_q_i           ( dec_exe_rd_adr_q),

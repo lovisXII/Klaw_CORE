@@ -33,11 +33,9 @@ logic            end_reset_valid;
 logic [XLEN-1:0] reset_adr;
 logic [XLEN-1:0] pc_fetched_nxt;
 
-logic            instr_v_nxt;
 logic [31:0]     instr_nxt;
 logic [XLEN-1:0] pc_nxt;
 
-logic            instr_v_q;
 logic [31:0]     instr_q;
 logic [XLEN-1:0] pc_q;
 
@@ -66,7 +64,6 @@ assign pc_fetched_nxt  = {XLEN{reset_n &  flush_v_q_i}} & pc_data_q_i    // bran
 assign icache_adr_o   = pc_fetched_nxt;
 
 // Decod Interface
-assign instr_v_nxt = reset_n;
 assign instr_nxt   = icache_instr_i;
 assign pc_nxt      = pc_fetched_nxt;
 
@@ -75,11 +72,9 @@ assign pc_nxt      = pc_fetched_nxt;
 // --------------------------------
 always_ff @(posedge clk, negedge reset_n)
   if (!reset_n) begin
-    instr_v_q <= '0;
     instr_q   <= '0;
     pc_q      <= '0;
   end else begin
-    instr_v_q <= instr_v_nxt;
     instr_q   <= instr_nxt;
     pc_q      <= pc_nxt;
 end
@@ -87,7 +82,6 @@ end
 // --------------------------------
 //      Ouputs
 // --------------------------------
-assign instr_v_q_o    = instr_v_q;
 assign instr_q_o      = instr_q;
 assign pc_q_o         = pc_q;
 

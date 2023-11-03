@@ -316,7 +316,7 @@ int sc_main(int argc, char* argv[]) {
     sc_signal<sc_uint<32>>  icache_instr;
     sc_signal<bool>         adr_v;
     sc_signal<sc_uint<32>>  mem_adr;
-    sc_signal<sc_uint<32>>  is_store;
+    sc_signal<bool>         is_store;
     sc_signal<sc_uint<32>>  store_data;
     sc_signal<sc_uint<32>>  load_data;
     sc_signal<sc_uint<3>>   access_size;

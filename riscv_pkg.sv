@@ -204,38 +204,38 @@ typedef enum logic [11:0] {
 // lsu unit :
   // 01000 000001 : store
   // 01000 000010 : load
-typedef enum logic [5:0]{
-    ADD   = 6'd0,
-    AND   = 6'd1,
-    OR    = 6'd2,
-    XOR   = 6'd3, // loads
-    SLT   = 6'd4
+typedef enum logic [2:0]{
+    ADD   = 3'd0,
+    AND   = 3'd1,
+    OR    = 3'd2,
+    XOR   = 3'd3, // loads
+    SLT   = 3'd4
 } unit_enc_t;
 
-typedef enum logic [5:0]{
-    ALU   = 6'd0, // Arithmetic logic unit
-    SFT   = 6'd1, // Shifter
-    BU    = 6'd2, // Branch unit
-    LSU   = 6'd3  // Load store unit
+typedef enum logic [1:0]{
+    ALU   = 2'd0, // Arithmetic logic unit
+    SFT   = 2'd1, // Shifter
+    BU    = 2'd2, // Branch unit
+    LSU   = 2'd3  // Load store unit
 } alu_instr_enc_t;
 
-typedef enum logic [5:0]{
-    SLL   = 6'd0,
-    SRL   = 6'd1,
-    SRA   = 6'd2
+typedef enum logic [1:0]{
+    SLL   = 2'd0,
+    SRL   = 2'd1,
+    SRA   = 2'd2
 } shift_instr_enc_t;
 
-typedef enum logic [5:0]{
-    BEQ   = 6'd0,
-    BNE   = 6'd1,
-    BLT   = 6'd2, // priviledge type
-    BGE   = 6'd3,
-    JAL   = 6'd4, // 64 bits mul & r
-    JALR  = 6'd5
+typedef enum logic [2:0]{
+    BEQ   = 3'd0,
+    BNE   = 3'd1,
+    BLT   = 3'd2, // priviledge type
+    BGE   = 3'd3,
+    JAL   = 3'd4, // 64 bits mul & r
+    JALR  = 3'd5
 } bu_instr_enc_t;
 
-typedef enum logic [5:0]{
-    ST    = 6'd0,
-    LD    = 6'd1
+typedef enum logic [1:0]{
+    ST    = 2'd0,
+    LD    = 2'd1
 } lsu_instr_enc_t;
 endpackage
