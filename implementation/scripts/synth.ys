@@ -1,0 +1,12 @@
+read_verilog implementation/synth/*
+
+proc; opt; fsm; opt; memory; opt
+techmap; opt
+
+dfflibmap -liberty implementation/open_pdks/sky130/sky130A/libs.ref/sky130_fd_sc_hs/lib/sky130_fd_sc_hs__ff_100C_1v95.lib
+abc -liberty implementation/open_pdks/sky130/sky130A/libs.ref/sky130_fd_sc_hs/lib/sky130_fd_sc_hs__ff_100C_1v95.lib
+
+stat
+
+clean
+write_verilog implementation/synth/synth.v

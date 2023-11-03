@@ -6,6 +6,7 @@ sudo apt-get install build-essential clang bison flex \
 	libboost-python-dev libboost-filesystem-dev zlib1g-dev
 sudo apt install python3
 sudo apt install m4 tcsh tcl-dev tk-dev
+sudo apt install klayout
 
 git clone git@github.com:YosysHQ/yosys.git
 cd yosys

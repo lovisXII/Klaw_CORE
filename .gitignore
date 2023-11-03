@@ -27,5 +27,5 @@ riscof/riscof_work/projet_isa_checked.yaml
 riscof/riscof_work/test_list.yaml
 riscof/sail_cSim/__pycache__/*
 riscof/spike/__pycache__/*
-synth/*.v
-open_pdks/*
+implementation/synth/
+implementation/open_pdks/*

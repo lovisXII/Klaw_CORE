@@ -11,8 +11,11 @@ DEBUG?=
 
 # Implementation
 SYNTH?=yosys
-SRC_V=synth/
-YO_SCRIPT=$(SRC_V)scripts/synth.ys
+IMPL_DIR=implementation
+IMPL?=$(IMPL_DIR)/OpenSTA/app/sta
+SYNTH_DIR=$(IMPL_DIR)/synth/
+YO_SCRIPT=$(IMPL_DIR)/scripts/synth.ys
+IMPL_SCRIPT=$(IMPL_DIR)/scripts/p_and_r
 
 # VERILATOR
 VERILATOR_FLAGS=-sc -Wno-fatal -Wall --trace --pins-sc-uint
@@ -56,14 +59,16 @@ spike:
 	spike -p1 -g -l --log=spike.log --isa=rv32i --log-commits a.out
 # Synthesis
 sv2v:
-	mkdir -p $(SRC_V)
-	$(SV2V) --verbose -I --incidr=$(SRC) $(PKG) --write=adjacent --write=$(SRC_V)
+	mkdir -p $(SYNTH_DIR)
+	$(SV2V) --verbose -I --incidr=$(SRC) $(PKG) --write=adjacent --write=$(SYNTH_DIR)
 
 synth: sv2v
 	$(SYNTH) -qv3 -l synth.log $(YO_SCRIPT)
 
+p_and_r:synth
+	$(IMPL) $(IMPL_SCRIPT)
 clean:
 	rm -rf obj_dir/ *.vcd *.out.txt.s \
 	*.out kernel *.txt *.o *.log \
 	$(ODIR)
-	rm -f synth/*.v
+	rm -rf implementation/synth/
