@@ -1,4 +1,4 @@
-import riscv::*;
+import riscv_pkg::*;
 
 module ifetch(
     // global interface
@@ -18,7 +18,6 @@ module ifetch(
     // --------------------------------
     //      DEC
     // --------------------------------
-    output logic            instr_v_q_o,
     output logic[31:0]      instr_q_o,
     output logic[XLEN-1:0]  pc_q_o
 

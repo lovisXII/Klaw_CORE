@@ -1,4 +1,4 @@
-import riscv::*;
+import riscv_pkg::*;
 
 module core (
     // global interface
@@ -23,24 +23,20 @@ module core (
 logic                       flush_v_q;
 logic[31:0]                 if_dec_instr_q;
 logic[31:0]                 if_dec_pc0_q;
-logic                       dec_exe_illegal_inst0_q;
 logic[XLEN-1:0]             dec_exe_pc0_q;
-logic                       dec_rf_instr_rs1_v;
 logic[NB_REGS-1:0]          dec_rf_instr_rs1_adr;
 logic[XLEN-1:0]             dec_rf_instr_rs1_data;
-logic                       dec_rf_instr_rs2_v;
 logic[NB_REGS-1:0]          dec_rf_instr_rs2_adr;
 logic[XLEN-1:0]             dec_rf_instr_rs2_data;
 logic                       dec_exe_instr_rd_v_q;
 logic[NB_REGS-1:0]          dec_exe_rd_adr_q;
-logic                       dec_exe_instr_rs1_v_q;
 logic [XLEN:0]              dec_exe_rs1_data_q;
 logic [XLEN:0]              dec_exe_rs2_data_q;
 logic [XLEN-1:0]            exe_immediat_q;
 logic [2:0]                 dec_exe_instr_access_size_q;
 logic                       dec_exe_unsign_extension_q;
 logic [NB_UNIT-1:0]         dec_exe_instr_unit_q;
-logic [NB_OP_DECODED-1:0]   dec_exe_instr_operation_q;
+logic [NB_OPERATION-1:0]    dec_exe_instr_operation_q;
 logic                       exe_ff_write_v_q;
 logic [NB_REGS-1:0]         exe_ff_rd_adr_q;
 logic [XLEN-1:0]            exe_ff_res_data_q;
@@ -67,11 +63,8 @@ dec u_decod(
   .reset_n              ( reset_n),
   .instr_q_i            ( if_dec_instr_q),
   .pc0_q_i              ( if_dec_pc0_q),
-  .instr_illegal_q_o    ( dec_exe_illegal_inst0_q),
-  .rf_rs1_v_o           ( dec_rf_instr_rs1_v),
   .rfr_rs1_adr_o        ( dec_rf_instr_rs1_adr),
   .rf_rs1_data_i        ( dec_rf_instr_rs1_data),
-  .rf_rs2_v_o           ( dec_rf_instr_rs2_v),
   .rfr_rs2_adr_o        ( dec_rf_instr_rs2_adr),
   .rf_rs2_data_i        ( dec_rf_instr_rs2_data),
   .exe_ff_write_v_q_i   ( exe_ff_write_v_q),
@@ -123,13 +116,11 @@ exe u_exe(
   .pc_data_q_o          ( exe_if_pc0_write_data)
 );
 
-register_file u_rf(
+rf u_rf(
   .clk              ( clk),
   .reset_n          ( reset_n),
-  .rs1_v_i          ( dec_rf_instr_rs1_v),
   .rs1_adr_i        ( dec_rf_instr_rs1_adr),
   .rs1_data_o       ( dec_rf_instr_rs1_data),
-  .rs2_v_i          ( dec_rf_instr_rs2_v),
   .rs2_adr_i        ( dec_rf_instr_rs2_adr),
   .rs2_data_o       ( dec_rf_instr_rs2_data),
   .write_valid_i    ( exe_rf_instr_write_valid),

@@ -1,15 +1,13 @@
-import riscv::*;
+import riscv_pkg::*;
 
-module register_file(
+module rf(
     input logic clk,
     input logic reset_n,
     //----------------------------------------
     // Inputs
     //----------------------------------------
-    input  logic               rs1_v_i,
     input  logic [NB_REGS-1:0] rs1_adr_i,
     output logic [XLEN-1:0]    rs1_data_o,
-    input  logic               rs2_v_i,
     input  logic [NB_REGS-1:0] rs2_adr_i,
     output logic [XLEN-1:0]    rs2_data_o,
     //----------------------------------------

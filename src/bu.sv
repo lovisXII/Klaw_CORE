@@ -1,4 +1,4 @@
-import riscv::*;
+import riscv_pkg::*;
 
 module bu
 (

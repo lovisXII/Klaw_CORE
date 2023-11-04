@@ -1,4 +1,4 @@
-import riscv::*;
+import riscv_pkg::*;
 
 module dec (
   input logic                 clk,
@@ -9,16 +9,13 @@ module dec (
   input logic [XLEN-1:0]             instr_q_i,
   input logic [XLEN-1:0]             pc0_q_i,
   // Exception
-  output logic                       instr_illegal_q_o,
 // --------------------------------
 //      RF Interface
 // --------------------------------
   // Registers Source 1
-  output logic                       rf_rs1_v_o,
   output logic [4:0]                 rfr_rs1_adr_o,
   input logic [XLEN-1:0]             rf_rs1_data_i,
   // Registers Source 2
-  output logic                       rf_rs2_v_o,
   output logic [4:0]                 rfr_rs2_adr_o,
   input logic [XLEN-1:0]             rf_rs2_data_i,
 // --------------------------------
@@ -33,7 +30,6 @@ module dec (
   input logic [4:0]                   rf_ff_rd_adr_q_i,
   input logic [XLEN-1:0]              rf_ff_res_data_i,
   // PC
-  output logic                       instr_v_q_o,
   output logic [XLEN-1:0]            pc_q_o,
   // Registers Destination
   output logic                       rd_v_q_o,
@@ -46,15 +42,13 @@ module dec (
   output logic [2:0]                 access_size_q_o,
   output logic                       unsign_ext_q_o,
   output logic [NB_UNIT-1:0]         unit_q_o,
-  output logic [NB_OP_DECODED-1:0]   operation_q_o,
+  output logic [NB_OPERATION-1:0]    operation_q_o,
   // Flush signals
   input logic                        flush_v_q_i
 );
 // --------------------------------
 //      Signals declaration
 // --------------------------------
-  logic                       instr_illegal_inst_nxt;
-  logic                       instr_illegal_inst_q;
   logic                       instr_rd_v;
   // rd
   logic                       rd_v_nxt;
@@ -86,27 +80,24 @@ module dec (
   logic                       unsign_extension;
   logic                       unsign_extension_nxt;
   logic [NB_UNIT-1:0]         unit_nxt;
-  logic [NB_OP_DECODED-1:0]   operation;
+  logic [NB_OPERATION-1:0]    operation;
   logic                       rs2_ca2_v;
   // Flops
   logic                       rd_v_q;
   logic [XLEN:0]              rs1_data_q;
   logic [XLEN:0]              rs2_data_q;
-  logic                       instr_is_st_q;
-  logic                       instr_is_braq;
   logic [XLEN-1:0]            immediat;
   logic [XLEN-1:0]            immediat_q;
   logic [2:0]                 instr_access_size_q;
   logic                       unsign_extension_q;
   logic [NB_UNIT-1:0]         instr_unit_q;
-  logic [NB_OP_DECODED-1:0]   instr_operation_q;
+  logic [NB_OPERATION-1:0]    instr_operation_q;
 
 // --------------------------------
 //      Decoder
 // --------------------------------
 decoder dec0(
     .instr_i              (instr_q_i),
-    .illegal_inst_o       (instr_illegal_inst_nxt),
     .rd_v_o               (instr_rd_v),
     .rd_o                 (rd_adr_nxt),
     .rs1_v_o              (rs1_v),
@@ -163,7 +154,6 @@ assign rs2_data_nxt       = {XLEN+1{ rs2_ca2_v}} & ~rs2_data_extended + 32'b1
 
 always_ff @(posedge clk, negedge reset_n)
   if (!reset_n) begin
-              instr_illegal_inst_q     <= '0;
               rd_v_q                   <= '0;
               rd_adr_q                 <= '0;
               rs1_data_q               <= '0;
@@ -174,7 +164,6 @@ always_ff @(posedge clk, negedge reset_n)
               instr_operation_q        <= '0;
               pc_q_o                   <= '0;
   end else begin
-              instr_illegal_inst_q        <= instr_illegal_inst_nxt;
               rd_v_q                      <= rd_v_nxt;
               rd_adr_q                    <= rd_adr_nxt;
               rs1_data_q                  <= rs1_data_nxt;
@@ -190,12 +179,9 @@ always_ff @(posedge clk, negedge reset_n)
 // --------------------------------
 //      Ouputs
 // --------------------------------
-assign rf_rs1_v_o        = rs1_v;
 assign rfr_rs1_adr_o     = rs1_adr;
-assign rf_rs2_v_o        = rs2_v;
 assign rfr_rs2_adr_o     = rs2_adr;
 assign rd_v_q_o          = rd_v_q;
-assign instr_illegal_q_o = instr_illegal_inst_q;
 assign rd_adr_q_o        = rd_adr_q;
 assign rs1_data_qual_q_o = rs1_data_q;
 assign rs2_data_qual_q_o = rs2_data_q;

@@ -1,4 +1,4 @@
-import riscv::*;
+import riscv_pkg::*;
 
 module exe
 (
@@ -30,8 +30,8 @@ module exe
   output logic [XLEN-1:0]          adr_o,
   output logic                     is_store_o,
   output logic [XLEN-1:0]          store_data_o,
-  input  logic  [XLEN-1:0]          load_data_i,
-  output logic [2:0]                access_size_o,
+  input  logic  [XLEN-1:0]         load_data_i,
+  output logic [2:0]               access_size_o,
 // --------------------------------
 //      WBK
 // --------------------------------
@@ -108,10 +108,8 @@ bu u_bu(
 );
 lsu u_lsu(
     .rs1_data_i         (rs1_data_qual_q_i[XLEN-1:0]),
-    .rs2_data_i         (rs2_data_qual_q_i[XLEN-1:0]),
     .immediat_i         (immediat_q_i),
     .lsu_en_i           (lsu_en),
-    .cmd_i              (operation_q_i),
     .access_size_q_i    (access_size_q_i),
     .unsign_extension_i (unsign_extension_q_i),
     .load_data_i        (load_data_i),

@@ -1,9 +1,8 @@
-import riscv::*;
+import riscv_pkg::*;
 
 module decoder (
   input logic [XLEN-1:0]             instr_i,
   // Exception
-  output logic                       illegal_inst_o,
   // Registers
   output logic                       rd_v_o,
   output logic [4:0]                 rd_o,
@@ -137,6 +136,7 @@ logic csrrwi;
 logic csrrsi;
 logic csrrci;
 logic fence;
+logic illegal_inst;
 
 //-------------------------
 // Instruction decoding
@@ -213,7 +213,7 @@ always_comb begin
     csrrsi         = 1'b0;
     csrrci         = 1'b0;
     fence          = 1'b0;
-    illegal_inst_o = 1'b0;
+    illegal_inst   = 1'b0;
   case(opcode)
     R_TYPE   : r_type     = 1'b1;
     I_TYPE   : i_type     = 1'b1;
@@ -292,7 +292,7 @@ always_comb begin
     {P_TYPE, 3'b110, 7'b???????}        : csrrsi = 1'b1;
     {P_TYPE, 3'b111, 7'b???????}        : csrrci = 1'b1;
     {FENCE_TYPE , 3'b000, 7'b???????}   : fence  = 1'b1;
-    default : illegal_inst_o = 1'b1;
+    default : illegal_inst = 1'b1;
   endcase
 end
 

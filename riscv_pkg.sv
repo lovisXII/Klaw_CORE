@@ -1,4 +1,4 @@
-package riscv;
+package riscv_pkg;
 
 localparam XLEN                 = 32;
 localparam NB_REGS              = $clog2(XLEN);
@@ -204,38 +204,28 @@ typedef enum logic [11:0] {
 // lsu unit :
   // 01000 000001 : store
   // 01000 000010 : load
-typedef enum logic [2:0]{
-    ADD   = 3'd0,
-    AND   = 3'd1,
-    OR    = 3'd2,
-    XOR   = 3'd3, // loads
-    SLT   = 3'd4
-} unit_enc_t;
+localparam ADD= 0;
+localparam AND= 1;
+localparam OR = 2;
+localparam XOR= 3;
+localparam SLT= 4;
 
-typedef enum logic [1:0]{
-    ALU   = 2'd0, // Arithmetic logic unit
-    SFT   = 2'd1, // Shifter
-    BU    = 2'd2, // Branch unit
-    LSU   = 2'd3  // Load store unit
-} alu_instr_enc_t;
+localparam ALU= 0;
+localparam SFT= 1;
+localparam BU = 2;
+localparam LSU= 3;
 
-typedef enum logic [1:0]{
-    SLL   = 2'd0,
-    SRL   = 2'd1,
-    SRA   = 2'd2
-} shift_instr_enc_t;
+localparam SLL = 0;
+localparam SRL = 1;
+localparam SRA = 2;
 
-typedef enum logic [2:0]{
-    BEQ   = 3'd0,
-    BNE   = 3'd1,
-    BLT   = 3'd2, // priviledge type
-    BGE   = 3'd3,
-    JAL   = 3'd4, // 64 bits mul & r
-    JALR  = 3'd5
-} bu_instr_enc_t;
+localparam BEQ = 0;
+localparam BNE = 1;
+localparam BLT = 2;
+localparam BGE = 3;
+localparam JAL = 4;
+localparam JALR= 5;
 
-typedef enum logic [1:0]{
-    ST    = 2'd0,
-    LD    = 2'd1
-} lsu_instr_enc_t;
+localparam ST  = 0;
+localparam LD  = 1;
 endpackage
