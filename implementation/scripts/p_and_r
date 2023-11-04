@@ -1,6 +1,0 @@
-# delay calc example
-read_liberty implementation/open_pdks/sky130/sky130A/libs.ref/sky130_fd_sc_hs/lib/sky130_fd_sc_hs__ff_100C_1v95.lib
-read_verilog implementation/synth/synth.v
-link_design core
-create_clock -name clk -period 10 {clk}
-report_checks

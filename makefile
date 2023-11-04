@@ -4,18 +4,14 @@ RISC?=riscv32-unknown-elf-gcc
 SV2V?=bin/sv2v
 
 # SRC RTL
+SRC_DIR=src
 SRC=$(wildcard src/*.sv)
 ODIR= obj_dir
 TEST?=sw/tests/I/add/add_0.S
 DEBUG?=
 
 # Implementation
-SYNTH?=yosys
-IMPL_DIR=implementation
-IMPL?=$(IMPL_DIR)/OpenSTA/app/sta
-SYNTH_DIR=$(IMPL_DIR)/synth/
-YO_SCRIPT=$(IMPL_DIR)/scripts/synth.ys
-IMPL_SCRIPT=$(IMPL_DIR)/scripts/p_and_r
+IMPL_DIR=implementation/OpenLane/designs/core
 
 # VERILATOR
 VERILATOR_FLAGS=-sc -Wno-fatal -Wall --trace --pins-sc-uint
@@ -57,18 +53,15 @@ riscof_run: core_tb
 # Checker
 spike:
 	spike -p1 -g -l --log=spike.log --isa=rv32i --log-commits a.out
-# Synthesis
+# Implementation
+impl: sv2v
+	$(MAKE) -C implementation/OpenLane/ mount
 sv2v:
-	mkdir -p $(SYNTH_DIR)
-	$(SV2V) --verbose -I --incidr=$(SRC) $(PKG) --write=adjacent --write=$(SYNTH_DIR)
+	cp -rf implementation/designs/core/* $(IMPL_DIR)/
+	$(SV2V) --verbose -I --incidr=$(SRC_DIR) $(SRC) $(PKG) --write=adjacent --write=$(IMPL_DIR)/src/
 
-synth: sv2v
-	$(SYNTH) -qv3 -l synth.log $(YO_SCRIPT)
-
-p_and_r:synth
-	$(IMPL) $(IMPL_SCRIPT)
 clean:
 	rm -rf obj_dir/ *.vcd *.out.txt.s \
 	*.out kernel *.txt *.o *.log \
 	$(ODIR)
-	rm -rf implementation/synth/
+	rm -rf implementation/OpenLane/designs/core/src/*.v

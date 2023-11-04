@@ -124,4 +124,13 @@ You may not call the ``_good`` or ``_bad`` label, but if you do not when you pro
 
 # Implementation
 
-In progress
+To run the implementation we're using OpenLane.
+Commands :
+```sh
+make impl #will go to implementation/OpenLane and run make mount
+# After this command you will be in the docker environment
+./flow.tcl -design core -config_file designs/core/config.json
+klayout -e -nn $PDK_ROOT/sky130A/libs.tech/klayout/tech/sky130A.lyt \
+   -l $PDK_ROOT/sky130A/libs.tech/klayout/tech/sky130A.lyp \
+   ./designs/core/runs/results/final/gds/core.gds
+```
