@@ -1,0 +1,19 @@
+Design Name: core
+Run Directory: /openlane/designs/core/runs/RUN_2023.11.04_13.53.25
+----------------------------------------
+
+Magic DRC Summary:
+Source: /openlane/designs/core/runs/RUN_2023.11.04_13.53.25/reports/signoff/drc.rpt
+Total Magic DRC violations is 0
+----------------------------------------
+
+LVS Summary:
+Source: /openlane/designs/core/runs/RUN_2023.11.04_13.53.25/logs/signoff/41-core.lef.lvs.log
+Number of nets: 8056                       |Number of nets: 8056                       
+Design is LVS clean.
+----------------------------------------
+
+Antenna Summary:
+Source: /openlane/designs/core/runs/RUN_2023.11.04_13.53.25/logs/signoff/43-arc.log
+Pin violations: 71
+Net violations: 52
