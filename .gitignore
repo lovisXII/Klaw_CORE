@@ -11,7 +11,6 @@ logs/
 *.txt
 *.signature
 .vscode/*
-__pycache__/*
 */__pycache__/*
 riscof/riscof_work/rv32i_m/I/src/*
 riscof/riscof_work/database.yaml
@@ -27,5 +26,4 @@ riscof/riscof_work/projet_isa_checked.yaml
 riscof/riscof_work/test_list.yaml
 riscof/sail_cSim/__pycache__/*
 riscof/spike/__pycache__/*
-implementation/synth/
 implementation/open_pdks/*

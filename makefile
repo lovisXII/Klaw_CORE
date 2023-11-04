@@ -65,3 +65,6 @@ clean:
 	*.out kernel *.txt *.o *.log \
 	$(ODIR)
 	rm -rf implementation/OpenLane/designs/core/src/*.v
+
+clean_gdsii:
+	rm -rf implementation/OpenLane/designs/core/runs

@@ -129,10 +129,10 @@ Commands :
 ```sh
 make impl #will go to implementation/OpenLane and run make mount
 # After this command you will be in the docker environment
-./flow.tcl -design core -config_file designs/core/config.json
+./flow.tcl -design core -tag run_10ns -config_file designs/core/config.json
 klayout -e -nn $PDK_ROOT/sky130A/libs.tech/klayout/tech/sky130A.lyt \
    -l $PDK_ROOT/sky130A/libs.tech/klayout/tech/sky130A.lyp \
-   designs/core/runs/RUN_2023.11.04_13.53.25/results/final/gds/core.gds
+   designs/core/runs/run_10ns/results/final/gds/core.gds
 ```
 GDSII with skywater 130nm process
 ![](doc/img/gdsii.png)
