@@ -132,5 +132,7 @@ make impl #will go to implementation/OpenLane and run make mount
 ./flow.tcl -design core -config_file designs/core/config.json
 klayout -e -nn $PDK_ROOT/sky130A/libs.tech/klayout/tech/sky130A.lyt \
    -l $PDK_ROOT/sky130A/libs.tech/klayout/tech/sky130A.lyp \
-   ./designs/core/runs/results/final/gds/core.gds
+   designs/core/runs/RUN_2023.11.04_13.53.25/results/final/gds/core.gds
 ```
+GDSII with skywater 130nm process
+![](doc/img/gdsii.png)
