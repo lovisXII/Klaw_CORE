@@ -57,6 +57,7 @@ spike:
 impl: sv2v
 	$(MAKE) -C implementation/OpenLane/ mount
 sv2v:
+	mkdir -p $(IMPL_DIR)
 	cp -rf implementation/designs/core/* $(IMPL_DIR)/
 	$(SV2V) --verbose -I --incidr=$(SRC_DIR) $(SRC) $(PKG) --write=adjacent --write=$(IMPL_DIR)/src/
 
