@@ -11,7 +11,7 @@ TEST?=sw/tests/I/add/add_0.S
 DEBUG?=
 
 # Implementation
-IMPL_DIR=implementation/OpenLane/designs/core
+IMPL_DIR=implementation/OpenLane/designs/core/
 
 # VERILATOR
 VERILATOR_FLAGS=-sc -Wno-fatal -Wall --trace --pins-sc-uint

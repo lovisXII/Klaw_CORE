@@ -1,14 +1,19 @@
 {
-    "PDK": "sky130A",
-    "RUN_LINTER":0,
     "DESIGN_NAME": "core",
     "VERILOG_FILES": "dir::src/*.v",
+    "PDK": "sky130A",
+    "RUN_LINTER":0,
+
     "CLOCK_PERIOD": 10,
     "CLOCK_PORT": "clk",
     "CLOCK_NET": "ref::$CLOCK_PORT",
+
+    "SYNTH_AUTONAME":1,
+    "SYNTH_BIN":"yosys",
+    "SYNTH_STRATEGY":"DELAY",
+    "SYNTH_BUFFERING":1,
+
     "STD_CELL_LIBRARY":"sky130_fd_sc_hd",
-    "FP_PDN_VOFFSET": 7,
-    "FP_PDN_HOFFSET": 7,
     "FP_PDN_SKIPTRIM": true,
     "pdk::sky130*": {
         "FP_CORE_UTIL": 45,
