@@ -19,6 +19,12 @@ module dec (
   output logic [4:0]                 rfr_rs2_adr_o,
   input logic [XLEN-1:0]             rf_rs2_data_i,
 // --------------------------------
+//      CSR Interface
+// --------------------------------
+  output logic [11:0]                 csr_adr_o,
+  output logic                        csr_wbk_o,
+  input  logic [XLEN-1:0]             csr_data_i,
+// --------------------------------
 //      Execute Interface
 // --------------------------------
   // Fast forwards from EXE
@@ -34,6 +40,9 @@ module dec (
   // Registers Destination
   output logic                       rd_v_q_o,
   output logic [4:0]                 rd_adr_q_o,
+  // Csr destination
+  output logic                       csr_wbk_q_o,
+  output logic [11:0]                csr_adr_q_o,
   // Source registers
   output logic [XLEN:0]              rs1_data_qual_q_o,
   output logic [XLEN:0]              rs2_data_qual_q_o,
@@ -65,6 +74,11 @@ module dec (
   logic [XLEN-1:0]            rs2_data;
   logic [XLEN:0]              rs2_data_extended;
   logic [XLEN:0]              rs2_data_nxt;
+  // csr
+  logic [11:0]                csr_adr_nxt;
+  logic [11:0]                csr_adr_q;
+  logic [XLEN-1:0]            csr_data_nxt;
+  logic [XLEN-1:0]            csr_data_q;
   // EXE ff
   logic                       exe_ff_rs1_adr_match;
   logic                       exe_ff_rs2_adr_match;
@@ -97,13 +111,18 @@ module dec (
 decoder dec0(
     .instr_i              (instr_q_i),
     .rd_v_o               (instr_rd_v),
-    .rd_o                 (rd_adr_nxt),
+    .rd_adr_o             (rd_adr_nxt),
+    .csr_read_v_o         (csr_v),
+    .csr_wbk_o            (csr_wbk_nxt),
+    .csr_clear_o          (csr_clear),
+    .csr_adr_o            (csr_adr),
     .rs1_v_o              (rs1_v),
     .rs1_adr_o            (rs1_adr),
     .rs2_v_o              (rs2_v),
     .rs2_adr_o            (rs2_adr),
     .auipc_o              (auipc),
     .rs2_is_immediat_o    (rs2_is_immediat),
+    .rs2_is_csr_o         (rs2_is_csr),
     .immediat_o           (immediat),
     .access_size_o        (instr_access_size_nxt),
     .unsign_extension_o   (unsign_extension),
@@ -132,18 +151,24 @@ assign rs1_data       = {XLEN{rs1_v}} & ({XLEN{~exe_ff_rs1_adr_match & ~rf_ff_rs
                                        | {XLEN{ rf_ff_rs1_adr_match}}                         & rf_ff_res_data_q_i)
                       | {XLEN{auipc}} & pc0_q_i;
 
-assign rs1_data_nxt   = {~unsign_extension & rs1_data[31], rs1_data};
+assign rs1_data_nxt   = { ~unsign_extension & rs1_data[31],
+                         ({XLEN{~csr_clear}} & rs1_data) | ({XLEN{csr_clear}} & ~rs1_data)
+                        };
 // Operand 2 value
 assign rs2_data       = {XLEN{rs2_v & ~exe_ff_rs2_adr_match & ~rf_ff_rs2_adr_match}} & rf_rs2_data_i     // no ff, no imm, data from RF
                       | {XLEN{rs2_v &  exe_ff_rs2_adr_match}}                        & exe_ff_res_data_q_i // exe ff
                       | {XLEN{rs2_v &  rf_ff_rs2_adr_match}}                         & rf_ff_res_data_q_i  // rf ff
-                      | {XLEN{rs2_is_immediat}}                                      & immediat;   // immediat
+                      | {XLEN{rs2_is_immediat}}                                      & immediat   // immediat
+                      | {XLEN{rs2_is_csr}}                                           & csr_data_nxt;
 
 assign rs2_data_extended  = {~unsign_extension & rs2_data[31], rs2_data};
 assign rs2_data_nxt       = {XLEN+1{ rs2_ca2_v}} & ~rs2_data_extended + 32'b1
                           | {XLEN+1{~rs2_ca2_v}} &  rs2_data_extended;
 
-
+// Csr value
+assign csr_adr_nxt  = {12{csr_v}} & csr_adr;
+assign csr_data_nxt = csr_data_i;
+assign csr_adr_o    = csr_adr_nxt;
 // --------------------------------
 //      Flopping outputs
 // --------------------------------
@@ -159,17 +184,21 @@ always_ff @(posedge clk, negedge reset_n)
               instr_unit_q             <= '0;
               instr_operation_q        <= '0;
               pc_q_o                   <= '0;
+              csr_adr_q                <= '0;
+              csr_wbk_q                <= '0;
   end else begin
-              rd_v_q                      <= rd_v_nxt;
-              rd_adr_q                    <= rd_adr_nxt;
-              rs1_data_q                  <= rs1_data_nxt;
-              rs2_data_q                  <= rs2_data_nxt;
-              immediat_q                  <= immediat;
-              instr_access_size_q         <= instr_access_size_nxt;
-              unsign_extension_q          <= unsign_extension_nxt;
-              instr_unit_q                <= unit_nxt;
-              instr_operation_q           <= operation;
-              pc_q_o                      <= pc0_q_i;
+              rd_v_q                   <= rd_v_nxt;
+              rd_adr_q                 <= rd_adr_nxt;
+              rs1_data_q               <= rs1_data_nxt;
+              rs2_data_q               <= rs2_data_nxt;
+              immediat_q               <= immediat;
+              instr_access_size_q      <= instr_access_size_nxt;
+              unsign_extension_q       <= unsign_extension_nxt;
+              instr_unit_q             <= unit_nxt;
+              instr_operation_q        <= operation;
+              pc_q_o                   <= pc0_q_i;
+              csr_adr_q                <= csr_adr_nxt;
+              csr_wbk_q                <= csr_wbk_nxt;
   end
 
 // --------------------------------
@@ -186,5 +215,7 @@ assign access_size_q_o   = instr_access_size_q;
 assign unsign_ext_q_o    = unsign_extension_q;
 assign unit_q_o          = instr_unit_q;
 assign operation_q_o     = instr_operation_q;
+assign csr_adr_q_o       = csr_adr_q;
+assign csr_wbk_q_o       = csr_wbk_q;
 
 endmodule

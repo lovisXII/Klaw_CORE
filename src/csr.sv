@@ -1,8 +1,9 @@
 module csr(
     input  logic            clk,
     input  logic            reset,
-    input  logic            write_v,
-    input  logic [11:0]     adr_i,
+    input  logic            write_v_i,
+    input  logic [11:0]     adr_read_i,
+    input  logic [11:0]     adr_write_i,
     input  logic [XLEN-1:0] data_i,
     output logic [XLEN-1:0] data_o,
 );
@@ -33,18 +34,18 @@ logic [XLEN-1:0] mip_q;
 logic            mscratch_nxt_v;
 logic [XLEN-1:0] mscratch_q;
 
-assign mvendorid_nxt_v    = write_v & (CSR_MVENDORID == adr_i);
-assign marchid_nxt_v      = write_v & (CSR_MARCHID   == adr_i);
-assign mimpid_nxt_v       = write_v & (CSR_MIMPID    == adr_i);
-assign mstatus_nxt_v      = write_v & (CSR_MSTATUS   == adr_i);
-assign misa_nxt_v         = write_v & (CSR_MISA      == adr_i);
-assign mie_nxt_v          = write_v & (CSR_MIE       == adr_i);
-assign mtvec_nxt_v        = write_v & (CSR_MTVEC     == adr_i);
-assign mstatush_nxt_v     = write_v & (CSR_MSTATUSH  == adr_i);
-assign mepc_nxt_v         = write_v & (CSR_MEPC      == adr_i);
-assign mtval_nxt_v        = write_v & (CSR_MTVAL     == adr_i);
-assign mip_nxt_v          = write_v & (CSR_MIP       == adr_i);
-assign mscratch_nxt_v     = write_v & (CSR_MSCRATCH  == adr_i);
+assign mvendorid_nxt_v    = write_v_i & (CSR_MVENDORID == adr_write_i);
+assign marchid_nxt_v      = write_v_i & (CSR_MARCHID   == adr_write_i);
+assign mimpid_nxt_v       = write_v_i & (CSR_MIMPID    == adr_write_i);
+assign mstatus_nxt_v      = write_v_i & (CSR_MSTATUS   == adr_write_i);
+assign misa_nxt_v         = write_v_i & (CSR_MISA      == adr_write_i);
+assign mie_nxt_v          = write_v_i & (CSR_MIE       == adr_write_i);
+assign mtvec_nxt_v        = write_v_i & (CSR_MTVEC     == adr_write_i);
+assign mstatush_nxt_v     = write_v_i & (CSR_MSTATUSH  == adr_write_i);
+assign mepc_nxt_v         = write_v_i & (CSR_MEPC      == adr_write_i);
+assign mtval_nxt_v        = write_v_i & (CSR_MTVAL     == adr_write_i);
+assign mip_nxt_v          = write_v_i & (CSR_MIP       == adr_write_i);
+assign mscratch_nxt_v     = write_v_i & (CSR_MSCRATCH  == adr_write_i);
 
 always_ff @(posedge clk, negedge reset_n) begin
     if (~reset_n) begin
