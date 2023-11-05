@@ -49,6 +49,7 @@ module exe
   // CSR interface
   output logic                      csr_wbk_v_q_o,
   output logic [11:0]               csr_adr_q_o,
+  output logic [XLEN-1:0]           csr_data_q_o,
   output logic                      flush_v_q_o,
   output logic [XLEN-1:0]           pc_data_q_o
 
@@ -71,6 +72,12 @@ logic [XLEN-1:0]          bu_data_res;
 logic                     lsu_en;
 logic [XLEN-1:0]          lsu_res_data;
 // Wbk signals
+logic                     csr_wbk_v_nxt;
+logic                     csr_wbk_v_q;
+logic [11:0]              csr_adr_nxt;
+logic [11:0]              csr_adr_q;
+logic [XLEN-1:0]          csr_data_nxt;
+logic [XLEN-1:0]          csr_data_q;
 logic                     rd_v_nxt;
 logic                     rd_v_q;
 logic [4:0]               rd_adr_q;
@@ -155,12 +162,12 @@ assign pc_data_nxt  = bu_pc_res;
 
 assign rd_v_nxt     = rd_v_q_i & ~flush_v_q & ~flush_v_dly1_q;
 assign res_data_nxt = {XLEN{alu_en & ~csr_wbk_i}} & alu_res_data
-                    | {XLEN{alu_en &  csr_wbk_i}} & rs1_data_qual_q_i
+                    | {XLEN{alu_en &  csr_wbk_i}} & rs1_data_qual_q_i[XLEN-1:0]
                     | {XLEN{shifter_en}}          & shifter_res_data
                     | {XLEN{bu_en}}               & bu_data_res
                     | {XLEN{lsu_en}}              & lsu_res_data;
 
-assign csr_wbk_v    = csr_wbk_i;
+assign csr_wbk_v_nxt    = csr_wbk_i;
 assign csr_data_nxt = {XLEN{alu_en & csr_wbk_i}} & alu_res_data;
 // --------------------------------
 //      Flopping outputs
@@ -175,6 +182,7 @@ always_ff @(posedge clk, negedge reset_n)
     pc_data_q         <= '0;
     csr_wbk_v_q       <= '0;
     csr_data_q        <= '0;
+    csr_adr_q         <= '0;
   end else begin
     rd_v_q            <= rd_v_nxt;
     rd_adr_q          <= rd_adr_q_i;
@@ -184,6 +192,7 @@ always_ff @(posedge clk, negedge reset_n)
     pc_data_q         <= pc_data_nxt;
     csr_wbk_v_q       <= csr_wbk_v_nxt;
     csr_data_q        <= csr_data_nxt;
+    csr_adr_q         <= csr_adr_nxt;
 end
 
 // --------------------------------
@@ -198,6 +207,7 @@ assign wbk_data_q_o        = res_data_q;
 assign flush_v_q_o         = flush_v_q;
 assign pc_data_q_o         = pc_data_q;
 assign csr_wbk_v_q_o       = csr_wbk_v_q;
+assign csr_adr_q_o         = csr_adr_nxt;
 assign csr_data_q_o        = csr_data_q;
 
 endmodule
