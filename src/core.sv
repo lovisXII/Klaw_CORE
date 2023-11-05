@@ -76,6 +76,9 @@ dec u_decod(
   .pc_q_o               ( dec_exe_pc_q),
   .rd_v_q_o             ( dec_exe_rd_v_q),
   .rd_adr_q_o           ( dec_exe_rd_adr_q),
+  .csr_adr_o            (dec_csr_adr),
+  .csr_wbk_o            (dec_exe_csr_wbk),
+  .csr_data_i           (dec_exe_csr_data),
   .rs1_data_qual_q_o    ( dec_exe_rs1_data_q),
   .rs2_data_qual_q_o    ( dec_exe_rs2_data_q),
   .branch_imm_q_o       ( exe_immediat_q),
@@ -84,7 +87,6 @@ dec u_decod(
   .unit_q_o             ( dec_exe_unit_q),
   .operation_q_o        ( dec_exe_operation_q),
   .flush_v_q_i          ( flush_v_q)
-
 );
 
 exe u_exe(
@@ -93,6 +95,8 @@ exe u_exe(
   .pc_q_i               ( dec_exe_pc_q),
   .rd_v_q_i             ( dec_exe_rd_v_q),
   .rd_adr_q_i           ( dec_exe_rd_adr_q),
+  .csr_wbk_i            (dec_exe_csr_wbk),
+  .csr_adr_i            (dec_exe_csr_data),
   .rs1_data_qual_q_i    ( dec_exe_rs1_data_q),
   .rs2_data_qual_q_i    ( dec_exe_rs2_data_q),
   .immediat_q_i         ( exe_immediat_q),
@@ -127,6 +131,16 @@ rf u_rf(
   .write_adr_i      ( wbk_adr_q),
   .write_data_i     ( wbk_data_q)
 
+);
+
+csr u_csr(
+  .clk              (clk),
+  .reset_n          (reset_n),
+  .write_v_i        (exe_csr_wbk_v_q),
+  .adr_read_i       (dec_csr_adr),
+  .adr_write_i      (exe_csr_adr_q),
+  .data_i           (dec_csr_data),
+  .data_o           (csr_dec_data)
 );
 
 endmodule

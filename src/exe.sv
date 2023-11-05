@@ -13,6 +13,9 @@ module exe
   // Destination
   input logic                       rd_v_q_i,
   input logic [4:0]                 rd_adr_q_i,
+  // Csr
+  input logic                       csr_wbk_i,
+  input logic [11:0]                csr_adr_i,
   // Source 1
   input logic [XLEN:0]              rs1_data_qual_q_i,
   // Source 2
@@ -35,12 +38,17 @@ module exe
 // --------------------------------
 //      WBK
 // --------------------------------
+  // forwards
   output logic                      exe_ff_w_v_q_o,
   output logic [NB_REGS-1:0]        exe_ff_rd_adr_q_o,
   output logic [XLEN-1:0]           exe_ff_res_data_q_o,
+  // RF interface
   output logic                      wbk_v_q_o,
   output logic [XLEN-1:0]           wbk_data_q_o,
   output logic [NB_REGS-1:0]        wbk_adr_q_o,
+  // CSR interface
+  output logic                      csr_wbk_v_q_o,
+  output logic [11:0]               csr_adr_q_o,
   output logic                      flush_v_q_o,
   output logic [XLEN-1:0]           pc_data_q_o
 
@@ -146,12 +154,14 @@ assign branch_v_nxt = branch_v;
 assign pc_data_nxt  = bu_pc_res;
 
 assign rd_v_nxt     = rd_v_q_i & ~flush_v_q & ~flush_v_dly1_q;
-assign res_data_nxt = {XLEN{alu_en}}        & alu_res_data
-                    | {XLEN{shifter_en}}    & shifter_res_data
-                    | {XLEN{bu_en}}         & bu_data_res
-                    | {XLEN{lsu_en}}        & lsu_res_data;
+assign res_data_nxt = {XLEN{alu_en & ~csr_wbk_i}} & alu_res_data
+                    | {XLEN{alu_en &  csr_wbk_i}} & rs1_data_qual_q_i
+                    | {XLEN{shifter_en}}          & shifter_res_data
+                    | {XLEN{bu_en}}               & bu_data_res
+                    | {XLEN{lsu_en}}              & lsu_res_data;
 
-
+assign csr_wbk_v    = csr_wbk_i;
+assign csr_data_nxt = {XLEN{alu_en & csr_wbk_i}} & alu_res_data;
 // --------------------------------
 //      Flopping outputs
 // --------------------------------
@@ -163,6 +173,8 @@ always_ff @(posedge clk, negedge reset_n)
     flush_v_q         <= '0;
     flush_v_dly1_q    <= '0;
     pc_data_q         <= '0;
+    csr_wbk_v_q       <= '0;
+    csr_data_q        <= '0;
   end else begin
     rd_v_q            <= rd_v_nxt;
     rd_adr_q          <= rd_adr_q_i;
@@ -170,6 +182,8 @@ always_ff @(posedge clk, negedge reset_n)
     flush_v_q         <= branch_v_nxt;
     flush_v_dly1_q    <= flush_v_q;
     pc_data_q         <= pc_data_nxt;
+    csr_wbk_v_q       <= csr_wbk_v_nxt;
+    csr_data_q        <= csr_data_nxt;
 end
 
 // --------------------------------
@@ -178,10 +192,12 @@ end
 assign exe_ff_w_v_q_o      = rd_v_nxt;
 assign exe_ff_rd_adr_q_o   = rd_adr_q_i;
 assign exe_ff_res_data_q_o = res_data_nxt;
-assign wbk_v_q_o         = rd_v_q;
-assign wbk_adr_q_o = rd_adr_q;
-assign wbk_data_q_o  = res_data_q;
+assign wbk_v_q_o           = rd_v_q;
+assign wbk_adr_q_o         = rd_adr_q;
+assign wbk_data_q_o        = res_data_q;
 assign flush_v_q_o         = flush_v_q;
 assign pc_data_q_o         = pc_data_q;
+assign csr_wbk_v_q_o       = csr_wbk_v_q;
+assign csr_data_q_o        = csr_data_q;
 
 endmodule
