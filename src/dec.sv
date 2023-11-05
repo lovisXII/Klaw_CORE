@@ -169,7 +169,7 @@ assign rs2_data_nxt       = {XLEN+1{ rs2_ca2_v}} & ~rs2_data_extended + 32'b1
                           | {XLEN+1{~rs2_ca2_v}} &  rs2_data_extended;
 
 // Csr value
-assign csr_adr_nxt  = {12{csr_read_v}} & csr_adr;
+assign csr_adr_nxt  = csr_adr;
 assign csr_adr_o    = csr_adr_nxt;
 // --------------------------------
 //      Flopping outputs

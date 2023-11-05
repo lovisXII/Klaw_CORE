@@ -44,13 +44,13 @@ module exe
   output logic [XLEN-1:0]           exe_ff_res_data_q_o,
   // RF interface
   output logic                      res_w_v_q_o,
-  output logic [XLEN-1:0]           instr_wbk_data_q_o,
+  output logic [XLEN-1:0]           wbk_data_q_o,
   // CSR interface
   output logic                      csr_wbk_v_q_o,
   output logic [11:0]               csr_adr_q_o,
   output logic [XLEN-1:0]           csr_data_q_o,
   // PC interfaces
-  output logic [NB_REGS-1:0]        instr_write_adr_q_o,
+  output logic [NB_REGS-1:0]        wbk_adr_q_o,
   output logic                      flush_v_q_o,
   output logic [XLEN-1:0]           pc_data_q_o
 
@@ -168,8 +168,9 @@ assign res_data_nxt = {XLEN{alu_en & ~csr_wbk_i}} & alu_res_data
                     | {XLEN{bu_en}}               & bu_data_res
                     | {XLEN{lsu_en}}              & lsu_res_data;
 
-assign csr_wbk_v_nxt    = csr_wbk_i;
-assign csr_data_nxt = {XLEN{alu_en & csr_wbk_i}} & alu_res_data;
+assign csr_wbk_v_nxt = alu_en & csr_wbk_i;
+assign csr_adr_nxt   = csr_adr_i;
+assign csr_data_nxt  = alu_res_data;
 // --------------------------------
 //      Flopping outputs
 // --------------------------------
@@ -199,16 +200,16 @@ end
 // --------------------------------
 //      Ouputs
 // --------------------------------
-assign exe_ff_write_v_q_o    = rd_v_nxt;
-assign exe_ff_rd_adr_q_o     = rd_adr_q_i;
-assign exe_ff_res_data_q_o   = res_data_nxt;
-assign res_w_v_q_o           = rd_v_q;
-assign instr_write_adr_q_o   = rd_adr_q;
-assign instr_wbk_data_q_o    = res_data_q;
-assign flush_v_q_o           = flush_v_q;
-assign pc_data_q_o           = pc_data_q;
-assign csr_wbk_v_q_o         = csr_wbk_v_q;
-assign csr_adr_q_o           = csr_adr_nxt;
-assign csr_data_q_o          = csr_data_q;
+assign exe_ff_write_v_q_o  = rd_v_nxt;
+assign exe_ff_rd_adr_q_o   = rd_adr_q_i;
+assign exe_ff_res_data_q_o = res_data_nxt;
+assign res_w_v_q_o         = rd_v_q;
+assign wbk_adr_q_o         = rd_adr_q;
+assign wbk_data_q_o        = res_data_q;
+assign flush_v_q_o         = flush_v_q;
+assign pc_data_q_o         = pc_data_q;
+assign csr_wbk_v_q_o       = csr_wbk_v_q;
+assign csr_adr_q_o         = csr_adr_nxt;
+assign csr_data_q_o        = csr_data_q;
 
 endmodule

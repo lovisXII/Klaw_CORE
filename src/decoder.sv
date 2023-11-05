@@ -318,7 +318,8 @@ assign rd_v_o    = rd_v;
 assign rd_adr_o  = rd_adr;
 // Csr register
 assign csr_adr_v    = |rd_adr;
-assign csr_wbk_o    = (csrrs  | csrrc | csrrsi | csrrci) & ~&rs1_adr;
+assign csr_wbk_o    = csrrw | csrrwi
+                    | ((csrrs  | csrrc | csrrsi | csrrci) & ~&rs1_adr);
 assign csr_clear_o  = csrrc | csrrci;
 assign csr_read_v_o = csr_adr_v;
 assign csr_adr_o    = instr_i[31:20];
