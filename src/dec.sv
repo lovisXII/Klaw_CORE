@@ -13,16 +13,15 @@ module dec (
 //      RF Interface
 // --------------------------------
   // Registers Source 1
-  output logic [4:0]                 rfr_rs1_adr_o,
+  output logic [4:0]                 rf_rs1_adr_o,
   input logic [XLEN-1:0]             rf_rs1_data_i,
   // Registers Source 2
-  output logic [4:0]                 rfr_rs2_adr_o,
+  output logic [4:0]                 rf_rs2_adr_o,
   input logic [XLEN-1:0]             rf_rs2_data_i,
 // --------------------------------
 //      CSR Interface
 // --------------------------------
   output logic [11:0]                 csr_adr_o,
-  output logic                        csr_wbk_o,
   input  logic [XLEN-1:0]             csr_data_i,
 // --------------------------------
 //      Execute Interface
@@ -75,10 +74,14 @@ module dec (
   logic [XLEN:0]              rs2_data_extended;
   logic [XLEN:0]              rs2_data_nxt;
   // csr
+  logic                       rs2_is_csr;
+  logic                       csr_read_v;
+  logic                       csr_clear;
+  logic                       csr_wbk_nxt;
+  logic                       csr_wbk_q;
+  logic [11:0]                csr_adr;
   logic [11:0]                csr_adr_nxt;
   logic [11:0]                csr_adr_q;
-  logic [XLEN-1:0]            csr_data_nxt;
-  logic [XLEN-1:0]            csr_data_q;
   // EXE ff
   logic                       exe_ff_rs1_adr_match;
   logic                       exe_ff_rs2_adr_match;
@@ -112,7 +115,7 @@ decoder dec0(
     .instr_i              (instr_q_i),
     .rd_v_o               (instr_rd_v),
     .rd_adr_o             (rd_adr_nxt),
-    .csr_read_v_o         (csr_v),
+    .csr_read_v_o         (csr_read_v),
     .csr_wbk_o            (csr_wbk_nxt),
     .csr_clear_o          (csr_clear),
     .csr_adr_o            (csr_adr),
@@ -159,15 +162,14 @@ assign rs2_data       = {XLEN{rs2_v & ~exe_ff_rs2_adr_match & ~rf_ff_rs2_adr_mat
                       | {XLEN{rs2_v &  exe_ff_rs2_adr_match}}                        & exe_ff_res_data_q_i // exe ff
                       | {XLEN{rs2_v &  rf_ff_rs2_adr_match}}                         & rf_ff_res_data_q_i  // rf ff
                       | {XLEN{rs2_is_immediat}}                                      & immediat   // immediat
-                      | {XLEN{rs2_is_csr}}                                           & csr_data_nxt;
+                      | {XLEN{rs2_is_csr}}                                           & csr_data_i;
 
 assign rs2_data_extended  = {~unsign_extension & rs2_data[31], rs2_data};
 assign rs2_data_nxt       = {XLEN+1{ rs2_ca2_v}} & ~rs2_data_extended + 32'b1
                           | {XLEN+1{~rs2_ca2_v}} &  rs2_data_extended;
 
 // Csr value
-assign csr_adr_nxt  = {12{csr_v}} & csr_adr;
-assign csr_data_nxt = csr_data_i;
+assign csr_adr_nxt  = {12{csr_read_v}} & csr_adr;
 assign csr_adr_o    = csr_adr_nxt;
 // --------------------------------
 //      Flopping outputs
@@ -204,8 +206,8 @@ always_ff @(posedge clk, negedge reset_n)
 // --------------------------------
 //      Ouputs
 // --------------------------------
-assign rfr_rs1_adr_o     = rs1_adr;
-assign rfr_rs2_adr_o     = rs2_adr;
+assign rf_rs1_adr_o     = rs1_adr;
+assign rf_rs2_adr_o     = rs2_adr;
 assign rd_v_q_o          = rd_v_q;
 assign rd_adr_q_o        = rd_adr_q;
 assign rs1_data_qual_q_o = rs1_data_q;

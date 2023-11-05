@@ -1,11 +1,11 @@
 module csr(
     input  logic            clk,
-    input  logic            reset,
+    input  logic            reset_n,
     input  logic            write_v_i,
     input  logic [11:0]     adr_read_i,
     input  logic [11:0]     adr_write_i,
     input  logic [XLEN-1:0] data_i,
-    output logic [XLEN-1:0] data_o,
+    output logic [XLEN-1:0] data_o
 );
 logic            mvendorid_nxt_v;
 logic [XLEN-1:0] mvendorid_q;
@@ -43,6 +43,7 @@ assign mie_nxt_v          = write_v_i & (CSR_MIE       == adr_write_i);
 assign mtvec_nxt_v        = write_v_i & (CSR_MTVEC     == adr_write_i);
 assign mstatush_nxt_v     = write_v_i & (CSR_MSTATUSH  == adr_write_i);
 assign mepc_nxt_v         = write_v_i & (CSR_MEPC      == adr_write_i);
+assign mcause_nxt_v       = write_v_i & (CSR_MCAUSE    == adr_write_i);
 assign mtval_nxt_v        = write_v_i & (CSR_MTVAL     == adr_write_i);
 assign mip_nxt_v          = write_v_i & (CSR_MIP       == adr_write_i);
 assign mscratch_nxt_v     = write_v_i & (CSR_MSCRATCH  == adr_write_i);
@@ -131,6 +132,24 @@ always_ff @(posedge clk, negedge reset_n) begin
 end
 always_ff @(posedge clk, negedge reset_n) begin
     if (~reset_n) begin
+            mepc_q <= 32'h0;
+    end else begin
+        if (mepc_nxt_v) begin
+            mepc_q <= data_i;
+        end
+    end
+end
+always_ff @(posedge clk, negedge reset_n) begin
+    if (~reset_n) begin
+            mcause_q <= 32'h0;
+    end else begin
+        if (mcause_nxt_v) begin
+            mcause_q <= data_i;
+        end
+    end
+end
+always_ff @(posedge clk, negedge reset_n) begin
+    if (~reset_n) begin
             mtval_q <= 32'h0;
     end else begin
         if (mtval_nxt_v) begin
@@ -156,4 +175,21 @@ always_ff @(posedge clk, negedge reset_n) begin
         end
     end
 end
+
+assign data_o = 32'b0
+              | {XLEN{(CSR_MVENDORID == adr_read_i)}} & mvendorid_q
+              | {XLEN{(CSR_MARCHID   == adr_read_i)}} & marchid_q
+              | {XLEN{(CSR_MIMPID    == adr_read_i)}} & mimpid_q
+              | {XLEN{(CSR_MSTATUS   == adr_read_i)}} & mstatus_q
+              | {XLEN{(CSR_MISA      == adr_read_i)}} & misa_q
+              | {XLEN{(CSR_MIE       == adr_read_i)}} & mie_q
+              | {XLEN{(CSR_MTVEC     == adr_read_i)}} & mtvec_q
+              | {XLEN{(CSR_MSTATUSH  == adr_read_i)}} & mstatush_q
+              | {XLEN{(CSR_MEPC      == adr_read_i)}} & mepc_q
+              | {XLEN{(CSR_MCAUSE    == adr_read_i)}} & mcause_q
+              | {XLEN{(CSR_MTVAL     == adr_read_i)}} & mtval_q
+              | {XLEN{(CSR_MIP       == adr_read_i)}} & mip_q
+              | {XLEN{(CSR_MSCRATCH  == adr_read_i)}} & mscratch_q
+              ;
+
 endmodule

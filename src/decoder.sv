@@ -9,7 +9,7 @@ module decoder (
   // Csr
   output logic                       csr_read_v_o,
   output logic                       csr_wbk_o,
-  output logic                       csr_clear_o
+  output logic                       csr_clear_o,
   output logic [11:0]                csr_adr_o,
   // rs1
   output logic                       rs1_v_o,
@@ -21,7 +21,7 @@ module decoder (
   output logic                       auipc_o,
   output logic                       rs2_is_immediat_o,
   output logic                       rs2_is_csr_o,
-  output logic [31:0]                immediat_o,
+  output logic [XLEN-1:0]            immediat_o,
   output logic [2:0]                 access_size_o,
   output logic                       unsign_extension_o,
   output logic [NB_UNIT-1:0]         unit_o,
@@ -315,13 +315,13 @@ assign rd_v      = r_type | i_type | l_type | fence | p_type & ~(ecall | ebreak)
                  | is_csr;
 assign rd_adr    = {5{rd_v}} & instr_i[11:7];
 assign rd_v_o    = rd_v;
-assign rd_adr_o  = rd;
+assign rd_adr_o  = rd_adr;
 // Csr register
 assign csr_adr_v    = |rd_adr;
-assign csr_wbk_o    = (csrrs  | csrrc | csrrsi | csrci) & ~&rs1_adr;
+assign csr_wbk_o    = (csrrs  | csrrc | csrrsi | csrrci) & ~&rs1_adr;
 assign csr_clear_o  = csrrc | csrrci;
 assign csr_read_v_o = csr_adr_v;
-assign csr_adr_o    = instr[31:20];
+assign csr_adr_o    = instr_i[31:20];
 // src1 register
 assign rs1_v     = (r_type | i_type | jalr | b_type | s_type | l_type | fence
                   | p_type & ~(ecall | ebreak | is_csr)
@@ -353,7 +353,7 @@ assign immediat_o          = {32{(i_type | jalr | l_type)}}  & {{20{instr_i[31]}
                            | {32{b_type}}                    & {{19{instr_i[31]}}, instr_i[31],instr_i[7],instr_i[30:25],instr_i[11:8],1'b0}
                            | {32{jal}}                       & {{11{instr_i[31]}}, instr_i[31],instr_i[19:12],instr_i[20],instr_i[30:21],1'b0}
                            | {32{auipc | lui}}               & {instr_i[31:12], 12'b0}
-                           | {32{csrrwi | csrrsi | csrrci}}  & {28'd0, instr_i[19:15]};
+                           | {32{csrrwi | csrrsi | csrrci}}  & {27'd0, instr_i[19:15]};
 // slt will be treated as an addition
 // We will perform :
 // res = rs2 - rs1
