@@ -167,8 +167,9 @@ assign res_data_nxt = {XLEN{alu_en & ~csr_wbk_i}} & alu_res_data
                     | {XLEN{bu_en}}               & bu_data_res
                     | {XLEN{lsu_en}}              & lsu_res_data;
 
-assign csr_wbk_v_nxt    = csr_wbk_i;
-assign csr_data_nxt = {XLEN{alu_en & csr_wbk_i}} & alu_res_data;
+assign csr_wbk_v_nxt = alu_en & csr_wbk_i;
+assign csr_adr_nxt   = csr_adr_i;
+assign csr_data_nxt  = alu_res_data;
 // --------------------------------
 //      Flopping outputs
 // --------------------------------
