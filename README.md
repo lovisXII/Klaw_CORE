@@ -125,7 +125,40 @@ You may not call the ``_good`` or ``_bad`` label, but if you do not when you pro
 # Implementation
 
 To run the implementation we're using OpenLane.
-Commands :
+1st you will need to install docker, it will reboot your computer :
+```sh
+sudo apt-get update
+sudo apt-get upgrade
+sudo apt install -y build-essential python3 python3-venv python3-pip make git
+# Remove old installations
+sudo apt-get remove docker docker-engine docker.io containerd runc
+# Installation of requirements
+sudo apt-get update
+sudo apt-get install \
+   ca-certificates \
+   curl \
+   gnupg \
+   lsb-release
+# Add the keyrings of docker
+sudo mkdir -p /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+# Add the package repository
+echo \
+   "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+   $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+# Update the package repository
+sudo apt-get update
+# Install Docker
+sudo apt-get install docker-ce docker-ce-cli containerd.io docker-compose-plugin
+sudo groupadd docker
+sudo usermod -aG docker $USER
+sudo reboot # REBOOT!
+```
+Then you will need to run the following script to setup the install :
+```sh
+./setup-implem.sh
+```
+And finally to run the flow RTL to GDSII you will need to run this :
 ```sh
 make impl #will go to implementation/OpenLane and run make mount
 # After this command you will be in the docker environment
