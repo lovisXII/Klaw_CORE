@@ -33,7 +33,9 @@ logic            mip_nxt_v;
 logic [XLEN-1:0] mip_q;
 logic            mscratch_nxt_v;
 logic [XLEN-1:0] mscratch_q;
-
+// --------------------------------
+//      Write
+// --------------------------------
 assign mvendorid_nxt_v    = write_v_i & (CSR_MVENDORID == adr_write_i);
 assign marchid_nxt_v      = write_v_i & (CSR_MARCHID   == adr_write_i);
 assign mimpid_nxt_v       = write_v_i & (CSR_MIMPID    == adr_write_i);
@@ -175,6 +177,10 @@ always_ff @(posedge clk, negedge reset_n) begin
         end
     end
 end
+
+// --------------------------------
+//      Read
+// --------------------------------
 
 assign data_o = 32'b0
               | {XLEN{(CSR_MVENDORID == adr_read_i)}} & mvendorid_q

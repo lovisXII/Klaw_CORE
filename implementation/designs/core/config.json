@@ -10,7 +10,7 @@
 
     "SYNTH_AUTONAME":1,
     "SYNTH_BIN":"yosys",
-    "SYNTH_STRATEGY":"DELAY",
+    "SYNTH_STRATEGY":"DELAY 4",
     "SYNTH_BUFFERING":1,
 
     "STD_CELL_LIBRARY":"sky130_fd_sc_hd",

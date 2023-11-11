@@ -9,7 +9,7 @@
 #include <sys/stat.h>  // mkdir
 #include <verilated.h>
 #include "Vcore.h"
-#define MAX_CYCLES 300000
+#define MAX_CYCLES 1000
 #if VM_TRACE
 #include <verilated_vcd_sc.h>
 #endif
