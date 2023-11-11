@@ -19,11 +19,13 @@ module decoder (
   output logic [4:0]                 rs2_adr_o,
   // Additionnal informations
   output logic                       auipc_o,
+  output logic                       rs1_is_immediat_o,
   output logic                       rs2_is_immediat_o,
   output logic                       rs2_is_csr_o,
   output logic [XLEN-1:0]            immediat_o,
   output logic [2:0]                 access_size_o,
   output logic                       unsign_extension_o,
+  output logic                       csrrw_o,
   output logic [NB_UNIT-1:0]         unit_o,
   output logic [NB_OPERATION-1:0]    operation_o,
   output logic                       rs2_ca2_v_o
@@ -311,22 +313,19 @@ end
 // Register affectation
 //-------------------------
 // Destination register
-assign rd_v      = r_type | i_type | l_type | fence | p_type & ~(ecall | ebreak) | lui | auipc | jal | jalr
-                 | is_csr;
+assign rd_v      = r_type | i_type | l_type | fence | p_type & ~(ecall | ebreak) | lui | auipc | jal | jalr;
 assign rd_adr    = {5{rd_v}} & instr_i[11:7];
 assign rd_v_o    = rd_v;
 assign rd_adr_o  = rd_adr;
 // Csr register
 assign csr_adr_v    = |rd_adr;
-assign csr_wbk_o    = csrrw | csrrwi
-                    | ((csrrs  | csrrc | csrrsi | csrrci) & ~&rs1_adr);
+assign csr_wbk_o    = csrrw | csrrwi | csrrc | csrrci | (csrrsi | csrrs) & ~&rs1_adr;
 assign csr_clear_o  = csrrc | csrrci;
 assign csr_read_v_o = csr_adr_v;
 assign csr_adr_o    = instr_i[31:20];
 // src1 register
 assign rs1_v     = (r_type | i_type | jalr | b_type | s_type | l_type | fence
-                  | p_type & ~(ecall | ebreak)
-                  | jalr | is_csr) & |rs1_adr;
+                  | csrrw | csrrc | csrrs | jalr) & |rs1_adr;
 assign rs1_v_o   = rs1_v;
 assign rs1_adr   = instr_i[19:15];
 assign rs1_adr_o = rs1_adr;
@@ -347,8 +346,9 @@ assign is_arithm           = (r_type | i_type) & ~(sll | srl | sra | slli | srli
 assign is_shift            = (r_type | i_type) & (sll | srl | sra | slli | srli | srai);
 assign unsign_extension    = bltu | bgeu | lbu | lhu | sltiu | sltu;
 assign auipc_o             = auipc;
-assign rs2_is_immediat_o   = lui | auipc | jalr | jalr | i_type | l_type | csrrwi | csrrsi | csrrci;
-assign rs2_is_csr_o        = csrrw | csrrs | csrrc;
+assign rs1_is_immediat_o   = csrrwi | csrrsi | csrrci;
+assign rs2_is_immediat_o   = lui | auipc | jalr | jalr | i_type | l_type;
+assign rs2_is_csr_o        = csrrw | csrrs | csrrc | csrrwi | csrrsi | csrrci;
 assign immediat_o          = {32{(i_type | jalr | l_type)}}  & {{20{instr_i[31]}}, instr_i[31:20]}
                            | {32{s_type}}                    & {{20{instr_i[31]}}, instr_i[31:25],instr_i[11:7]}
                            | {32{b_type}}                    & {{19{instr_i[31]}}, instr_i[31],instr_i[7],instr_i[30:25],instr_i[11:8],1'b0}
@@ -394,11 +394,13 @@ assign operation_o[4]   = slt  | sltu | slti | sltiu | jal;
 assign operation_o[3]   = xorr | xori | bge  | bgeu;
 assign operation_o[2]   = orr  | ori  | sra  | srai | blt | bltu | csrrs |csrrsi;
 assign operation_o[1]   = andd | andi | srl  | srli | bne   | is_load | csrrc |csrrci;
-assign operation_o[0]   = add  | sub  | addi | sll  | slli  | lui  | auipc | beq | s_type | csrrw |csrrwi;
+assign operation_o[0]   = add  | sub  | addi | sll  | slli  | lui  | auipc | beq | s_type;
 // Access size :
   // 001 : byte
   // 010 : half-word
   // 100 : word
 assign access_size_o      = {{lw | sw}, {lh | lhu | sh}, {lb | lbu | sb}};
 assign unsign_extension_o = unsign_extension;
+// Optimisation made to avoid using alu
+assign csrrw_o            = csrrw | csrrwi;
 endmodule

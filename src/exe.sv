@@ -24,6 +24,7 @@ module exe
   input logic [XLEN-1:0]            immediat_q_i,
   input logic [2:0]                 access_size_q_i,
   input logic                       unsign_extension_q_i,
+  input logic                       csrrw_q_i,
   input logic [NB_UNIT-1:0]         unit_q_i,
   input logic [NB_OPERATION-1:0]    operation_q_i,
 // --------------------------------
@@ -36,7 +37,7 @@ module exe
   input  logic  [XLEN-1:0]         load_data_i,
   output logic [2:0]               access_size_o,
 // --------------------------------
-//      WBK
+//      Forwards
 // --------------------------------
   // forwards
   output logic                      exe_ff_w_v_q_o,
@@ -46,6 +47,9 @@ module exe
   output logic                      exe_ff_csr_wbk_v_o,
   output logic [11:0]               exe_ff_csr_adr_o,
   output logic [XLEN-1:0]           exe_ff_csr_data_o,
+// --------------------------------
+//      WBK
+// --------------------------------
   // RF interface
   output logic                      wbk_v_q_o,
   output logic [XLEN-1:0]           wbk_data_q_o,
@@ -166,14 +170,15 @@ assign pc_data_nxt  = bu_pc_res;
 
 assign rd_v_nxt     = rd_v_q_i & ~flush_v_q & ~flush_v_dly1_q;
 assign res_data_nxt = {XLEN{alu_en & ~csr_wbk_i}} & alu_res_data
-                    | {XLEN{alu_en &  csr_wbk_i}} & rs2_data_qual_q_i[XLEN-1:0]
+                    | {XLEN{csr_wbk_i}}           & rs2_data_qual_q_i[XLEN-1:0]
                     | {XLEN{shifter_en}}          & shifter_res_data
                     | {XLEN{bu_en}}               & bu_data_res
                     | {XLEN{lsu_en}}              & lsu_res_data;
 
 assign csr_wbk_v_nxt = csr_wbk_i;
 assign csr_adr_nxt   = csr_adr_i;
-assign csr_data_nxt  = alu_res_data;
+assign csr_data_nxt  = {XLEN{~csrrw_q_i}} & alu_res_data
+                     | {XLEN{ csrrw_q_i}} & rs1_data_qual_q_i[XLEN-1:0];
 // --------------------------------
 //      Flopping outputs
 // --------------------------------
