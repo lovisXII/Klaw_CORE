@@ -47,11 +47,7 @@ logic [11:0]                dec_exe_csr_adr_q;
 logic [11:0]                dec_csr_adr;
 logic [XLEN-1:0]            csr_dec_data;
 // exe dec interface
-logic                       exe_ff_write_v_q;
-logic [NB_REGS-1:0]         exe_ff_rd_adr_q;
 logic [XLEN-1:0]            exe_ff_res_data_q;
-logic                       exe_ff_csr_wbk_v;
-logic [11:0]                exe_ff_csr_adr;
 logic [XLEN-1:0]            exe_ff_csr_data;
 logic                       wbk_v_q;
 logic [NB_REGS-1:0]         wbk_adr_q;
@@ -104,11 +100,8 @@ dec u_decod(
 // --------------------------------
 //      CSR Interface
 // --------------------------------
-  .exe_ff_write_v_q_i   ( exe_ff_write_v_q),
-  .exe_ff_rd_adr_q_i    ( exe_ff_rd_adr_q),
   .exe_ff_res_data_q_i  ( exe_ff_res_data_q),
-  .exe_ff_csr_wbk_v_i   (exe_ff_csr_wbk_v),
-  .exe_ff_csr_adr_i     (exe_ff_csr_adr),
+  .exe_ff_res_data_q_i  (exe_ff_res_data_q),
   .exe_ff_csr_data_i    (exe_ff_csr_data),
   .rf_write_v_q_i       ( wbk_v_q),
   .rf_ff_rd_adr_q_i     ( wbk_adr_q),
@@ -160,11 +153,7 @@ exe u_exe(
 // --------------------------------
 //      WBK
 // --------------------------------
-  .exe_ff_w_v_q_o       ( exe_ff_write_v_q),
-  .exe_ff_rd_adr_q_o    ( exe_ff_rd_adr_q),
-  .exe_ff_res_data_q_o  ( exe_ff_res_data_q),
-  .exe_ff_csr_wbk_v_o   (exe_ff_csr_wbk_v),
-  .exe_ff_csr_adr_o     (exe_ff_csr_adr),
+  .exe_ff_res_data_q_o  (exe_ff_res_data_q),
   .exe_ff_csr_data_o    (exe_ff_csr_data),
   .wbk_v_q_o            ( wbk_v_q),
   .wbk_adr_q_o          ( wbk_adr_q),
