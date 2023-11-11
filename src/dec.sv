@@ -53,6 +53,7 @@ module dec (
   output logic [XLEN-1:0]            branch_imm_q_o,
   output logic [2:0]                 access_size_q_o,
   output logic                       unsign_ext_q_o,
+  output logic                       csrrw_q_o,
   output logic [NB_UNIT-1:0]         unit_q_o,
   output logic [NB_OPERATION-1:0]    operation_q_o,
   // Flush signals
@@ -70,6 +71,7 @@ module dec (
   logic                       rs1_v;
   logic [4:0]                 rs1_adr;
   logic [XLEN-1:0]            rs1_data;
+  logic [XLEN:0]              rs1_data_extended;
   logic [XLEN:0]              rs1_data_nxt;
   // rs2
   logic                       rs2_v;
@@ -78,6 +80,7 @@ module dec (
   logic [XLEN:0]              rs2_data_extended;
   logic [XLEN:0]              rs2_data_nxt;
   // csr
+  logic                       csr_read_v;
   logic                       rs2_is_csr;
   logic                       csr_clear;
   logic                       csr_wbk_nxt;
@@ -88,15 +91,18 @@ module dec (
   // EXE ff
   logic                       exe_ff_rs1_adr_match;
   logic                       exe_ff_rs2_adr_match;
+  logic                       exe_ff_csr_adr_match;
   // RF ff
   logic                       rf_ff_rs1_adr_match;
   logic                       rf_ff_rs2_adr_match;
   // Additionnal informations
   logic                       auipc;
+  logic                       rs1_is_immediat;
   logic                       rs2_is_immediat;
   logic [2:0]                 instr_access_size_nxt;
   logic                       unsign_extension;
   logic                       unsign_extension_nxt;
+  logic                       csrrw_nxt;
   logic [NB_UNIT-1:0]         unit_nxt;
   logic [NB_OPERATION-1:0]    operation;
   logic                       rs2_ca2_v;
@@ -108,6 +114,7 @@ module dec (
   logic [XLEN-1:0]         immediat_q;
   logic [2:0]              instr_access_size_q;
   logic                    unsign_extension_q;
+  logic                    csrrw_q;
   logic [NB_UNIT-1:0]      instr_unit_q;
   logic [NB_OPERATION-1:0] instr_operation_q;
 
@@ -127,11 +134,13 @@ decoder dec0(
     .rs2_v_o              (rs2_v),
     .rs2_adr_o            (rs2_adr),
     .auipc_o              (auipc),
+    .rs1_is_immediat_o    (rs1_is_immediat),
     .rs2_is_immediat_o    (rs2_is_immediat),
     .rs2_is_csr_o         (rs2_is_csr),
     .immediat_o           (immediat),
     .access_size_o        (instr_access_size_nxt),
     .unsign_extension_o   (unsign_extension),
+    .csrrw_o              (csrrw_nxt),
     .unit_o               (unit_nxt),
     .operation_o          (operation),
     .rs2_ca2_v_o          (rs2_ca2_v)
@@ -143,8 +152,8 @@ decoder dec0(
 assign rd_v_nxt        = instr_rd_v;
 // EXE ff
 assign exe_ff_rs1_adr_match    = (rs1_adr == exe_ff_rd_adr_q_i)  & exe_ff_write_v_i   & ~flush_v_q_i;
-assign exe_ff_rs2_adr_match    = (rs2_adr == exe_ff_rd_adr_q_i)   & exe_ff_write_v_i   & ~flush_v_q_i;
-assign exe_ff_csr_adr_match    = (csr_adr == exe_ff_csr_adr_i) & exe_ff_csr_wbk_v_i & ~flush_v_q_i;
+assign exe_ff_rs2_adr_match    = (rs2_adr == exe_ff_rd_adr_q_i)  & exe_ff_write_v_i   & ~flush_v_q_i;
+assign exe_ff_csr_adr_match    = (csr_adr == exe_ff_csr_adr_i)   & exe_ff_csr_wbk_v_i & ~flush_v_q_i;
 
 // RF ff
 assign rf_ff_rs1_adr_match    = (rs1_adr == rf_ff_rd_adr_q_i) & rf_write_v_q_i & ~exe_ff_rs1_adr_match & ~flush_v_q_i;
@@ -156,9 +165,14 @@ assign unsign_extension_nxt = unsign_extension;
 assign rs1_data       = {XLEN{rs1_v}} & ({XLEN{~exe_ff_rs1_adr_match & ~rf_ff_rs1_adr_match}} & rf_rs1_data_i
                                        | {XLEN{ exe_ff_rs1_adr_match}}                        & exe_ff_res_data_q_i
                                        | {XLEN{ rf_ff_rs1_adr_match}}                         & rf_ff_res_data_q_i)
-                      | {XLEN{auipc}} & pc0_q_i;
+                      | {XLEN{rs1_is_immediat}}                                               & immediat
+                      | {XLEN{auipc}}                                                         & pc0_q_i;
 
-assign rs1_data_nxt   = { ~unsign_extension & rs1_data[31], rs1_data};
+assign rs1_data_extended  = {~unsign_extension & rs1_data[31],
+                              {XLEN{~csr_clear}} &  rs1_data
+                            | {XLEN{ csr_clear}} & ~rs1_data};
+
+assign rs1_data_nxt       = rs1_data_extended;
 // Operand 2 value
 assign rs2_data       = {XLEN{rs2_v & ~exe_ff_rs2_adr_match & ~rf_ff_rs2_adr_match}} & rf_rs2_data_i       // no ff, no imm, data from RF
                       | {XLEN{rs2_v &  exe_ff_rs2_adr_match}}                        & exe_ff_res_data_q_i // exe ff
@@ -167,9 +181,7 @@ assign rs2_data       = {XLEN{rs2_v & ~exe_ff_rs2_adr_match & ~rf_ff_rs2_adr_mat
                       | {XLEN{rs2_is_csr & ~exe_ff_csr_adr_match}}                   & csr_data_i
                       | {XLEN{rs2_is_csr &  exe_ff_csr_adr_match}}                   & exe_ff_csr_data_i; // csr ff
 
-assign rs2_data_extended  = {~unsign_extension & rs2_data[31],
-                              {XLEN{~csr_clear}} &  rs2_data
-                            | {XLEN{ csr_clear}} & ~rs2_data};
+assign rs2_data_extended  = {~unsign_extension & rs2_data[31], rs2_data};
 
 assign rs2_data_nxt       = {XLEN+1{ rs2_ca2_v}} & ~rs2_data_extended + 32'b1
                           | {XLEN+1{~rs2_ca2_v}} &  rs2_data_extended;
@@ -189,6 +201,7 @@ always_ff @(posedge clk, negedge reset_n)
               rs2_data_q               <= '0;
               instr_access_size_q      <= '0;
               unsign_extension_q       <= '0;
+              csrrw_q                  <= '0;
               instr_unit_q             <= '0;
               instr_operation_q        <= '0;
               pc_q_o                   <= '0;
@@ -202,6 +215,7 @@ always_ff @(posedge clk, negedge reset_n)
               immediat_q               <= immediat;
               instr_access_size_q      <= instr_access_size_nxt;
               unsign_extension_q       <= unsign_extension_nxt;
+              csrrw_q                  <= csrrw_nxt;
               instr_unit_q             <= unit_nxt;
               instr_operation_q        <= operation;
               pc_q_o                   <= pc0_q_i;
@@ -221,6 +235,7 @@ assign rs2_data_qual_q_o = rs2_data_q;
 assign branch_imm_q_o    = immediat_q;
 assign access_size_q_o   = instr_access_size_q;
 assign unsign_ext_q_o    = unsign_extension_q;
+assign csrrw_q_o         = csrrw_q;
 assign unit_q_o          = instr_unit_q;
 assign operation_q_o     = instr_operation_q;
 assign csr_adr_q_o       = csr_adr_q;
