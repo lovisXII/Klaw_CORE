@@ -40,12 +40,8 @@ module exe
 //      Forwards
 // --------------------------------
   // forwards rd
-  output logic                      exe_ff_write_v_o,
-  output logic [NB_REGS-1:0]        exe_ff_rd_adr_q_o,
   output logic [XLEN-1:0]           exe_ff_res_data_o,
   // forwards csr
-  output logic                      exe_ff_csr_wbk_v_o,
-  output logic [11:0]               exe_ff_csr_adr_o,
   output logic [XLEN-1:0]           exe_ff_csr_data_o,
 // --------------------------------
 //      WBK
@@ -210,12 +206,8 @@ end
 //      Ouputs
 // --------------------------------
 // rd ff
-assign exe_ff_write_v_o   = rd_v_nxt;
-assign exe_ff_rd_adr_q_o  = rd_adr_q_i;
 assign exe_ff_res_data_o  = res_data_nxt;
 // csr ff
-assign exe_ff_csr_wbk_v_o = csr_wbk_v_nxt;
-assign exe_ff_csr_adr_o   = csr_adr_nxt;
 assign exe_ff_csr_data_o  = csr_data_nxt;
 // wbk
 assign res_w_v_q_o        = rd_v_q;

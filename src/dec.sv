@@ -27,12 +27,8 @@ module dec (
 //      Execute Interface
 // --------------------------------
   // rd ff from EXE
-  input logic                        exe_ff_write_v_i,
-  input logic [4:0]                  exe_ff_rd_adr_q_i,
   input logic [XLEN-1:0]             exe_ff_res_data_q_i,
   // csr ff from exe
-  input logic                        exe_ff_csr_wbk_v_i,
-  input logic [11:0]                 exe_ff_csr_adr_i,
   input logic [XLEN-1:0]             exe_ff_csr_data_i,
   // Fast forwards from RF
   input logic                        rf_write_v_q_i,
@@ -80,7 +76,6 @@ module dec (
   logic [XLEN:0]              rs2_data_extended;
   logic [XLEN:0]              rs2_data_nxt;
   // csr
-  logic                       csr_read_v;
   logic                       rs2_is_csr;
   logic                       csr_clear;
   logic                       csr_wbk_nxt;
@@ -151,9 +146,9 @@ decoder dec0(
 // --------------------------------
 assign rd_v_nxt        = instr_rd_v;
 // EXE ff
-assign exe_ff_rs1_adr_match    = (rs1_adr == exe_ff_rd_adr_q_i)  & exe_ff_write_v_i   & ~flush_v_q_i;
-assign exe_ff_rs2_adr_match    = (rs2_adr == exe_ff_rd_adr_q_i)  & exe_ff_write_v_i   & ~flush_v_q_i;
-assign exe_ff_csr_adr_match    = (csr_adr == exe_ff_csr_adr_i)   & exe_ff_csr_wbk_v_i & ~flush_v_q_i;
+assign exe_ff_rs1_adr_match    = (rs1_adr == rd_adr_q)  & rd_v_q    & ~flush_v_q_i;
+assign exe_ff_rs2_adr_match    = (rs2_adr == rd_adr_q)  & rd_v_q    & ~flush_v_q_i;
+assign exe_ff_csr_adr_match    = (csr_adr == csr_adr_q) & csr_wbk_q & ~flush_v_q_i;
 
 // RF ff
 assign rf_ff_rs1_adr_match    = (rs1_adr == rf_ff_rd_adr_q_i) & rf_write_v_q_i & ~exe_ff_rs1_adr_match & ~flush_v_q_i;
