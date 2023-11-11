@@ -41,7 +41,11 @@ module exe
   // forwards
   output logic                      exe_ff_w_v_q_o,
   output logic [NB_REGS-1:0]        exe_ff_rd_adr_q_o,
-  output logic [XLEN-1:0]           exe_ff_res_data_q_o,
+  output logic [XLEN-1:0]           exe_ff_res_data_o,
+  // forwards csr
+  output logic                      exe_ff_csr_wbk_v_o,
+  output logic [11:0]               exe_ff_csr_adr_o,
+  output logic [XLEN-1:0]           exe_ff_csr_data_o,
   // RF interface
   output logic                      wbk_v_q_o,
   output logic [XLEN-1:0]           wbk_data_q_o,
@@ -162,12 +166,12 @@ assign pc_data_nxt  = bu_pc_res;
 
 assign rd_v_nxt     = rd_v_q_i & ~flush_v_q & ~flush_v_dly1_q;
 assign res_data_nxt = {XLEN{alu_en & ~csr_wbk_i}} & alu_res_data
-                    | {XLEN{alu_en &  csr_wbk_i}} & rs1_data_qual_q_i[XLEN-1:0]
+                    | {XLEN{alu_en &  csr_wbk_i}} & rs2_data_qual_q_i[XLEN-1:0]
                     | {XLEN{shifter_en}}          & shifter_res_data
                     | {XLEN{bu_en}}               & bu_data_res
                     | {XLEN{lsu_en}}              & lsu_res_data;
 
-assign csr_wbk_v_nxt = alu_en & csr_wbk_i;
+assign csr_wbk_v_nxt = csr_wbk_i;
 assign csr_adr_nxt   = csr_adr_i;
 assign csr_data_nxt  = alu_res_data;
 // --------------------------------
@@ -199,9 +203,15 @@ end
 // --------------------------------
 //      Ouputs
 // --------------------------------
+// rd ff
 assign exe_ff_w_v_q_o      = rd_v_nxt;
 assign exe_ff_rd_adr_q_o   = rd_adr_q_i;
 assign exe_ff_res_data_q_o = res_data_nxt;
+// csr ff
+assign exe_ff_csr_wbk_v_o = csr_wbk_v_nxt;
+assign exe_ff_csr_adr_o   = csr_adr_nxt;
+assign exe_ff_csr_data_o  = csr_data_nxt;
+// wbk
 assign wbk_v_q_o           = rd_v_q;
 assign wbk_adr_q_o         = rd_adr_q;
 assign wbk_data_q_o        = res_data_q;

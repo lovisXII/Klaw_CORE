@@ -325,13 +325,13 @@ assign csr_read_v_o = csr_adr_v;
 assign csr_adr_o    = instr_i[31:20];
 // src1 register
 assign rs1_v     = (r_type | i_type | jalr | b_type | s_type | l_type | fence
-                  | p_type & ~(ecall | ebreak | is_csr)
-                  | jalr);
+                  | p_type & ~(ecall | ebreak)
+                  | jalr | is_csr) & |rs1_adr;
 assign rs1_v_o   = rs1_v;
 assign rs1_adr   = instr_i[19:15];
 assign rs1_adr_o = rs1_adr;
 // src2 register
-assign rs2_v     = r_type | b_type | s_type;
+assign rs2_v     = (r_type | b_type | s_type) & |rs1_adr;
 assign rs2_v_o   = rs2_v;
 assign rs2_adr   = instr_i[24:20];
 assign rs2_adr_o = rs2_adr;
