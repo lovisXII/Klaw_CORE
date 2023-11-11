@@ -134,15 +134,6 @@ always_ff @(posedge clk, negedge reset_n) begin
 end
 always_ff @(posedge clk, negedge reset_n) begin
     if (~reset_n) begin
-            mepc_q <= 32'h0;
-    end else begin
-        if (mepc_nxt_v) begin
-            mepc_q <= data_i;
-        end
-    end
-end
-always_ff @(posedge clk, negedge reset_n) begin
-    if (~reset_n) begin
             mcause_q <= 32'h0;
     end else begin
         if (mcause_nxt_v) begin
