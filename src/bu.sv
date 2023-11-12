@@ -17,12 +17,14 @@ module bu
     //----------------------------------------
     output logic                    branch_v_o,
     output logic[XLEN-1:0]          pc_nxt_o,
+    output logic                    pc_missaligned_o,
     output logic[XLEN-1:0]          data_o
 );
 // Output selection
 logic            data_eq;
 logic            branch_v;
 logic [XLEN:0]   addition_res;
+logic [XLEN:0]   pc_nxt;
 
 // Perform rs1 - rs2
 // addition_res[XLEN] = 1 <=> rs1 - rs2 < 0 <=> rs1 < rs2
@@ -37,8 +39,10 @@ assign branch_v = bu_en_i & (
                 | cmd_i[JAL] | cmd_i[JALR]                                       // jal jalr
                 );
 
-assign branch_v_o = branch_v;
-assign data_o     = pc_data_i + 32'd4;
-assign pc_nxt_o   = {XLEN{branch_v & ~cmd_i[JALR]}}  & pc_data_i  + immediat_i
-                  | {XLEN{branch_v &  cmd_i[JALR]}}  & rs1_data_i[XLEN-1:0] + immediat_i;
+assign branch_v_o       = branch_v;
+assign data_o           = pc_data_i + 32'd4;
+assign pc_nxt           = {XLEN{branch_v & ~cmd_i[JALR]}}  & pc_data_i  + immediat_i
+                        | {XLEN{branch_v &  cmd_i[JALR]}}  & rs1_data_i[XLEN-1:0] + immediat_i;
+assign pc_nxt_o         = pc_nxt;
+assign pc_missaligned_o = pc_nxt[0] | pc_nxt[1];
 endmodule
