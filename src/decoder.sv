@@ -28,7 +28,8 @@ module decoder (
   output logic                       csrrw_o,
   output logic [NB_UNIT-1:0]         unit_o,
   output logic [NB_OPERATION-1:0]    operation_o,
-  output logic                       rs2_ca2_v_o
+  output logic                       rs2_ca2_v_o,
+  output logic                       illegal_inst_o
 );
 
 
@@ -53,7 +54,6 @@ module decoder (
 logic rd_v;
 logic rs1_v;
 logic rs2_v;
-logic csr_adr_v;
 logic [4:0] rd_adr;
 logic [4:0] rs1_adr;
 logic [4:0] rs2_adr;
@@ -318,10 +318,8 @@ assign rd_adr    = {5{rd_v}} & instr_i[11:7];
 assign rd_v_o    = rd_v;
 assign rd_adr_o  = rd_adr;
 // Csr register
-assign csr_adr_v    = |rd_adr;
 assign csr_wbk_o    = csrrw | csrrwi | csrrc | csrrci | (csrrsi | csrrs) & ~&rs1_adr;
 assign csr_clear_o  = csrrc | csrrci;
-assign csr_read_v_o = csr_adr_v;
 assign csr_adr_o    = instr_i[31:20];
 // src1 register
 assign rs1_v     = (r_type | i_type | jalr | b_type | s_type | l_type | fence
@@ -355,10 +353,7 @@ assign immediat_o          = {32{(i_type | jalr | l_type)}}  & {{20{instr_i[31]}
                            | {32{jal}}                       & {{11{instr_i[31]}}, instr_i[31],instr_i[19:12],instr_i[20],instr_i[30:21],1'b0}
                            | {32{auipc | lui}}               & {instr_i[31:12], 12'b0}
                            | {32{csrrwi | csrrsi | csrrci}}  & {27'd0, instr_i[19:15]};
-// slt will be treated as an addition
-// We will perform :
-// res = rs2 - rs1
-// If res[31] = 1 => rs2 - rs1 > 0, ie rs2 > rs1
+assign illegal_inst_o      = illegal_inst;
 assign rs2_ca2_v_o         = sub | bge | blt | bgeu | bltu | slt | sltu | slti | sltiu;
 // should encode the operation, add, sub, sll, slr, sra...etc
 // msb encodes the unit, lsb encodes the operation

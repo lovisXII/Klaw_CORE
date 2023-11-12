@@ -52,8 +52,9 @@ module dec (
   output logic                       csrrw_q_o,
   output logic [NB_UNIT-1:0]         unit_q_o,
   output logic [NB_OPERATION-1:0]    operation_q_o,
+  output logic                       illegal_inst_q_o,
   // Flush signals
-  input logic                        flush_v_q_i
+  input logic                        flush_v_i
 );
 // --------------------------------
 //      Signals declaration
@@ -83,6 +84,9 @@ module dec (
   logic [11:0]                csr_adr;
   logic [11:0]                csr_adr_nxt;
   logic [11:0]                csr_adr_q;
+  // Exceptions
+  logic                       illegal_inst_nxt;
+  logic                       illegal_inst_q;
   // EXE ff
   logic                       exe_ff_rs1_adr_match;
   logic                       exe_ff_rs2_adr_match;
@@ -120,7 +124,6 @@ decoder dec0(
     .instr_i              (instr_q_i),
     .rd_v_o               (instr_rd_v),
     .rd_adr_o             (rd_adr_nxt),
-    .csr_read_v_o         (csr_read_v),
     .csr_wbk_o            (csr_wbk_nxt),
     .csr_clear_o          (csr_clear),
     .csr_adr_o            (csr_adr),
@@ -138,7 +141,8 @@ decoder dec0(
     .csrrw_o              (csrrw_nxt),
     .unit_o               (unit_nxt),
     .operation_o          (operation),
-    .rs2_ca2_v_o          (rs2_ca2_v)
+    .rs2_ca2_v_o          (rs2_ca2_v),
+    .illegal_inst_o       (illegal_inst_nxt)
 );
 
 // --------------------------------
@@ -146,13 +150,13 @@ decoder dec0(
 // --------------------------------
 assign rd_v_nxt        = instr_rd_v;
 // EXE ff
-assign exe_ff_rs1_adr_match    = (rs1_adr == rd_adr_q)  & rd_v_q    & ~flush_v_q_i;
-assign exe_ff_rs2_adr_match    = (rs2_adr == rd_adr_q)  & rd_v_q    & ~flush_v_q_i;
-assign exe_ff_csr_adr_match    = (csr_adr == csr_adr_q) & csr_wbk_q & ~flush_v_q_i;
+assign exe_ff_rs1_adr_match    = (rs1_adr == rd_adr_q)  & rd_v_q    & ~flush_v_i;
+assign exe_ff_rs2_adr_match    = (rs2_adr == rd_adr_q)  & rd_v_q    & ~flush_v_i;
+assign exe_ff_csr_adr_match    = (csr_adr == csr_adr_q) & csr_wbk_q & ~flush_v_i;
 
 // RF ff
-assign rf_ff_rs1_adr_match    = (rs1_adr == rf_ff_rd_adr_q_i) & rf_write_v_q_i & ~exe_ff_rs1_adr_match & ~flush_v_q_i;
-assign rf_ff_rs2_adr_match    = (rs2_adr == rf_ff_rd_adr_q_i) & rf_write_v_q_i & ~exe_ff_rs2_adr_match & ~flush_v_q_i;
+assign rf_ff_rs1_adr_match    = (rs1_adr == rf_ff_rd_adr_q_i) & rf_write_v_q_i & ~exe_ff_rs1_adr_match & ~flush_v_i;
+assign rf_ff_rs2_adr_match    = (rs2_adr == rf_ff_rd_adr_q_i) & rf_write_v_q_i & ~exe_ff_rs2_adr_match & ~flush_v_i;
 
 // Sign extension
 assign unsign_extension_nxt = unsign_extension;
@@ -202,6 +206,7 @@ always_ff @(posedge clk, negedge reset_n)
               pc_q_o                   <= '0;
               csr_adr_q                <= '0;
               csr_wbk_q                <= '0;
+              illegal_inst_q           <= '0;
   end else begin
               rd_v_q                   <= rd_v_nxt;
               rd_adr_q                 <= rd_adr_nxt;
@@ -216,6 +221,7 @@ always_ff @(posedge clk, negedge reset_n)
               pc_q_o                   <= pc0_q_i;
               csr_adr_q                <= csr_adr_nxt;
               csr_wbk_q                <= csr_wbk_nxt;
+              illegal_inst_q           <= illegal_inst_nxt;
   end
 
 // --------------------------------
@@ -235,5 +241,6 @@ assign unit_q_o          = instr_unit_q;
 assign operation_q_o     = instr_operation_q;
 assign csr_adr_q_o       = csr_adr_q;
 assign csr_wbk_q_o       = csr_wbk_q;
+assign illegal_inst_q_o  = illegal_inst_q;
 
 endmodule

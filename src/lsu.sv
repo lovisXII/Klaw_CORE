@@ -20,21 +20,23 @@ module lsu
     // Outputs
     //----------------------------------------
     output  logic [XLEN-1:0]         adr_o,
-    output  logic [XLEN-1:0]         lsu_data_o
+    output  logic [XLEN-1:0]         lsu_data_o,
+    output  logic                    adr_missaligned_o
 );
 
 logic [XLEN-1:0] adr;
 logic [XLEN-1:0] load_data;
 
-assign adr       = {XLEN{lsu_en_i}} & rs1_data_i + immediat_i;
-
-assign load_data = {XLEN{access_size_q_i[0] & adr[1:0] == 2'b00}} & {{24{~unsign_extension_i & load_data_i[7]}},  load_data_i[7:0]  }
-                 | {XLEN{access_size_q_i[0] & adr[1:0] == 2'b01}} & {{24{~unsign_extension_i & load_data_i[7]}},  load_data_i[15:8] }
-                 | {XLEN{access_size_q_i[0] & adr[1:0] == 2'b10}} & {{24{~unsign_extension_i & load_data_i[7]}},  load_data_i[23:16]}
-                 | {XLEN{access_size_q_i[0] & adr[1:0] == 2'b11}} & {{24{~unsign_extension_i & load_data_i[7]}},  load_data_i[31:24]}
-                 | {XLEN{access_size_q_i[1] & adr[1:0] == 2'b00}} & {{16{~unsign_extension_i & load_data_i[15]}}, load_data_i[15:0] }
-                 | {XLEN{access_size_q_i[1] & adr[1:0] == 2'b10}} & {{16{~unsign_extension_i & load_data_i[31]}}, load_data_i[31:16]}
-                 | {XLEN{access_size_q_i[2]}} & load_data_i;
-assign adr_o        = adr;
-assign lsu_data_o   = load_data;
+assign adr               = {XLEN{lsu_en_i}} & rs1_data_i + immediat_i;
+assign load_data         = {XLEN{access_size_q_i[0] & adr[1:0] == 2'b00}} & {{24{~unsign_extension_i & load_data_i[7]}},  load_data_i[7:0]  }
+                         | {XLEN{access_size_q_i[0] & adr[1:0] == 2'b01}} & {{24{~unsign_extension_i & load_data_i[7]}},  load_data_i[15:8] }
+                         | {XLEN{access_size_q_i[0] & adr[1:0] == 2'b10}} & {{24{~unsign_extension_i & load_data_i[7]}},  load_data_i[23:16]}
+                         | {XLEN{access_size_q_i[0] & adr[1:0] == 2'b11}} & {{24{~unsign_extension_i & load_data_i[7]}},  load_data_i[31:24]}
+                         | {XLEN{access_size_q_i[1] & adr[1:0] == 2'b00}} & {{16{~unsign_extension_i & load_data_i[15]}}, load_data_i[15:0] }
+                         | {XLEN{access_size_q_i[1] & adr[1:0] == 2'b10}} & {{16{~unsign_extension_i & load_data_i[31]}}, load_data_i[31:16]}
+                         | {XLEN{access_size_q_i[2]}} & load_data_i;
+assign adr_o             = adr;
+assign lsu_data_o        = load_data;
+assign adr_missaligned_o = (adr[0] | adr[1]) & access_size_q_i[2]
+                         | (adr[0]         ) & access_size_q_i[1];
 endmodule

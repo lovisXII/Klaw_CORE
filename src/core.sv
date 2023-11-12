@@ -71,7 +71,7 @@ ifetch u_ifetch (
     // --------------------------------
     //      EXE
     // --------------------------------
-    .flush_v_q_i    ( flush_v_q),
+    .flush_v_i    ( flush_v_q),
     .pc_data_q_i    ( exe_if_pc0_write_data),
     // --------------------------------
     //      DEC
@@ -121,7 +121,7 @@ dec u_dec(
   .csrrw_q_o            (csrrw_q),
   .unit_q_o             (dec_exe_instr_unit_q),
   .operation_q_o        (dec_exe_instr_operation_q),
-  .flush_v_q_i          (flush_v_q)
+  .flush_v_i          (flush_v_q)
 
 );
 
@@ -164,7 +164,7 @@ exe u_exe(
   .csr_wbk_v_q_o        (exe_csr_wbk_v_q),
   .csr_adr_q_o          (exe_csr_adr_q),
   .csr_data_q_o         (exe_csr_data),
-  .flush_v_q_o          (flush_v_q),
+  .flush_v_o          (flush_v_q),
   .pc_data_q_o          (exe_if_pc0_write_data)
 );
 

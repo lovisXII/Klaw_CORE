@@ -13,7 +13,7 @@ module ifetch(
     // --------------------------------
     //      EXE
     // --------------------------------
-    input  logic            flush_v_q_i,
+    input  logic            flush_v_i,
     input  logic[XLEN-1:0]  pc_data_q_i,
     // --------------------------------
     //      DEC
@@ -56,8 +56,8 @@ assign end_reset_valid = reset_n & ~reset_n_q ;
 assign reset_adr       = {XLEN{end_reset_valid}} & reset_adr_i;
 
 // Next PC gestion
-assign pc_fetched_nxt  = {XLEN{reset_n &  flush_v_q_i}} & pc_data_q_i    // branch taken
-                       | {XLEN{reset_n & ~flush_v_q_i}} & pc_q + 32'b100 // no branch taken
+assign pc_fetched_nxt  = {XLEN{reset_n &  flush_v_i}} & pc_data_q_i    // branch taken
+                       | {XLEN{reset_n & ~flush_v_i}} & pc_q + 32'b100 // no branch taken
                        | {XLEN{end_reset_valid}}        & reset_adr;     // reset
 // Icache Interface
 assign icache_adr_o   = pc_fetched_nxt;

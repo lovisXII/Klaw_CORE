@@ -7,11 +7,11 @@ module csr(
     input  logic [XLEN-1:0] data_i,
     output logic [XLEN-1:0] data_o
 );
+logic            mhardtid_nxt_v;
+logic            mhardtid_q;
 logic            mvendorid_nxt_v;
 logic [XLEN-1:0] mvendorid_q;
-logic            marchid_nxt_v;
 logic [XLEN-1:0] marchid_q;
-logic            mimpid_nxt_v;
 logic [XLEN-1:0] mimpid_q;
 logic            mstatus_nxt_v;
 logic [XLEN-1:0] mstatus_q;
@@ -36,9 +36,8 @@ logic [XLEN-1:0] mscratch_q;
 // --------------------------------
 //      Write
 // --------------------------------
+assign mhardtid_nxt_v     = write_v_i & (CSR_MHARTID   == adr_write_i);
 assign mvendorid_nxt_v    = write_v_i & (CSR_MVENDORID == adr_write_i);
-assign marchid_nxt_v      = write_v_i & (CSR_MARCHID   == adr_write_i);
-assign mimpid_nxt_v       = write_v_i & (CSR_MIMPID    == adr_write_i);
 assign mstatus_nxt_v      = write_v_i & (CSR_MSTATUS   == adr_write_i);
 assign misa_nxt_v         = write_v_i & (CSR_MISA      == adr_write_i);
 assign mie_nxt_v          = write_v_i & (CSR_MIE       == adr_write_i);
@@ -52,6 +51,16 @@ assign mscratch_nxt_v     = write_v_i & (CSR_MSCRATCH  == adr_write_i);
 
 always_ff @(posedge clk, negedge reset_n) begin
     if (~reset_n) begin
+            mhardtid_q <= 32'h0;
+    end else begin
+        if (mhardtid_nxt_v) begin
+            mhardtid_q <= data_i;
+        end
+    end
+end
+
+always_ff @(posedge clk, negedge reset_n) begin
+    if (~reset_n) begin
             mvendorid_q <= 32'h0;
     end else begin
         if (mvendorid_nxt_v) begin
@@ -60,24 +69,9 @@ always_ff @(posedge clk, negedge reset_n) begin
     end
 end
 
-always_ff @(posedge clk, negedge reset_n) begin
-    if (~reset_n) begin
-            marchid_q <= 32'h0;
-    end else begin
-        if (marchid_nxt_v) begin
-            marchid_q <= data_i;
-        end
-    end
-end
-always_ff @(posedge clk, negedge reset_n) begin
-    if (~reset_n) begin
-            mimpid_q <= 32'h0;
-    end else begin
-        if (mimpid_nxt_v) begin
-            mimpid_q <= data_i;
-        end
-    end
-end
+assign marchid_q = 32'h0;
+assign mimpid_q  = 32'h0;
+
 always_ff @(posedge clk, negedge reset_n) begin
     if (~reset_n) begin
             mstatus_q <= 32'h0;
@@ -89,7 +83,7 @@ always_ff @(posedge clk, negedge reset_n) begin
 end
 always_ff @(posedge clk, negedge reset_n) begin
     if (~reset_n) begin
-            misa_q <= 32'h0;
+            misa_q <= {2'b1, 1'b0, 26'd8};
     end else begin
         if (misa_nxt_v) begin
             misa_q <= data_i;
@@ -174,6 +168,7 @@ end
 // --------------------------------
 
 assign data_o = 32'b0
+              | {XLEN{(CSR_MHARTID   == adr_read_i)}} & mhardtid_q
               | {XLEN{(CSR_MVENDORID == adr_read_i)}} & mvendorid_q
               | {XLEN{(CSR_MARCHID   == adr_read_i)}} & marchid_q
               | {XLEN{(CSR_MIMPID    == adr_read_i)}} & mimpid_q
