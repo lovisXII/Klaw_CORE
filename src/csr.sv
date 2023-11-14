@@ -8,7 +8,7 @@ module csr(
     output logic [XLEN-1:0] data_o
 );
 logic            mhardtid_nxt_v;
-logic            mhardtid_q;
+logic [XLEN-1:0] mhardtid_q;
 logic            mvendorid_nxt_v;
 logic [XLEN-1:0] mvendorid_q;
 logic [XLEN-1:0] marchid_q;
