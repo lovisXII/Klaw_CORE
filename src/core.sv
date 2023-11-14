@@ -20,8 +20,18 @@ module core (
     input logic  [XLEN-1:0] load_data_i,
     output logic [2:0]      access_size_o
 );
-// core mode
-logic [1:0] core_mode_q;
+// priviledge
+logic [1:0]                 core_mode_q;
+logic                       illegal_inst_q;
+logic                       sret_q;
+logic                       mret_q;
+logic                       exception_q;
+logic [XLEN-1:0]            mcause_q;
+logic [XLEN-1:0]            mtval_q;
+logic [XLEN-1:0]            mstatus_q;
+logic [XLEN-1:0]            mepc_q;
+logic [XLEN-1:0]            mepc_reg_q;
+logic [XLEN-1:0]            mtvec_reg_q;
 // ifetch dec interface
 logic                       flush_v_q;
 logic[31:0]                 if_dec_q;
@@ -122,6 +132,9 @@ dec u_decod(
   .csrrw_q_o            (csrrw_q),
   .unit_q_o             ( dec_exe_unit_q),
   .operation_q_o        ( dec_exe_operation_q),
+  .illegal_inst_q_o     (illegal_inst_q),
+  .mret_q_o             (mret_q),
+  .sret_q_o             (sret_q),
   .flush_v_q_i          ( flush_v_q)
 );
 
@@ -144,6 +157,9 @@ exe u_exe(
   .csrrw_q_i            (csrrw_q),
   .unit_q_i             ( dec_exe_unit_q),
   .operation_q_i        ( dec_exe_operation_q),
+  .illegal_inst_q_i     (illegal_inst_q),
+  .mret_q_i             (mret_q),
+  .sret_q_i             (sret_q),
 // --------------------------------
 //      MEM
 // --------------------------------
@@ -159,6 +175,13 @@ exe u_exe(
   .exe_ff_res_data_q_o  (exe_ff_res_data_q),
   .exe_ff_csr_data_o    (exe_ff_csr_data),
   .core_mode_q_o        (core_mode_q),
+  .exception_q_o        (exception_q),
+  .mcause_q_o           (mcause_q),
+  .mtval_q_o            (mtval_q),
+  .mepc_q_o             (mepc_q),
+  .mtvec_q_i            (mtvec_reg_q),
+  .mepc_q_i             (mepc_reg_q),
+  .mstatus_q_o          (mstatus_q),
   .wbk_v_q_o            ( wbk_v_q),
   .wbk_adr_q_o          ( wbk_adr_q),
   .wbk_data_q_o         ( wbk_data_q),
@@ -185,10 +208,17 @@ rf u_rf(
 csr u_csr(
   .clk              (clk),
   .reset_n          (reset_n),
+  .exception_q_i    (exception_q),
+  .mcause_q_i       (mcause_q),
+  .mtval_q_i        (mtval_q),
+  .mepc_q_i         (mepc_q),
+  .mtvec_q_o        (mtvec_reg_q),
+  .mstatus_q_i      (mstatus_q),
   .write_v_i        (exe_csr_wbk_v_q),
   .adr_read_i       (dec_csr_adr),
   .adr_write_i      (exe_csr_adr_q),
   .data_i           (exe_csr_data),
+  .mepc_q_o         (mepc_reg_q),
   .data_o           (csr_dec_data)
 );
 

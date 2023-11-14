@@ -28,6 +28,8 @@ module exe
   input logic [NB_UNIT-1:0]         unit_q_i,
   input logic [NB_OPERATION-1:0]    operation_q_i,
   input logic                       illegal_inst_q_i,
+  input logic                       mret_q_i,
+  input logic                       sret_q_i,
 // --------------------------------
 //      MEM
 // --------------------------------
@@ -45,9 +47,17 @@ module exe
   // forwards csr
   output logic [XLEN-1:0]           exe_ff_csr_data_o,
 // --------------------------------
-//      Exception/Interruptions
+//      exception_nxt/Interruptions
 // --------------------------------
-output logic [1:0]                  core_mode_q_o,
+output logic [1:0]                core_mode_q_o,
+output logic                      exception_q_o,
+output logic [XLEN-1:0]           mcause_q_o,
+output logic [XLEN-1:0]           mtval_q_o,
+output logic [XLEN-1:0]           mepc_q_o,
+output logic [XLEN-1:0]           mstatus_q_o,
+
+input  logic [XLEN-1:0]           mepc_q_i,
+input  logic [XLEN-1:0]           mtvec_q_i,
 // --------------------------------
 //      WBK
 // --------------------------------
@@ -82,13 +92,18 @@ logic                     lsu_en;
 logic [XLEN-1:0]          lsu_res_data;
 logic [XLEN-1:0]          mem_adr;
 logic                     is_store;
-// Exception
-logic                     exception;
+// exception_nxt
+logic                     exception_nxt;
 logic                     exception_q;
-logic                     mret;
-logic [XLEN-1:0]          cause;
-logic [XLEN-1:0]          mtval;
-logic [XLEN-1:0]          adr_fault;
+logic                     flush_nxt;
+logic [XLEN-1:0]          cause_nxt;
+logic [XLEN-1:0]          mtval_nxt;
+logic [XLEN-1:0]          mstatus_nxt;
+logic [XLEN-1:0]          cause_q;
+logic [XLEN-1:0]          mtval_q;
+logic [XLEN-1:0]          mstatus_q;
+logic [XLEN-1:0]          mepc_q;
+logic                     adr_fault;
 logic                     flush;
 logic                     pc_missaligned;
 logic                     adr_missaligned;
@@ -166,34 +181,38 @@ lsu u_lsu(
 // --------------------------------
 //      Internal architecture
 // --------------------------------
-// Exception
-assign exception          = pc_missaligned  | instr_access_fault | illegal_inst_q_i
-                          | break_point     | ld_adr_missaligned | ld_access_fault
-                          | ld_access_fault | st_adr_missaligned | st_access_fault
-                          | env_call_m_mode;
+// exception_nxt
+assign exception_nxt        = pc_missaligned  | instr_access_fault | illegal_inst_q_i
+                            | break_point     | ld_adr_missaligned | ld_access_fault
+                            | ld_access_fault | st_adr_missaligned | st_access_fault
+                            | env_call_m_mode;
 
-assign ld_adr_missaligned = adr_missaligned & ~is_store;
-assign st_adr_missaligned = adr_missaligned &  is_store;
+assign ld_adr_missaligned   = adr_missaligned & ~is_store;
+assign st_adr_missaligned   = adr_missaligned &  is_store;
 
-assign adr_fault          = mem_adr;
+assign adr_fault            = '0;
 
-assign flush              = exception | flush_v_q | flush_v_dly1_q;
-assign cause              = {XLEN{pc_missaligned}}     & 32'b0
-                          | {XLEN{instr_access_fault}} & 32'd1
-                          | {XLEN{illegal_inst_q_i}}   & 32'd2
-                          | {XLEN{break_point}}        & 32'd3
-                          | {XLEN{ld_adr_missaligned}} & 32'd4
-                          | {XLEN{ld_access_fault}}    & 32'd5
-                          | {XLEN{st_adr_missaligned}} & 32'd6
-                          | {XLEN{st_access_fault}}    & 32'd7
-                          | {XLEN{env_call_m_mode}}    & 32'd11;
+assign flush_nxt            = exception_nxt | branch_v_nxt;
+assign flush                = flush_nxt | flush_v_q | flush_v_dly1_q;
+assign cause_nxt            = {XLEN{pc_missaligned}}     & 32'b0
+                            | {XLEN{instr_access_fault}} & 32'd1
+                            | {XLEN{illegal_inst_q_i}}   & 32'd2
+                            | {XLEN{break_point}}        & 32'd3
+                            | {XLEN{ld_adr_missaligned}} & 32'd4
+                            | {XLEN{ld_access_fault}}    & 32'd5
+                            | {XLEN{st_adr_missaligned}} & 32'd6
+                            | {XLEN{st_access_fault}}    & 32'd7
+                            | {XLEN{env_call_m_mode}}    & 32'd11;
 
-assign mtval              = {XLEN{pc_missaligned  | instr_access_fault}} & pc_data_nxt
-                          | {XLEN{adr_missaligned | adr_fault}}          & res_data_nxt;
+assign mtval_nxt            = {XLEN{pc_missaligned  | instr_access_fault}} & pc_data_nxt
+                            | {XLEN{adr_missaligned | adr_fault}}          & mem_adr;
 
-assign core_mode_nxt      = {2{exception}}          & 2'b11
-                          | {2{mret}}               & 2'b00
-                          | {2{~exception & ~mret}} & core_mode_q;
+assign mstatus_nxt = '0;
+
+assign core_mode_nxt        = {2{exception_nxt}}                          & 2'b11
+                            | {2{mret_q_i}}                               & 2'b00
+                            | {2{sret_q_i}}                               & 2'b01
+                            | {2{~exception_nxt & ~mret_q_i & ~sret_q_i}} & core_mode_q;
 // ALU
 assign alu_en           = unit_q_i[ALU];
 assign shifter_en       = unit_q_i[SFT];
@@ -219,8 +238,10 @@ assign access_size_o    = access_size_q_i;
 // j   :     I D E
 // If dly1 is not taken in consideration j will branch
 // but it's not suppose to branch, it should be flushed
-assign branch_v_nxt = branch_v;
-assign pc_data_nxt  = bu_pc_res;
+assign branch_v_nxt = branch_v | mret_q_i | sret_q_i;
+assign pc_data_nxt  = {XLEN{~exception_nxt}} & bu_pc_res
+                    | {XLEN{ exception_nxt}} & mtvec_q_i
+                    | {XLEN{ mret_q_i}}          & mepc_q_i;
 
 assign rd_v_nxt     = rd_v_q_i & ~flush;
 assign res_data_nxt = {XLEN{alu_en & ~csr_wbk_i}} & alu_res_data
@@ -249,17 +270,29 @@ always_ff @(posedge clk, negedge reset_n)
     csr_data_q        <= '0;
     csr_adr_q         <= '0;
     core_mode_q       <= 2'b11;
+    exception_q       <= '0;
+    cause_q           <= '0;
+    mtval_q           <= '0;
+    mepc_q            <= '0;
+    mstatus_q         <= '0;
+    core_mode_q       <= '0;
   end else begin
     rd_v_q            <= rd_v_nxt;
     rd_adr_q          <= rd_adr_q_i;
     res_data_q        <= res_data_nxt;
-    exception_q       <= exception;
-    flush_v_q         <= branch_v_nxt;
+    exception_q       <= exception_nxt;
+    flush_v_q         <= flush_nxt;
     flush_v_dly1_q    <= flush_v_q;
     pc_data_q         <= pc_data_nxt;
     csr_wbk_v_q       <= csr_wbk_v_nxt;
     csr_data_q        <= csr_data_nxt;
     csr_adr_q         <= csr_adr_nxt;
+    core_mode_q       <= core_mode_nxt;
+    exception_q       <= exception_nxt;
+    cause_q           <= cause_nxt;
+    mtval_q           <= mtval_nxt;
+    mepc_q            <= dec_pc0_q_i;
+    mstatus_q         <= mstatus_nxt;
     core_mode_q       <= core_mode_nxt;
 end
 
@@ -270,8 +303,13 @@ end
 assign exe_ff_res_data_o  = res_data_nxt;
 // csr ff
 assign exe_ff_csr_data_o  = csr_data_nxt;
-// core mode
-assign core_mode_q_o      = core_mode_q;
+// exceptions
+assign exception_q_o    = exception_q;
+assign mcause_q_o       = cause_q;
+assign mtval_q_o        = mtval_q;
+assign mepc_q_o         = mepc_q;
+assign mstatus_q_o      = mstatus_q;
+assign core_mode_q_o    = core_mode_q;
 // wbk
 assign wbk_v_q_o           = rd_v_q;
 assign wbk_adr_q_o         = rd_adr_q;

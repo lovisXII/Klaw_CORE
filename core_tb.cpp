@@ -237,7 +237,7 @@ int sc_main(int argc, char* argv[]) {
                 symbols.get_symbol(j, name, value, size, bind, type, section_index, other);
 
                 if (name == "_reset") {
-                    reset_adr = value ;
+                    reset_adr = value;
                     cout << "Found reset at address 0x" << std::hex << reset_adr << endl;
                 }
                 if (name == "_start") {
@@ -326,7 +326,7 @@ int sc_main(int argc, char* argv[]) {
         if_reset_adr = rvtest_entry_point;
     }
     else
-        if_reset_adr = start_adr;
+        if_reset_adr = reset_adr;
     if (debug) cout << FBLU("[Debug] ") << "Reset adr is " << std::hex << if_reset_adr << endl;
 
     reset_n.write(false);

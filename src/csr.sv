@@ -1,10 +1,23 @@
 module csr(
     input  logic            clk,
     input  logic            reset_n,
+    // --------------------------------
+    //      Inputs
+    // --------------------------------
+    input  logic            exception_q_i,
+    input  logic [XLEN-1:0] mcause_q_i,
+    input  logic [XLEN-1:0] mtval_q_i,
+    input  logic [XLEN-1:0] mepc_q_i,
+    input  logic [XLEN-1:0] mstatus_q_i,
     input  logic            write_v_i,
     input  logic [11:0]     adr_read_i,
     input  logic [11:0]     adr_write_i,
     input  logic [XLEN-1:0] data_i,
+    // --------------------------------
+    //      Outputs
+    // --------------------------------
+    output logic [XLEN-1:0] mepc_q_o,
+    output logic [XLEN-1:0] mtvec_q_o,
     output logic [XLEN-1:0] data_o
 );
 logic            mhardtid_nxt_v;
@@ -184,4 +197,9 @@ assign data_o = 32'b0
               | {XLEN{(CSR_MSCRATCH  == adr_read_i)}} & mscratch_q
               ;
 
+// --------------------------------
+//      Exceptions
+// --------------------------------
+assign mepc_q_o  = mepc_q;
+assign mtvec_q_o = mtvec_q;
 endmodule
