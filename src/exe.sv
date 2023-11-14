@@ -47,7 +47,7 @@ module exe
 // --------------------------------
 //      Exception/Interruptions
 // --------------------------------
-
+output logic [1:0]                  core_mode_q_o,
 // --------------------------------
 //      WBK
 // --------------------------------
@@ -80,11 +80,15 @@ logic [XLEN-1:0]          bu_data_res;
 // Load-store unit (LSU)
 logic                     lsu_en;
 logic [XLEN-1:0]          lsu_res_data;
+logic [XLEN-1:0]          mem_adr;
 logic                     is_store;
 // Exception
 logic                     exception;
 logic                     exception_q;
+logic                     mret;
 logic [XLEN-1:0]          cause;
+logic [XLEN-1:0]          mtval;
+logic [XLEN-1:0]          adr_fault;
 logic                     flush;
 logic                     pc_missaligned;
 logic                     adr_missaligned;
@@ -95,6 +99,8 @@ logic                     ld_access_fault;
 logic                     st_adr_missaligned;
 logic                     st_access_fault;
 logic                     env_call_m_mode;
+logic [1:0]               core_mode_nxt;
+logic [1:0]               core_mode_q;
 // Wbk signals
 logic                     csr_wbk_v_nxt;
 logic                     csr_wbk_v_q;
@@ -153,7 +159,7 @@ lsu u_lsu(
     .access_size_q_i    (access_size_q_i),
     .unsign_extension_i (unsign_extension_q_i),
     .load_data_i        (load_data_i),
-    .adr_o              (adr_o),
+    .adr_o              (mem_adr),
     .lsu_data_o         (lsu_res_data),
     .adr_missaligned_o  (adr_missaligned)
 );
@@ -168,16 +174,26 @@ assign exception          = pc_missaligned  | instr_access_fault | illegal_inst_
 
 assign ld_adr_missaligned = adr_missaligned & ~is_store;
 assign st_adr_missaligned = adr_missaligned &  is_store;
+
+assign adr_fault          = mem_adr;
+
 assign flush              = exception | flush_v_q | flush_v_dly1_q;
-assign cause              = pc_missaligned     & 32'b0
-                          | instr_access_fault & 32'd1
-                          | illegal_inst_q_i   & 32'd2
-                          | break_point        & 32'd3
-                          | ld_adr_missaligned & 32'd4
-                          | ld_access_fault    & 32'd5
-                          | st_adr_missaligned & 32'd6
-                          | st_access_fault    & 32'd7
-                          | env_call_m_mode    & 32'd11;
+assign cause              = {XLEN{pc_missaligned}}     & 32'b0
+                          | {XLEN{instr_access_fault}} & 32'd1
+                          | {XLEN{illegal_inst_q_i}}   & 32'd2
+                          | {XLEN{break_point}}        & 32'd3
+                          | {XLEN{ld_adr_missaligned}} & 32'd4
+                          | {XLEN{ld_access_fault}}    & 32'd5
+                          | {XLEN{st_adr_missaligned}} & 32'd6
+                          | {XLEN{st_access_fault}}    & 32'd7
+                          | {XLEN{env_call_m_mode}}    & 32'd11;
+
+assign mtval              = {XLEN{pc_missaligned  | instr_access_fault}} & pc_data_nxt
+                          | {XLEN{adr_missaligned | adr_fault}}          & res_data_nxt;
+
+assign core_mode_nxt      = {2{exception}}          & 2'b11
+                          | {2{mret}}               & 2'b00
+                          | {2{~exception & ~mret}} & core_mode_q;
 // ALU
 assign alu_en           = unit_q_i[ALU];
 assign shifter_en       = unit_q_i[SFT];
@@ -187,6 +203,7 @@ assign bu_en            = unit_q_i[BU];
 assign lsu_en           = unit_q_i[LSU];
 assign is_store         = lsu_en & operation_q_i[ST];
 assign adr_v_o          = lsu_en;
+assign adr_o            = mem_adr;
 assign is_store_o       = is_store;
 assign store_data_o     = {XLEN{lsu_en}} & rs2_data_qual_q_i[XLEN-1:0] ;
 assign access_size_o    = access_size_q_i;
@@ -231,6 +248,7 @@ always_ff @(posedge clk, negedge reset_n)
     csr_wbk_v_q       <= '0;
     csr_data_q        <= '0;
     csr_adr_q         <= '0;
+    core_mode_q       <= 2'b11;
   end else begin
     rd_v_q            <= rd_v_nxt;
     rd_adr_q          <= rd_adr_q_i;
@@ -242,6 +260,7 @@ always_ff @(posedge clk, negedge reset_n)
     csr_wbk_v_q       <= csr_wbk_v_nxt;
     csr_data_q        <= csr_data_nxt;
     csr_adr_q         <= csr_adr_nxt;
+    core_mode_q       <= core_mode_nxt;
 end
 
 // --------------------------------
@@ -251,6 +270,8 @@ end
 assign exe_ff_res_data_o  = res_data_nxt;
 // csr ff
 assign exe_ff_csr_data_o  = csr_data_nxt;
+// core mode
+assign core_mode_q_o      = core_mode_q;
 // wbk
 assign wbk_v_q_o           = rd_v_q;
 assign wbk_adr_q_o         = rd_adr_q;

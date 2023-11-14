@@ -26,6 +26,7 @@ module dec (
 // --------------------------------
 //      Execute Interface
 // --------------------------------
+  input logic [1:0]                  core_mode_q_i,
   // rd ff from EXE
   input logic [XLEN-1:0]             exe_ff_res_data_q_i,
   // csr ff from exe

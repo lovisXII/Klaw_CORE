@@ -20,6 +20,8 @@ module core (
     input logic  [XLEN-1:0] load_data_i,
     output logic [2:0]      access_size_o
 );
+// core mode
+logic [1:0] core_mode_q;
 // ifetch dec interface
 logic                       flush_v_q;
 logic[31:0]                 if_dec_q;
@@ -71,6 +73,7 @@ ifetch u_ifetch (
     // --------------------------------
     //      EXE
     // --------------------------------
+    .core_mode_q_i  (core_mode_q),
     .flush_v_q_i    ( flush_v_q),
     .pc_data_q_i    ( exe_if_pc),
     // --------------------------------
@@ -100,7 +103,7 @@ dec u_decod(
 // --------------------------------
 //      CSR Interface
 // --------------------------------
-  .exe_ff_res_data_q_i  ( exe_ff_res_data_q),
+  .core_mode_q_i        (core_mode_q),
   .exe_ff_res_data_q_i  (exe_ff_res_data_q),
   .exe_ff_csr_data_i    (exe_ff_csr_data),
   .rf_write_v_q_i       ( wbk_v_q),
@@ -155,6 +158,7 @@ exe u_exe(
 // --------------------------------
   .exe_ff_res_data_q_o  (exe_ff_res_data_q),
   .exe_ff_csr_data_o    (exe_ff_csr_data),
+  .core_mode_q_o        (core_mode_q),
   .wbk_v_q_o            ( wbk_v_q),
   .wbk_adr_q_o          ( wbk_adr_q),
   .wbk_data_q_o         ( wbk_data_q),
