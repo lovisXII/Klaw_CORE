@@ -29,7 +29,9 @@ module decoder (
   output logic [NB_UNIT-1:0]         unit_o,
   output logic [NB_OPERATION-1:0]    operation_o,
   output logic                       rs2_ca2_v_o,
-  output logic                       illegal_inst_o
+  output logic                       illegal_inst_o,
+  output logic                       mret_o,
+  output logic                       sret_o
 );
 
 
@@ -148,6 +150,8 @@ logic csrrc;
 logic csrrwi;
 logic csrrsi;
 logic csrrci;
+logic mret;
+logic sret;
 logic fence;
 logic illegal_inst;
 
@@ -225,6 +229,8 @@ always_comb begin
     csrrwi         = 1'b0;
     csrrsi         = 1'b0;
     csrrci         = 1'b0;
+    mret           = 1'b0;
+    sret           = 1'b0;
     fence          = 1'b0;
     illegal_inst   = 1'b0;
   case(opcode)
@@ -304,6 +310,8 @@ always_comb begin
     {P_TYPE, 3'b101, 7'b???????}        : csrrwi = 1'b1;
     {P_TYPE, 3'b110, 7'b???????}        : csrrsi = 1'b1;
     {P_TYPE, 3'b111, 7'b???????}        : csrrci = 1'b1;
+    {P_TYPE, 3'b000, 7'b0011000}        : mret   = instr_i[21];
+    {P_TYPE, 3'b000, 7'b0001000}        : sret   = instr_i[21];
     {FENCE_TYPE , 3'b000, 7'b???????}   : fence  = 1'b1;
     default : illegal_inst = 1'b1;
   endcase
@@ -312,28 +320,20 @@ end
 //-------------------------
 // Register affectation
 //-------------------------
-// Destination register
+// rd
 assign rd_v      = r_type | i_type | l_type | fence | p_type & ~(ecall | ebreak) | lui | auipc | jal | jalr;
 assign rd_adr    = {5{rd_v}} & instr_i[11:7];
-assign rd_v_o    = rd_v;
-assign rd_adr_o  = rd_adr;
-// Csr register
-assign csr_wbk_o    = csrrw | csrrwi | csrrc | csrrci | (csrrsi | csrrs) & ~&rs1_adr;
-assign csr_clear_o  = csrrc | csrrci;
-assign csr_adr_o    = instr_i[31:20];
-// src1 register
+// src1
 assign rs1_v     = (r_type | i_type | jalr | b_type | s_type | l_type | fence
                   | csrrw | csrrc | csrrs | jalr) & |rs1_adr;
-assign rs1_v_o   = rs1_v;
 assign rs1_adr   = instr_i[19:15];
-assign rs1_adr_o = rs1_adr;
-// src2 register
+// src2
 assign rs2_v     = (r_type | b_type | s_type) & |rs1_adr;
-assign rs2_v_o   = rs2_v;
 assign rs2_adr   = instr_i[24:20];
-assign rs2_adr_o = rs2_adr;
 
+//-------------------------
 // Additionnal informations
+//-------------------------
 assign is_csr              = csrrw | csrrs | csrrc | csrrwi | csrrsi | csrrci;
 assign is_store            = s_type ;
 assign is_load             = lb | lh | lw | lbu | lhu;
@@ -343,6 +343,24 @@ assign is_div              = div | divu | rem | remu;
 assign is_arithm           = (r_type | i_type) & ~(sll | srl | sra | slli | srli | srai) | lui | auipc;
 assign is_shift            = (r_type | i_type) & (sll | srl | sra | slli | srli | srai);
 assign unsign_extension    = bltu | bgeu | lbu | lhu | sltiu | sltu;
+
+//-------------------------
+// Outputs
+//-------------------------
+// rd
+assign rd_v_o       = rd_v;
+assign rd_adr_o     = rd_adr;
+// Csr register
+assign csr_wbk_o    = csrrw | csrrwi | csrrc | csrrci | (csrrsi | csrrs) & ~&rs1_adr;
+assign csr_clear_o  = csrrc | csrrci;
+assign csr_adr_o    = instr_i[31:20];
+// rs1
+assign rs1_v_o      = rs1_v;
+assign rs1_adr_o    = rs1_adr;
+// rs2
+assign rs2_v_o      = rs2_v;
+assign rs2_adr_o    = rs2_adr;
+// additionnal informations
 assign auipc_o             = auipc;
 assign rs1_is_immediat_o   = csrrwi | csrrsi | csrrci;
 assign rs2_is_immediat_o   = lui | auipc | jalr | jalr | i_type | l_type;
@@ -355,6 +373,10 @@ assign immediat_o          = {32{(i_type | jalr | l_type)}}  & {{20{instr_i[31]}
                            | {32{csrrwi | csrrsi | csrrci}}  & {27'd0, instr_i[19:15]};
 assign illegal_inst_o      = illegal_inst;
 assign rs2_ca2_v_o         = sub | bge | blt | bgeu | bltu | slt | sltu | slti | sltiu;
+//-------------------------
+// Unit/op encoding
+//-------------------------
+
 // should encode the operation, add, sub, sll, slr, sra...etc
 // msb encodes the unit, lsb encodes the operation
 // 00001 xxx : alu
@@ -398,4 +420,6 @@ assign access_size_o      = {{lw | sw}, {lh | lhu | sh}, {lb | lbu | sb}};
 assign unsign_extension_o = unsign_extension;
 // Optimisation made to avoid using alu
 assign csrrw_o            = csrrw | csrrwi;
+assign mret_o             = mret;
+assign sret_o             = sret;
 endmodule
