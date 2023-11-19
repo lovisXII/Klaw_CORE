@@ -159,7 +159,7 @@ decoder dec0(
 // --------------------------------
 //      Internal architecture
 // --------------------------------
-assign rd_v_nxt        = rd_v;
+assign rd_v_nxt        = rd_v & ~flush_v_i;
 // EXE ff
 assign exe_ff_rs1_adr_match    = (rs1_adr == rd_adr_q)  & rd_v_q    & ~flush_v_i;
 assign exe_ff_rs2_adr_match    = (rs2_adr == rd_adr_q)  & rd_v_q    & ~flush_v_i;
