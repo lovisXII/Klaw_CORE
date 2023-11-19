@@ -243,7 +243,7 @@ assign is_store         = lsu_en & operation_q_i[ST];
 assign adr_v_o          = lsu_en;
 assign adr_o            = mem_adr;
 assign is_store_o       = is_store;
-assign store_data_o     = {XLEN{lsu_en}} & rs2_data_qual_q_i[XLEN-1:0] ;
+assign store_data_o     = rs2_data_qual_q_i[XLEN-1:0] ;
 assign access_size_o    = access_size_q_i;
 // --------------------------------
 //      Write back data
