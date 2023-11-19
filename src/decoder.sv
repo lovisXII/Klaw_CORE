@@ -328,7 +328,7 @@ assign rs1_v     = (r_type | i_type | jalr | b_type | s_type | l_type | fence
                   | csrrw | csrrc | csrrs | jalr) & |rs1_adr;
 assign rs1_adr   = instr_i[19:15];
 // src2
-assign rs2_v     = (r_type | b_type | s_type) & |rs1_adr;
+assign rs2_v     = (r_type | b_type | s_type) & |rs2_adr;
 assign rs2_adr   = instr_i[24:20];
 
 //-------------------------
