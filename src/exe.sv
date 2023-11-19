@@ -211,8 +211,8 @@ assign st_adr_missaligned_nxt = st_adr_missaligned  & ~ld_access_fault_nxt;
 assign st_access_fault_nxt    = st_access_fault     & ~st_adr_missaligned_nxt;
 assign env_call_m_mode_nxt    = env_call_m_mode     & ~st_access_fault_nxt;
 
-assign flush            = exception_nxt | branch_v_nxt;
-assign flush_nxt        = flush & ~flush_v_q & ~flush_v_dly1_q;
+assign flush_nxt        = exception_nxt | branch_v_nxt;
+assign flush            = flush_nxt | flush_v_q | flush_v_dly1_q;
 assign cause_nxt        = {XLEN{pc_missaligned_nxt}}     & 32'b0
                         | {XLEN{instr_access_fault_nxt}} & 32'd1
                         | {XLEN{illegal_inst_nxt}}       & 32'd2
@@ -257,7 +257,7 @@ assign access_size_o    = access_size_q_i;
 // j   :     I D E
 // If dly1 is not taken in consideration j will branch
 // but it's not suppose to branch, it should be flushed
-assign branch_v_nxt = branch_v | mret_q_i | sret_q_i;
+assign branch_v_nxt = (branch_v | mret_q_i | sret_q_i) & ~flush_v_q & ~flush_v_dly1_q;
 assign pc_data_nxt  = {XLEN{~exception_nxt}} & bu_pc_res
                     | {XLEN{ exception_nxt}} & mtvec_q_i
                     | {XLEN{ mret_q_i}}      & mepc_q_i;
@@ -331,7 +331,7 @@ assign core_mode_q_o    = core_mode_q;
 assign wbk_v_q_o           = rd_v_q;
 assign wbk_adr_q_o         = rd_adr_q;
 assign wbk_data_q_o        = res_data_q;
-assign flush_v_q_o         = flush_v_q | exception_q;
+assign flush_v_q_o         = flush_v_q;
 assign pc_data_q_o         = pc_data_q;
 assign csr_wbk_v_q_o       = csr_wbk_v_q;
 assign csr_adr_q_o         = csr_adr_nxt;
