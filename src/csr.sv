@@ -20,6 +20,7 @@ module csr(
     output logic [XLEN-1:0] mtvec_q_o,
     output logic [XLEN-1:0] data_o
 );
+logic [XLEN-1:0] data_nxt;
 logic            mhardtid_nxt_v;
 logic [XLEN-1:0] mhardtid_q;
 logic            mvendorid_nxt_v;
@@ -27,20 +28,25 @@ logic [XLEN-1:0] mvendorid_q;
 logic [XLEN-1:0] marchid_q;
 logic [XLEN-1:0] mimpid_q;
 logic            mstatus_nxt_v;
+logic [XLEN-1:0] mstatus_nxt;
 logic [XLEN-1:0] mstatus_q;
 logic            misa_nxt_v;
 logic [XLEN-1:0] misa_q;
 logic            mie_nxt_v;
 logic [XLEN-1:0] mie_q;
 logic            mtvec_nxt_v;
+logic [XLEN-1:0] mtvec_nxt;
 logic [XLEN-1:0] mtvec_q;
 logic            mstatush_nxt_v;
 logic [XLEN-1:0] mstatush_q;
 logic            mepc_nxt_v;
+logic [XLEN-1:0] mepc_nxt;
 logic [XLEN-1:0] mepc_q;
 logic            mcause_nxt_v;
+logic [XLEN-1:0] mcause_nxt;
 logic [XLEN-1:0] mcause_q;
 logic            mtval_nxt_v;
+logic [XLEN-1:0] mtval_nxt;
 logic [XLEN-1:0] mtval_q;
 logic            mip_nxt_v;
 logic [XLEN-1:0] mip_q;
@@ -51,16 +57,34 @@ logic [XLEN-1:0] mscratch_q;
 // --------------------------------
 assign mhardtid_nxt_v     = write_v_i & (CSR_MHARTID   == adr_write_i);
 assign mvendorid_nxt_v    = write_v_i & (CSR_MVENDORID == adr_write_i);
-assign mstatus_nxt_v      = write_v_i & (CSR_MSTATUS   == adr_write_i);
+assign mstatus_nxt_v      = write_v_i & (CSR_MSTATUS   == adr_write_i)
+                          | exception_q_i;
 assign misa_nxt_v         = write_v_i & (CSR_MISA      == adr_write_i);
 assign mie_nxt_v          = write_v_i & (CSR_MIE       == adr_write_i);
 assign mtvec_nxt_v        = write_v_i & (CSR_MTVEC     == adr_write_i);
 assign mstatush_nxt_v     = write_v_i & (CSR_MSTATUSH  == adr_write_i);
-assign mepc_nxt_v         = write_v_i & (CSR_MEPC      == adr_write_i);
-assign mcause_nxt_v       = write_v_i & (CSR_MCAUSE    == adr_write_i);
-assign mtval_nxt_v        = write_v_i & (CSR_MTVAL     == adr_write_i);
+assign mepc_nxt_v         = write_v_i & (CSR_MEPC      == adr_write_i)
+                          | exception_q_i;
+assign mcause_nxt_v       = write_v_i & (CSR_MCAUSE    == adr_write_i)
+                          | exception_q_i;
+assign mtval_nxt_v        = write_v_i & (CSR_MTVAL     == adr_write_i)
+                          | exception_q_i;
 assign mip_nxt_v          = write_v_i & (CSR_MIP       == adr_write_i);
 assign mscratch_nxt_v     = write_v_i & (CSR_MSCRATCH  == adr_write_i);
+
+assign data_nxt     = {XLEN{write_v_i}} & data_i;
+
+assign mstatus_nxt  = {XLEN{mstatus_nxt_v}} & data_i
+                    | {XLEN{exception_q_i}} & mstatus_q_i;
+
+assign mepc_nxt     = {XLEN{mepc_nxt_v}}    & data_i
+                    | {XLEN{exception_q_i}} & mepc_q_i;
+
+assign mcause_nxt   = {XLEN{mcause_nxt_v}}  & data_i
+                    | {XLEN{exception_q_i}} & mcause_q_i;
+
+assign mtval_nxt    = {XLEN{mtval_nxt_v}}   & data_i
+                    | {XLEN{exception_q_i}} & mtval_q_i;
 
 always_ff @(posedge clk, negedge reset_n) begin
     if (~reset_n) begin
@@ -90,7 +114,7 @@ always_ff @(posedge clk, negedge reset_n) begin
             mstatus_q <= 32'h0;
     end else begin
         if (mstatus_nxt_v) begin
-            mstatus_q <= data_i;
+            mstatus_q <= mstatus_nxt;
         end
     end
 end
@@ -135,7 +159,7 @@ always_ff @(posedge clk, negedge reset_n) begin
             mepc_q <= 32'h0;
     end else begin
         if (mepc_nxt_v) begin
-            mepc_q <= data_i;
+            mepc_q <= mepc_nxt;
         end
     end
 end
@@ -144,7 +168,7 @@ always_ff @(posedge clk, negedge reset_n) begin
             mcause_q <= 32'h0;
     end else begin
         if (mcause_nxt_v) begin
-            mcause_q <= data_i;
+            mcause_q <= mcause_nxt;
         end
     end
 end
@@ -153,7 +177,7 @@ always_ff @(posedge clk, negedge reset_n) begin
             mtval_q <= 32'h0;
     end else begin
         if (mtval_nxt_v) begin
-            mtval_q <= data_i;
+            mtval_q <= mtval_nxt;
         end
     end
 end
