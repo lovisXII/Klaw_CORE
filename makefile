@@ -1,6 +1,6 @@
 # Compilers
 VERILATOR?=verilator
-RISC?=riscv32-unknown-elf-gcc
+RISC?=/opt/riscv/bin/riscv32-unknown-elf-gcc
 SV2V?=bin/sv2v
 
 # SRC RTL
