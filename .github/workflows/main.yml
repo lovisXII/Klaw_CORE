@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up tools
+      run: |
+        sudo apt-get install -y your-dependency-package1 your-dependency-package2
+        # Add any necessary setup commands here
+
+    - name: Compile RTL design
+      run: make
+
+    - name: Cleanup
+      run: make clean
