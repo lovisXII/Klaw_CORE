@@ -1,0 +1,12 @@
+categories:
+  - name: double
+    symbols:
+      - "="
+      - "<="
+      - "&"
+      - "|"
+      - "^"
+  - name: single_before
+    symbols:
+  - name: single_after
+    symbols:

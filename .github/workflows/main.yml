@@ -2,20 +2,48 @@ name: CI
 on:
   push:
     branches:
-      - main
+      - master
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
+
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          /opt/riscv/bin/
+          /usr/local/systemc-2.3.3/include/
+          /usr/local/systemc-2.3.3/lib-linux64/
+        key: ${{ runner.os }}-dependencies-${{ hashFiles('**/setup.sh') }}
+
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: '3.x'
+        architecture: 'x64'
+
+    - name: Set up virtual environment
+      run: python -m venv venv
+
+    - name: Activate virtual environment
+      run: source venv/bin/activate
 
     - name: Set up tools
       run: |
-        .github/workflows/scripts/setup.sh
+        python -m pip install --upgrade pip
+        pip install pyyaml
+        if [ ! -d "/opt/riscv/bin/" ] || [ ! -d "/usr/local/systemc-2.3.3/include/" ] || [ ! -d "/usr/local/systemc-2.3.3/lib-linux64/" ]; then
+          .github/workflows/scripts/setup.sh
+        fi
 
     - name: Compile RTL design
       run: make
+      working-directory: ${{ github.workspace }}
 
-    - name: Cleanup
-      run: make clean
+    - name: Check syntax
+      run: python3 .github/workflows/scripts/syntax.py
+      working-directory: ${{ github.workspace }}
