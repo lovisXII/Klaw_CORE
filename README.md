@@ -8,9 +8,9 @@ You can run any rv32i bare-metal programm written in assembly of C on the core.
 
 To setup all the dependencies you will need a couple of bash script. And of course you will need a linux distribution. The code have been runned under the following distribution :
 * Ubuntu 22.04
-* WSL (Windows Subsytem for Linux)
+* WSL2 (Windows Subsytem for Linux)
 
-It should work on other Unix distribution but some modification may be needed on the scripts.\
+It should work on other Unix distributions but some modification may be needed on the scripts.\
 To setup your environment please run :
 ```bash
 ./setup.sh
@@ -28,8 +28,7 @@ make run TEST=path/test_name # run the custom test given in argument
 make core_tb      # compile the design
 make riscof_build # build riscof framework and needed tests
 make riscof_run   # run riscof framework
-make sv2v         # Translate all system verilog file into verilog
-make synth        # Synthetise the RTL using yosys
+make impl         # Open a docker that allow to run the implementation
 ```
 ## Single test
 If you want to run the test bench by hand here are the needed steps :
@@ -40,18 +39,19 @@ obj_dir/Vcore path/test_name
 
 Running the above command will run the simulation and generate a wave file ``logs/vlt_dump.vcd`` that can be visualise using gtkwave
 
-## Riscof
+## Multi tests using Riscof
 
-Riscof is an open source framework that allow to test your design. It is splitted in one test per instruction that allow to detect most type of error.\
-Our design has a ``100% pass`` rate on the rv32i tests.\
-In the past we encountered error while running C files even with a 100% pass rate on riscof so the framework is not perfect. That is why we also run some custom C programm that allow us to test more deeply the design.\
-Every test we run pass successfully so please reach out if you encounter any issue.
+[Riscof](https://github.com/riscv-software-src/riscof) is an open source framework that allow to test your design. It is splitted in one test per instruction that allow to detect most type of error.\
+Our design has a ``100% pass`` rate on the **RV32I** tests.\
+In the past we encountered error while running C programms even with a 100% pass rate on riscof so the framework is not perfect.\
+This is why we also run some custom C programm that allow us to test more deeply the design.\
+If you encounter any issue while executing a programm and that you triple check your programm should work properly please reach out.\
 If you want to manually run a riscof test file you can run the following command :
 ```make
 make core_tb
 obj_dir/Vcore riscof/riscof_work/rv32i/I/src/test_name/dut/my.elf --riscof signature.txt
 ```
-This will run the elf file in the test directory and generate a signature file name ``signature.txt``.\
+This will run the riscof elf file and generate a signature file name ``signature.txt``.\
  To verify the test ran successfully, riscof compared the generated file ``signature.txt`` with the one in ``riscof/riscof_work/rv32i/I/src/test_name/ref/Reference-spike.signature ``
 
 # Design
@@ -66,21 +66,12 @@ This core is a scalar in order pipeline containing 3 stages which are :
     * LSU : Load Store Unit, which handles all memory accesses
 
 ![](doc/img/pipeline.png)
-## Ifetch
-The stage receive the PC (program counter) from the exe stage and fetch the associate instruction. It is also responsible of the boot process, when the reset is done it fetch the instruction at the address received by ``reset_adr``.\
-In case of a flush coming from exe the next PC taken will be the one calculated by the branch unit.
-## Decode
-In progress
-## Exe
-In progress
-## Register file
-In progress
 
 # Verification
 
 ## Custom programms
 
-Our test-bench is abled to run any type of rv32i assembly, c or elf files. But you need to ensure some things to be sure the programm with run successfully.\
+Our test-bench is abled to run any type of **RV32I** assembly, c or elf files. But you need to ensure some things to be sure the programm with run successfully.\
 Any files must start with the following lines of code :
 ```s
 .section .text
@@ -123,8 +114,8 @@ int main() {
 You may not call the ``_good`` or ``_bad`` label, but if you do not when you program will arrive to the end it will juste execute nothing and after a maximum numbers of cycle the program will be terminated by the test-bench.
 
 # Implementation
-
-To run the implementation we're using OpenLane.
+## Setup
+To perform the implementation we're using [OpenLane](https://github.com/The-OpenROAD-Project/OpenLane).
 1st you will need to install docker, it will reboot your computer :
 ```sh
 sudo apt-get update
@@ -158,10 +149,11 @@ Then you will need to run the following script to setup the install :
 ```sh
 ./setup-implem.sh
 ```
-And finally to run the flow RTL to GDSII you will need to run this :
+## Running the flow
+Once the flow is setup you will be able to generate the GDSII of the design using :
 ```sh
 make impl #will go to implementation/OpenLane and run make mount
-# After this command you will be in the docker environment
+# The below command should be run in the docker env launched by the previus command
 ./flow.tcl -design core -tag run_10ns -config_file designs/core/config.json
 klayout -e -nn $PDK_ROOT/sky130A/libs.tech/klayout/tech/sky130A.lyt \
    -l $PDK_ROOT/sky130A/libs.tech/klayout/tech/sky130A.lyp \
