@@ -4,7 +4,7 @@ setup_path=$PWD
 riscv_sha1="261255c19c0092ae94500ac237660cadb1e615b9"
 systemc_sha1="f861e02ba3a89cc000b62a21cecabaae910b7ef9"
 
-sudo apt install build-essential make wget git gcc g++ automake gtkwave
+sudo apt install build-essential make wget git gcc g++ automake gtkwave verilator
 pip install pyyaml
 # Installing riscv cross-compiler
 if ! command -v riscv32-unknown-elf-gcc &> /dev/null; then
