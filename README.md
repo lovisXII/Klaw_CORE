@@ -13,7 +13,7 @@ To setup all the dependencies you will need a couple of bash script. And of cour
 It should work on other Unix distributions but some modification may be needed on the scripts.\
 To setup your environment please run :
 ```bash
-./setup.sh
+source setup.sh
 ./setup-riscof.sh
 ```
 
