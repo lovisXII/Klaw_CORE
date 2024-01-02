@@ -9,9 +9,3 @@ Welcome to KLAW_CORE's documentation!
    uarch/uarch.rst
    verif/verif.rst
 
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

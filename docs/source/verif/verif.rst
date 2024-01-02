@@ -1,3 +1,5 @@
+.. _verif-ref:
+
 Verification
 =============
 

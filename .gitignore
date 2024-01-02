@@ -27,3 +27,4 @@ riscof/riscof_work/test_list.yaml
 riscof/sail_cSim/__pycache__/*
 riscof/spike/__pycache__/*
 implementation/open_pdks/*
+*.DS_Store
