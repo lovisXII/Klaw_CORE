@@ -2,7 +2,7 @@
 # This script allow you to setup the riscof test frimework
 # You will need it if you really want to test our design, otherwise it will be
 # useless for you to run this script
-
+project_root=$PWD
 export TEMPORARY_PATH=$PWD/riscof/
 ################### PYTHON SETUP ###################
 
@@ -102,3 +102,4 @@ PATH=$PWD/../obj_dir/Vcore
 jobs=$(nproc)">>config.ini
 cd $TEMPORARY_PATH
 riscof --verbose info arch-test --clone
+cd $project_root 
