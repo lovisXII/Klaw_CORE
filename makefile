@@ -27,8 +27,8 @@ C_ARGS=$(INCLUDE_PATH) -Wl, $(LIBS) -g
 
 # RISCV
 SW_DIR=sw
-LD_SCRIPT= -T $(SW_DIR)/kernel.ld
-RISC_FLAGS= -nostdlib -march=rv32izicsr $(LD_SCRIPT)
+LD_DIR=sw/ldscript
+RISC_FLAGS= -nostdlib -march=rv32izicsr
 
 all: core_tb
 
@@ -36,15 +36,31 @@ all: core_tb
 run:core_tb
 	obj_dir/Vcore $(TEST) $(DEBUG)
 
-core_tb: $(ODIR)/exception.o $(ODIR)/reset.o
+core_tb: build_sw
 	export SYSTEMC_INCLUDE=/usr/local/systemc-2.3.3/include/
 	export SYSTEMC_LIBDIR=/usr/local/systemc-2.3.3/lib-linux64/
 	$(VERILATOR) $(PKG) -CFLAGS "$(C_ARGS)" $(VERILATOR_FLAGS) $(SRC) --top-module $(TOP)  --exe $(TB)
 	$(MAKE) -j -C obj_dir -f Vcore.mk
 
-$(ODIR)/%.o:$(SW_DIR)/%.s
+# Building binary needed by simulation
+
+build_sw : build_dir kernel_obj user_obj
+
+build_dir :
 	mkdir -p $(ODIR)
-	$(RISC) $(RISC_FLAGS) $< -c -o $@
+
+kernel_obj: build_dir $(patsubst $(SW_DIR)/kernel/%.s,$(ODIR)/%.o,$(wildcard $(SW_DIR)/kernel/*.s))
+
+user_obj  : build_dir $(patsubst $(SW_DIR)/user/%.s,$(ODIR)/%.o,$(wildcard $(SW_DIR)/user/*.s))
+
+# build kernel
+$(ODIR)/%.o: $(SW_DIR)/kernel/%.s $(LD_DIR)/kernel.ld
+	$(RISC) $(RISC_FLAGS) -T $(LD_DIR)/kernel.ld $< -c -o $@
+
+# build user
+$(ODIR)/%.o: $(SW_DIR)/user/%.s $(LD_DIR)/app.ld
+	$(RISC) $(RISC_FLAGS) -T $(LD_DIR)/app.ld $< -c -o $@
+
 
 riscof_build: core_tb
 	cd riscof && ./lanch-riscof.sh build && cd ..

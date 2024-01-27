@@ -1,34 +1,3 @@
-.section .tohost, "aw", @progbits
-
-.globl tohost
-.align 4
-tohost: .dword 0
-
-.globl fromhost
-.align 4
-fromhost: .dword 0
-
-.section .text
-
-write_tohost:
-    li t1, 1
-    la t5, .tohost
-    sw t1,0(t5)
-    j write_tohost
-
-.section .exit
-.global _good
-.global _bad
-.global _exception_occur
-.space 16
-
-_bad :
-    j write_tohost
-_good :
-    j write_tohost
-_exception_occur :
-    j write_tohost
-
 .section .kernel
 .global _exception
 .global _instruction_address_misagligned

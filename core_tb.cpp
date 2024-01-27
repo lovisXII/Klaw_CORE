@@ -186,7 +186,7 @@ int sc_main(int argc, char* argv[]) {
     if (extension == "s" || extension == "S" || extension == "c") {
         char temp[512];
         sprintf(temp,
-                "riscv32-unknown-elf-gcc -nostdlib -march=rv32im -T sw/app.ld obj_dir/reset.o obj_dir/exception.o %s %s",
+                "riscv32-unknown-elf-gcc -nostdlib -march=rv32im -T sw/ldscript/ldscript.ld obj_dir/reset.o obj_dir/exception.o obj_dir/exit.o %s %s",
                 opt.c_str(),
                 path.c_str());
         system((char*)temp);
