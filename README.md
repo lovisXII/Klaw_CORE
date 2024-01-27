@@ -16,7 +16,7 @@ It should work on other Unix distributions but some modification may be needed o
 To setup your environment please run :
 ```bash
 source setup.sh
-./setup-riscof.sh
+source setup-riscof.sh
 ```
 
 After that you're suppose to be good to go. If not please raise an issue.

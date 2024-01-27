@@ -1,6 +1,6 @@
 #!/bin/bash
 
-setup_path=$PWD
+project_root=$PWD
 riscv_sha1="261255c19c0092ae94500ac237660cadb1e615b9"
 systemc_sha1="f861e02ba3a89cc000b62a21cecabaae910b7ef9"
 
@@ -47,3 +47,4 @@ sudo mkdir -p objdir && cd objdir
 sudo  ../configure --prefix=/usr/local/systemc-2.3.3/
 sudo make -j$(nproc)
 sudo make install
+cd $project_root 
