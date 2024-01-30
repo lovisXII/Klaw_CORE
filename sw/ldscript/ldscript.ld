@@ -5,7 +5,9 @@ SECTIONS
 {
    . = seg_reset;
    .reset : { *(.reset) }
+   . = ALIGN(0x1000);
    .kernel : { *(.kernel) }
+   . = ALIGN(0x1000);
    .exit   : { *(.exit) }
 
    . = seg_user;
