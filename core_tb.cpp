@@ -308,6 +308,18 @@ int sc_main(int argc, char* argv[]) {
     sc_signal<sc_uint<32>>  load_data;
     sc_signal<sc_uint<3>>   access_size;
 
+
+    sc_signal<sc_uint<32>>  write_data;
+    sc_signal<sc_uint<5>>   write_adr;
+    sc_signal<bool>         write_valid;
+    sc_signal<sc_uint<32>>   pc_val;
+    sc_signal<sc_uint<32>>   pc_val_mem;
+
+    //csr
+    sc_signal<sc_uint<12>>   csr_adr;
+    sc_signal<bool>          write_csr_v;
+    sc_signal<sc_uint<32>>   csr_data;
+
     core.clk              (clk);
     core.reset_n          (reset_n);
     core.reset_adr_i      (if_reset_adr);
@@ -319,6 +331,18 @@ int sc_main(int argc, char* argv[]) {
     core.store_data_o     (store_data);
     core.load_data_i      (load_data);
     core.access_size_o    (access_size);
+
+    // Connecting write control signals and data from the execution unit to the core module
+    core.write_valid_o    (write_valid);
+    core.write_adr_o      (write_adr);
+    core.write_data_o     (write_data);
+    core.pc_val_o         (pc_val);
+    core.pc_val_mem_o     (pc_val_mem);
+
+    //csr
+    core.write_csr_v_o    (write_csr_v);
+    core.csr_adr_o        (csr_adr);
+    core.csr_data_o       (csr_data);
 
     cout << "Reseting...";
 
@@ -341,6 +365,12 @@ int sc_main(int argc, char* argv[]) {
     int NB_CYCLES           = 0;
     int countdown           = 100 ;
     bool start_countdown    = false;
+
+
+    std:: ofstream register_file;
+    register_file.open("sim.log");
+    int prev_cycle;
+    int prev_cycle2;
 
     while (1)
     {
@@ -471,7 +501,33 @@ int sc_main(int argc, char* argv[]) {
         load_data    = ram[phys_adr];
         icache_instr = ram[if_adr];
         sc_start(500, SC_PS);
+
+    //Show what's been written in the destination register at each cycle
+    if (prev_cycle != NB_CYCLES){
+        prev_cycle = NB_CYCLES;
+        stringstream line;
+
+        if (write_valid || write_csr_v){
+            line << std::hex << "PC : 0x" << (pc_val.read() & 0xFFFFFFFF);
+        }
+        if (write_valid && write_adr.read() != 0) {
+            line << ", register : "<<dec << "x" <<write_adr<< ", data : 0x"<< setfill('0') << setw(8) << hex << (write_data.read()  & 0xFFFFFFFF);
+        }
+
+        if (write_csr_v) {
+            line <<", csr adr : "<<hex << "0x" <<(csr_adr.read()& 0xFFFFFFFF)<< ", data : 0x"<< setfill('0') << setw(8) << hex << (csr_data.read()  & 0xFFFFFFFF);
+        }
+
+        if (!line.str().empty()) {
+            register_file << line.str() << endl;
+        }
     }
 
+    else if (is_store.read() && adr_v.read() && prev_cycle2 != NB_CYCLES){
+        prev_cycle2=NB_CYCLES;
+        register_file << std::hex <<"PC : 0x" << (pc_val_mem.read()& 0xFFFFFFFF) <<", mem adr: "<<hex << "0x" <<(mem_adr.read()& 0xFFFFFFFF)<< ", data : 0x"<< setfill('0') << setw(8) << hex << (store_data.read()  & 0xFFFFFFFF)<<endl;
+    }
+
+    }
     return 0;
 }
