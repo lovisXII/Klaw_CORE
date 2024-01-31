@@ -94,7 +94,7 @@ if __name__ == "__main__":
         print("Error: No categories defined in the configuration file.")
         sys.exit(1)
 
-    directory = "../../../src"  # Update the directory as needed
+    directory = "src/"  # Update the directory as needed
     extensions = [".sv"]
     output_file = "spacing_errors.txt"  # Update the output file name as needed
 
