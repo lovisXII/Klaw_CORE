@@ -18,7 +18,13 @@ module core (
     output logic            is_store_o,
     output logic [XLEN-1:0] store_data_o,
     input logic  [XLEN-1:0] load_data_i,
-    output logic [2:0]      access_size_o
+    output logic [2:0]      access_size_o,
+
+    //Added outputs for checking //
+
+    output logic              write_valid_o,
+    output logic[31:0]        write_data_o,
+    output logic[NB_REGS-1:0] write_adr_o
 );
 logic                       flush_v_q;
 logic[31:0]                 if_dec_instr_q;
@@ -128,5 +134,9 @@ rf u_rf(
   .write_data_i     ( exe_rf_instr_write_data)
 
 );
+
+assign write_adr_o    = exe_rf_instr_write_adr;
+assign write_data_o   = exe_rf_instr_write_data;
+assign write_valid_o  = exe_rf_instr_write_valid;
 
 endmodule

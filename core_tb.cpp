@@ -321,6 +321,11 @@ int sc_main(int argc, char* argv[]) {
     sc_signal<sc_uint<32>>  load_data;
     sc_signal<sc_uint<3>>   access_size;
 
+    
+    sc_signal<sc_uint<32>>  write_data;
+    sc_signal<sc_uint<5>>   write_adr;
+    sc_signal<bool>         write_valid;
+
     core.clk              (clk);
     core.reset_n          (reset_n);
     core.reset_adr_i      (if_reset_adr);
@@ -332,6 +337,11 @@ int sc_main(int argc, char* argv[]) {
     core.store_data_o     (store_data);
     core.load_data_i      (load_data);
     core.access_size_o    (access_size);
+
+    // Connecting write control signals and data from the execution unit to the core module
+    core.write_valid_o    (write_valid);
+    core.write_adr_o      (write_adr);
+    core.write_data_o     (write_data);
 
     cout << "Reseting...";
 
@@ -354,6 +364,11 @@ int sc_main(int argc, char* argv[]) {
     int NB_CYCLES           = 0;
     int countdown           = 100 ;
     bool start_countdown    = false;
+
+    
+    std:: ofstream register_file;
+    register_file.open("register_values.txt");
+    int prev_cycle;
 
     while (1)
     {
@@ -485,6 +500,15 @@ int sc_main(int argc, char* argv[]) {
         load_data    = ram[phys_adr];
         icache_instr = ram[if_adr];
         sc_start(500, SC_PS);
+
+
+    //Show what's been written in the destination register at each cycle
+        if (write_valid) {
+            if (prev_cycle != NB_CYCLES){
+                prev_cycle = NB_CYCLES;
+                register_file<< "Cycle : "<<NB_CYCLES<<", register : "<<write_adr<< ", data : "<<write_data<<std::endl;
+            }
+        }
     }
 
     return 0;
