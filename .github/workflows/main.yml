@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - master
+      - verif/checker
 jobs:
   build:
     runs-on: ubuntu-latest
