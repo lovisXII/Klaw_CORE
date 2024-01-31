@@ -18,7 +18,20 @@ module core (
     output logic            is_store_o,
     output logic [XLEN-1:0] store_data_o,
     input logic  [XLEN-1:0] load_data_i,
-    output logic [2:0]      access_size_o
+    output logic [2:0]      access_size_o,
+
+    //Added outputs for checking //
+
+    output logic              write_valid_o,
+    output logic[31:0]        write_data_o,
+    output logic[NB_REGS-1:0] write_adr_o,
+    output logic[31:0]        pc_val_o,
+    output logic[31:0]        pc_val_mem_o,
+
+    output logic              write_csr_v_o,
+    output logic[11:0]        csr_adr_o,
+    output logic[31:0]        csr_data_o
+
 );
 // priviledge
 logic [1:0]                 core_mode_q;
@@ -68,6 +81,8 @@ logic[XLEN-1:0]             exe_if_pc;
 logic                       exe_csr_wbk_v_q;
 logic [11:0]                exe_csr_adr_q;
 logic [XLEN-1:0]            exe_csr_data;
+logic [XLEN-1:0]            pc_q_o;
+
 
 ifetch u_ifetch (
     // global interface
@@ -187,7 +202,8 @@ exe u_exe(
   .csr_adr_q_o          (exe_csr_adr_q),
   .csr_data_q_o         (exe_csr_data),
   .branch_v_q_o         ( branch_v_q),
-  .pc_data_q_o          ( exe_if_pc)
+  .pc_data_q_o          ( exe_if_pc),
+  .pc_q_o               ( pc_q_o)
 );
 
 rf u_rf(
@@ -218,5 +234,14 @@ csr u_csr(
   .mepc_q_o         (mepc_reg_q),
   .data_o           (csr_dec_data)
 );
+//Checker
+assign write_adr_o    = wbk_adr_q;
+assign write_data_o   = wbk_data_q;
+assign write_valid_o  = wbk_v_q;
+assign pc_val_o       = pc_q_o;
+assign pc_val_mem_o   = dec_exe_pc_q;
+assign write_csr_v_o  = exe_csr_wbk_v_q;
+assign csr_adr_o      = exe_csr_adr_q;
+assign csr_data_o     = exe_csr_data;
 
 endmodule

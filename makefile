@@ -8,6 +8,7 @@ SRC_DIR=src
 SRC=$(wildcard src/*.sv)
 ODIR= obj_dir
 TEST?=sw/tests/I/add/add_0.S
+TEST_R=riscof/riscof_work/rv32i_m/privilege/src/ebreak.S/dut/my.elf
 DEBUG?=
 
 # Implementation
@@ -42,6 +43,11 @@ view:
 run:core_tb
 	spike -p1 -g -l --log=spike.log --priv=m --isa=rv32izicsr --log-commits a.out
 	obj_dir/Vcore $(TEST) $(DEBUG)
+
+
+run_risc:core_tb
+	spike -p1 -g -l --log=spike.log --priv=m --isa=rv32izicsr --log-commits $(TEST_R)
+	obj_dir/Vcore $(TEST_R) --riscof signature.txt
 
 check: core_tb
 	obj_dir/Vcore $(TEST) $(DEBUG)

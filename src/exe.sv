@@ -69,8 +69,13 @@ input  logic [XLEN-1:0]           mtvec_q_i,
   output logic [11:0]               csr_adr_q_o,
   output logic [XLEN-1:0]           csr_data_q_o,
   output logic                      branch_v_q_o,
-  output logic [XLEN-1:0]           pc_data_q_o
+  output logic [XLEN-1:0]           pc_data_q_o,
 
+// --------------------------------
+//      CHECKER
+// --------------------------------
+
+  output logic [XLEN-1:0]           pc_q_o
 );
 // --------------------------------
 //      Signals declaration
@@ -151,6 +156,12 @@ logic [XLEN-1:0]          pc_data_nxt;
 logic                     flush_v_q;
 logic                     flush_v_dly1_q;
 logic [XLEN-1:0]          pc_data_q;
+
+// --------------------------------
+//      CHECKER
+// --------------------------------
+
+logic [XLEN-1:0]          pc_q;
 
 
 // --------------------------------
@@ -343,6 +354,8 @@ always_ff @(posedge clk, negedge reset_n)
     mepc_q            <= pc_q_i;
     branch_v_q        <= branch_v_nxt;
     branch_v_dly1_q   <= branch_v_q;
+//checker
+    pc_q              <= pc_q_i;
 end
 
 // --------------------------------
@@ -367,5 +380,7 @@ assign pc_data_q_o         = pc_data_q;
 assign csr_wbk_v_q_o       = csr_wbk_v_q;
 assign csr_adr_q_o         = csr_adr_q;
 assign csr_data_q_o        = csr_data_q;
+//Checker
+assign pc_q_o                = pc_q;
 
 endmodule
