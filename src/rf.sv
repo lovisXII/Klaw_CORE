@@ -18,7 +18,6 @@ module rf(
     input logic [XLEN-1:0]    write_data_i
 );
 
-logic            reg0_next_valid;
 logic [XLEN-1:0] reg0_q;
 logic            reg1_next_valid;
 logic [XLEN-1:0] reg1_q;
@@ -84,7 +83,6 @@ logic            reg31_next_valid;
 logic [XLEN-1:0] reg31_q;
 
 
-assign reg0_next_valid    = write_valid_i & (5'd0 == write_adr_i);
 assign reg1_next_valid    = write_valid_i & (5'd1 == write_adr_i);
 assign reg2_next_valid    = write_valid_i & (5'd2 == write_adr_i);
 assign reg3_next_valid    = write_valid_i & (5'd3 == write_adr_i);
@@ -118,15 +116,8 @@ assign reg30_next_valid   = write_valid_i & (5'd30 == write_adr_i);
 assign reg31_next_valid   = write_valid_i & (5'd31 == write_adr_i);
 
 
-always_ff @(posedge clk, negedge reset_n) begin
-    if (~reset_n) begin
-            reg0_q <= 32'h0;
-    end else begin
-        if (reg0_next_valid) begin
-            reg0_q <= write_data_i;
-        end
-    end
-end
+assign reg0_q = 32'h0;
+
 always_ff @(posedge clk, negedge reset_n) begin
     if (~reset_n) begin
             reg1_q <= 32'h0;
