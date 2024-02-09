@@ -228,4 +228,14 @@ localparam JALR= 5;
 
 localparam ST  = 0;
 localparam LD  = 1;
+
+/* Branch prediction */
+localparam PRED_SIZE      = 4;
+localparam PRED_WPTR_SIZE = 2; // log(PRED_SIZE)
+
+localparam PRED_SNT = 2'b00; // Strongly  Not Taken
+localparam PRED_WNT = 2'b01; // Weakly    Not Taken
+localparam PRED_WT  = 2'b10; // Weakly        Taken
+localparam PRED_ST  = 2'b11; // Strongly      Taken
+
 endpackage
