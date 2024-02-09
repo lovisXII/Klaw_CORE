@@ -8,7 +8,7 @@ module exe
 //      DEC
 // --------------------------------
   // PC
-  input logic [XLEN-1:0]            dec_pc0_q_i,
+  input logic [XLEN-1:0]            pc_q_i,
   // Registers
   // Destination
   input logic                       rd_v_q_i,
@@ -35,12 +35,12 @@ module exe
 // --------------------------------
 //      WBK
 // --------------------------------
-  output logic                      exe_ff_write_v_q_o,
+  output logic                      exe_ff_w_v_q_o,
   output logic [NB_REGS-1:0]        exe_ff_rd_adr_q_o,
   output logic [XLEN-1:0]           exe_ff_res_data_q_o,
-  output logic                      res_w_v_q_o,
-  output logic [XLEN-1:0]           instr_wbk_data_q_o,
-  output logic [NB_REGS-1:0]        instr_write_adr_q_o,
+  output logic                      wbk_v_q_o,
+  output logic [XLEN-1:0]           wbk_data_q_o,
+  output logic [NB_REGS-1:0]        wbk_adr_q_o,
   output logic                      flush_v_q_o,
   output logic [XLEN-1:0]           pc_data_q_o
 
@@ -99,7 +99,7 @@ bu u_bu(
     .rs2_data_i         (rs2_data_qual_q_i),
     .unsign_cmp_i       (unsign_extension_q_i),
     .immediat_i         (immediat_q_i),
-    .pc_data_i          (dec_pc0_q_i),
+    .pc_data_i          (pc_q_i),
     .bu_en_i            (bu_en),
     .cmd_i              (operation_q_i ),
     .branch_v_o         (branch_v),
@@ -175,13 +175,13 @@ end
 // --------------------------------
 //      Ouputs
 // --------------------------------
-assign exe_ff_write_v_q_o    = rd_v_nxt;
-assign exe_ff_rd_adr_q_o     = rd_adr_q_i;
-assign exe_ff_res_data_q_o   = res_data_nxt;
-assign res_w_v_q_o           = rd_v_q;
-assign instr_write_adr_q_o   = rd_adr_q;
-assign instr_wbk_data_q_o    = res_data_q;
-assign flush_v_q_o           = flush_v_q;
-assign pc_data_q_o           = pc_data_q;
+assign exe_ff_w_v_q_o      = rd_v_nxt;
+assign exe_ff_rd_adr_q_o   = rd_adr_q_i;
+assign exe_ff_res_data_q_o = res_data_nxt;
+assign wbk_v_q_o         = rd_v_q;
+assign wbk_adr_q_o = rd_adr_q;
+assign wbk_data_q_o  = res_data_q;
+assign flush_v_q_o         = flush_v_q;
+assign pc_data_q_o         = pc_data_q;
 
 endmodule
