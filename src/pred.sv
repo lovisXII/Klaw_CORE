@@ -54,8 +54,8 @@ for(i = 0; i < PRED_SIZE; i++) begin
     assign pred_hits[i]         = bu_pc_branch_i == branch_q[i] & pred_v_q[i];
     assign pred_sate_update[i]  = pred_update & pred_hits[i];
 
-    assign pred_state_next[i]   = (pred_state_q[i] + 1'b1) & {2{~&pred_state_q[i] & ~new_pred & pred_hits[i] & bu_pred_success_i   }} 
-                                | (pred_state_q[i] - 1'b1) & {2{ |pred_state_q[i] & ~new_pred & pred_hits[i] & bu_pred_failed_i    }}
+    assign pred_state_next[i]   = (pred_state_q[i] + 1'b1) & {2{~&pred_state_q[i] & ~new_pred & pred_hits[i] & bu_pred_success_i}} 
+                                | (pred_state_q[i] - 1'b1) & {2{ |pred_state_q[i] & ~new_pred & pred_hits[i] & bu_pred_failed_i }}
                                 | (pred_state_q[i]       ) & {2{~^pred_state_q[i] & ~new_pred & pred_hits[i]                    }}
                                 | (PRED_WT               ) & {2{                     new_pred                                   }};
 
@@ -70,7 +70,7 @@ endgenerate
 assign pred_miss        = ~|pred_hits;
 assign pred_wptr_we     = pred_miss & pred_en_i;
 
-assign pred_update      = pred_en_i & (bu_pred_success_i | bu_pred_failed_i | pred_miss);
+assign pred_update      = pred_en_i & (bu_pred_success_i | bu_pred_failed_i | pred_miss); // handle saturating cases and do nothing here ?
 
 assign new_pred         = &pred_v_q & |pred_we;
 
@@ -122,10 +122,10 @@ always_comb begin
     state     = '0;
     valid     = '0;
 
-    for(i=0; i<PRED_SIZE; i++) begin    
-        pc_target = pc_target   | (target_q[i]      & {XLEN{pred_hits[i]}});
-        state     = state       | (pred_state_q[i]  & {XLEN{pred_hits[i]}});
-        valid     = valid       | (pred_v_q[i]      & {XLEN{pred_hits[i]}});
+    for(int j=0; j<PRED_SIZE; j++) begin    
+        pc_target = pc_target   | (target_q[j]      & {XLEN{pred_hits[j]}});
+        state     = state       | (pred_state_q[j]  & {XLEN{pred_hits[j]}});
+        valid     = valid       | (pred_v_q[j]      & {XLEN{pred_hits[j]}});
     end
 
     assign pred_state   = state;

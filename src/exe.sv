@@ -42,7 +42,16 @@ module exe
   output logic [XLEN-1:0]           wbk_data_q_o,
   output logic [NB_REGS-1:0]        wbk_adr_q_o,
   output logic                      flush_v_q_o,
-  output logic [XLEN-1:0]           pc_data_q_o
+  output logic [XLEN-1:0]           pc_data_q_o,
+
+  input  logic                      dec_pred_v_i,
+  input  logic                      dec_pred_is_taken_i,
+  // Ifetch - branch prediction feedback
+  output logic [XLEN-1:0]           exe_pc_q_o,
+  output logic                      exe_branch_instr_o,
+  output logic                      bu_pred_feedback_o,
+  output logic                      bu_pred_success_o,
+  output logic                      bu_pred_failed_o
 
 );
 // --------------------------------
@@ -73,7 +82,15 @@ logic [XLEN-1:0]          pc_data_nxt;
 logic                     flush_v_q;
 logic                     flush_v_dly1_q;
 logic [XLEN-1:0]          pc_data_q;
-
+// ifetch branch feedback
+logic [XLEN-1:0]          pc_instr_q;
+logic                     branch_instr_q;
+logic                     bu_pred_feedback;
+logic                     bu_pred_success;
+logic                     bu_pred_failed;
+logic                     bu_pred_feedback_q;
+logic                     bu_pred_success_q;
+logic                     bu_pred_failed_q;
 
 // --------------------------------
 //      Unit instanciation
@@ -102,9 +119,14 @@ bu u_bu(
     .pc_data_i          (pc_q_i),
     .bu_en_i            (bu_en),
     .cmd_i              (operation_q_i ),
+    .pred_v_i           (dec_pred_v_i),
+    .pred_is_taken_i    (dec_pred_is_taken_i),
     .branch_v_o         (branch_v),
     .pc_nxt_o           (bu_pc_res),
-    .data_o             (bu_data_res)
+    .data_o             (bu_data_res),
+    .pred_feedback_o    (bu_pred_feedback),
+    .pred_success_o     (bu_pred_success),
+    .pred_failed_o      (bu_pred_failed)
 );
 lsu u_lsu(
     .rs1_data_i         (rs1_data_qual_q_i[XLEN-1:0]),
@@ -163,6 +185,11 @@ always_ff @(posedge clk, negedge reset_n)
     flush_v_q         <= '0;
     flush_v_dly1_q    <= '0;
     pc_data_q         <= '0;
+    pc_instr_q        <= '0;
+    branch_instr_q    <= '0;
+    bu_pred_feedback_q<= '0;
+    bu_pred_success_q <= '0;
+    bu_pred_failed_q  <= '0;
   end else begin
     rd_v_q            <= rd_v_nxt;
     rd_adr_q          <= rd_adr_q_i;
@@ -170,6 +197,11 @@ always_ff @(posedge clk, negedge reset_n)
     flush_v_q         <= branch_v_nxt;
     flush_v_dly1_q    <= flush_v_q;
     pc_data_q         <= pc_data_nxt;
+    pc_instr_q        <= pc_q_i;
+    branch_instr_q    <= bu_en;
+    bu_pred_feedback_q<= bu_pred_feedback;
+    bu_pred_success_q <= bu_pred_success;
+    bu_pred_failed_q  <= bu_pred_failed;
 end
 
 // --------------------------------
@@ -183,5 +215,11 @@ assign wbk_adr_q_o = rd_adr_q;
 assign wbk_data_q_o  = res_data_q;
 assign flush_v_q_o         = flush_v_q;
 assign pc_data_q_o         = pc_data_q;
+
+assign exe_pc_q_o           = pc_instr_q;
+assign exe_branch_instr_o   = branch_instr_q;
+assign bu_pred_feedback_o   = bu_pred_feedback_q;
+assign bu_pred_success_o    = bu_pred_success_q;
+assign bu_pred_failed_o     = bu_pred_failed_q;
 
 endmodule

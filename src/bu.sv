@@ -12,12 +12,19 @@ module bu
     input  logic[XLEN-1:0]          pc_data_i,
     input  logic                    bu_en_i,
     input  logic[NB_OPERATION-1:0]  cmd_i,
+    // prediction
+    input  logic                    pred_v_i,
+    input  logic                    pred_is_taken_i,
     //----------------------------------------
     // Outputs
     //----------------------------------------
     output logic                    branch_v_o,
     output logic[XLEN-1:0]          pc_nxt_o,
-    output logic[XLEN-1:0]          data_o
+    output logic[XLEN-1:0]          data_o,
+    // prediction feedback
+    output logic                    pred_feedback_o,
+    output logic                    pred_success_o,
+    output logic                    pred_failed_o
 );
 // Output selection
 logic            data_eq;
@@ -41,4 +48,13 @@ assign branch_v_o = branch_v;
 assign data_o     = pc_data_i + 32'd4;
 assign pc_nxt_o   = {XLEN{branch_v & ~cmd_i[JALR]}}  & pc_data_i  + immediat_i
                   | {XLEN{branch_v &  cmd_i[JALR]}}  & rs1_data_i[XLEN-1:0] + immediat_i;
-endmodule
+
+assign pred_feedback_o  = bu_en_i & pred_v_i;
+
+assign pred_success_o   = pred_v_i & (( pred_is_taken_i &  branch_v)
+                                      |(~pred_is_taken_i & ~branch_v));
+
+assign pred_failed_o    = pred_v_i & (( pred_is_taken_i & ~branch_v)
+                                      |(~pred_is_taken_i &  branch_v));
+
+endmodule 

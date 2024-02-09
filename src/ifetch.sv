@@ -15,9 +15,18 @@ module ifetch(
     // --------------------------------
     input  logic            flush_v_q_i,
     input  logic[XLEN-1:0]  pc_data_q_i,
+    input  logic[XLEN-1:0]  exe_pc_i,
+    input  logic            exe_branch_instr_i,
+    input  logic            bu_pred_feedback_i, 
+    input  logic            bu_pred_success_i,
+    input  logic            bu_pred_failed_i,
+
     // --------------------------------
     //      DEC
     // --------------------------------
+    
+    output logic            pred_v_o,
+    output logic            pred_is_taken_o,
     output logic[31:0]      instr_q_o,
     output logic[XLEN-1:0]  pc_q_o
 
@@ -37,6 +46,30 @@ logic [XLEN-1:0] pc_nxt;
 
 logic [31:0]     instr_q;
 logic [XLEN-1:0] pc_q;
+
+logic [XLEN-1:0] pred_pc;
+logic            pred_taken;
+logic            pred_v;
+logic            pred_v_q;
+logic            pred_taken_q;
+
+// --------------------------------
+//      Unit instanciation
+// --------------------------------
+
+pred u_pred(
+    .clk                (clk),
+    .reset_n            (reset_n),
+    .pred_en_i          (exe_branch_instr_i | bu_pred_feedback_i),
+    .bu_pc_branch_i     (exe_pc_i),
+    .bu_pc_target_i     (pc_data_q_i),
+    .bu_pred_success_i  (bu_pred_success_i),
+    .bu_pred_failed_i   (bu_pred_failed_i),
+    .pred_pc_o          (pred_pc),
+    .pred_taken_o       (pred_taken),
+    .pred_v_o           (pred_v)
+);
+
 
 // --------------------------------
 //      Internal architecture
@@ -73,9 +106,13 @@ always_ff @(posedge clk, negedge reset_n)
   if (!reset_n) begin
     instr_q   <= '0;
     pc_q      <= '0;
+    pred_v_q  <= '0;
+    pred_taken_q <= '0;
   end else begin
     instr_q   <= instr_nxt;
     pc_q      <= pc_nxt;
+    pred_v_q  <= pred_v;
+    pred_taken_q <= pred_taken;
 end
 
 // --------------------------------
@@ -83,5 +120,7 @@ end
 // --------------------------------
 assign instr_q_o      = instr_q;
 assign pc_q_o         = pc_q;
+assign pred_v_o         = pred_v_q;
+assign pred_is_taken_o  = pred_taken_q;
 
 endmodule

@@ -8,6 +8,9 @@ module dec (
 // --------------------------------
   input logic [XLEN-1:0]             instr_q_i,
   input logic [XLEN-1:0]             pc0_q_i,
+  // Branch prediction
+  input logic                        pred_v_i,
+  input logic                        pred_is_taken_i,
   // Exception
 // --------------------------------
 //      RF Interface
@@ -43,6 +46,9 @@ module dec (
   output logic                       unsign_ext_q_o,
   output logic [NB_UNIT-1:0]         unit_q_o,
   output logic [NB_OPERATION-1:0]    operation_q_o,
+  // Prediction
+  output logic                       exe_pred_v_o,
+  output logic                       exe_pred_is_taken_o, 
   // Flush signals
   input logic                        flush_v_q_i
 );
@@ -90,7 +96,8 @@ module dec (
   logic                    unsign_extension_q;
   logic [NB_UNIT-1:0]      instr_unit_q;
   logic [NB_OPERATION-1:0] instr_operation_q;
-
+  logic                    pred_v_q;  
+  logic                    pred_is_taken_q;
 // --------------------------------
 //      Decoder
 // --------------------------------
@@ -159,6 +166,8 @@ always_ff @(posedge clk, negedge reset_n)
               instr_unit_q             <= '0;
               instr_operation_q        <= '0;
               pc_q_o                   <= '0;
+              pred_v_q                 <= '0;
+              pred_is_taken_q          <= '0;
   end else begin
               rd_v_q                      <= rd_v_nxt;
               rd_adr_q                    <= rd_adr_nxt;
@@ -170,6 +179,8 @@ always_ff @(posedge clk, negedge reset_n)
               instr_unit_q                <= unit_nxt;
               instr_operation_q           <= operation;
               pc_q_o                      <= pc0_q_i;
+              pred_v_q                    <= pred_v_i;
+              pred_is_taken_q             <= pred_is_taken_i;
   end
 
 // --------------------------------
@@ -186,5 +197,7 @@ assign access_size_q_o   = instr_access_size_q;
 assign unsign_ext_q_o    = unsign_extension_q;
 assign unit_q_o          = instr_unit_q;
 assign operation_q_o     = instr_operation_q;
+assign exe_pred_v_o        = pred_v_q;
+assign exe_pred_is_taken_o = pred_is_taken_q;
 
 endmodule

@@ -45,17 +45,30 @@ logic [NB_REGS-1:0]         wbk_adr_q;
 logic [XLEN-1:0]            wbk_data_q;
 logic[XLEN-1:0]             exe_if_pc;
 
-
+logic [XLEN-1:0]            exe_if_pc_instr;
+logic                       exe_if_branch_instr;
+logic                       bu_if_pred_success;
+logic                       bu_if_pred_failed;
+logic                       if_dec_pred_v;
+logic                       if_dec_pred_is_taken;
+logic                       dec_exe_pred_v;
+logic                       dec_exe_pred_is_taken;
 ifetch u_ifetch (
-    .clk            ( clk),
-    .reset_n        ( reset_n),
-    .reset_adr_i    ( reset_adr_i),
-    .icache_instr_i ( icache_instr_i),
-    .icache_adr_o   ( icache_adr_o),
-    .flush_v_q_i    ( flush_v_q),
-    .pc_data_q_i    ( exe_if_pc),
-    .instr_q_o      ( if_dec_q),
-    .pc_q_o         ( if_dec_pc0_q)
+    .clk                ( clk),
+    .reset_n            ( reset_n),
+    .reset_adr_i        ( reset_adr_i),
+    .icache_instr_i     ( icache_instr_i),
+    .icache_adr_o       ( icache_adr_o),
+    .flush_v_q_i        ( flush_v_q),
+    .pc_data_q_i        ( exe_if_pc),
+    .exe_pc_i           ( exe_if_pc_instr),     // rename for clarity?
+    .exe_branch_instr_i ( exe_if_branch_instr),
+    .bu_pred_success_i  ( bu_if_pred_success),
+    .bu_pred_failed_i   ( bu_if_pred_failed),
+    .pred_v_o           ( if_dec_pred_v),
+    .pred_is_taken_o    ( if_dec_pred_is_taken),
+    .instr_q_o          ( if_dec_q),
+    .pc_q_o             ( if_dec_pc0_q)
 
 );
 dec u_decod(
@@ -63,6 +76,8 @@ dec u_decod(
   .reset_n              ( reset_n),
   .instr_q_i            ( if_dec_q),
   .pc0_q_i              ( if_dec_pc0_q),
+  .pred_v_i             ( if_dec_pred_v),
+  .pred_is_taken_i      ( if_dec_pred_is_taken),
   .rfr_rs1_adr_o        ( dec_rf_rs1_adr),
   .rf_rs1_data_i        ( dec_rf_rs1_data),
   .rfr_rs2_adr_o        ( dec_rf_rs2_adr),
@@ -83,6 +98,8 @@ dec u_decod(
   .unsign_ext_q_o       ( dec_exe_unsign_extension_q),
   .unit_q_o             ( dec_exe_unit_q),
   .operation_q_o        ( dec_exe_operation_q),
+  .exe_pred_v_o       (dec_exe_pred_v),
+  .exe_pred_is_taken_o(dec_exe_pred_is_taken),
   .flush_v_q_i          ( flush_v_q)
 
 );
@@ -113,7 +130,13 @@ exe u_exe(
   .wbk_adr_q_o          ( wbk_adr_q),
   .wbk_data_q_o         ( wbk_data_q),
   .flush_v_q_o          ( flush_v_q),
-  .pc_data_q_o          ( exe_if_pc)
+  .pc_data_q_o          ( exe_if_pc),
+  .dec_pred_v_i         ( dec_exe_pred_v),
+  .dec_pred_is_taken_i  ( dec_exe_pred_is_taken),
+  .exe_pc_q_o           ( exe_if_pc_instr),
+  .exe_branch_instr_o   ( exe_if_branch_instr),        
+  .bu_pred_success_o    ( bu_if_pred_success),        
+  .bu_pred_failed_o     ( bu_if_pred_failed)      
 );
 
 rf u_rf(
