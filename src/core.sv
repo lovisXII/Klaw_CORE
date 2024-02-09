@@ -24,7 +24,8 @@ module core (
 
     output logic              write_valid_o,
     output logic[31:0]        write_data_o,
-    output logic[NB_REGS-1:0] write_adr_o
+    output logic[NB_REGS-1:0] write_adr_o,
+    output logic[31:0]        pc_val_o
 );
 logic                       flush_v_q;
 logic[31:0]                 if_dec_instr_q;
@@ -50,6 +51,7 @@ logic                       exe_rf_instr_write_valid;
 logic [NB_REGS-1:0]         exe_rf_instr_write_adr;
 logic [XLEN-1:0]            exe_rf_instr_write_data;
 logic[XLEN-1:0]             exe_if_pc0_write_data;
+logic [XLEN-1:0]            pc_q_o;
 
 
 ifetch u_ifetch (
@@ -119,7 +121,8 @@ exe u_exe(
   .instr_write_adr_q_o  ( exe_rf_instr_write_adr),
   .instr_wbk_data_q_o   ( exe_rf_instr_write_data),
   .flush_v_q_o          ( flush_v_q),
-  .pc_data_q_o          ( exe_if_pc0_write_data)
+  .pc_data_q_o          ( exe_if_pc0_write_data),
+  .pc_q_o               ( pc_q_o)
 );
 
 rf u_rf(
@@ -135,8 +138,10 @@ rf u_rf(
 
 );
 
+//Checker
 assign write_adr_o    = exe_rf_instr_write_adr;
 assign write_data_o   = exe_rf_instr_write_data;
 assign write_valid_o  = exe_rf_instr_write_valid;
+assign pc_val_o       = pc_q_o;
 
 endmodule

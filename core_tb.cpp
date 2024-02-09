@@ -325,6 +325,7 @@ int sc_main(int argc, char* argv[]) {
     sc_signal<sc_uint<32>>  write_data;
     sc_signal<sc_uint<5>>   write_adr;
     sc_signal<bool>         write_valid;
+    sc_signal<sc_uint<32>>   pc_val;
 
     core.clk              (clk);
     core.reset_n          (reset_n);
@@ -342,6 +343,7 @@ int sc_main(int argc, char* argv[]) {
     core.write_valid_o    (write_valid);
     core.write_adr_o      (write_adr);
     core.write_data_o     (write_data);
+    core.pc_val_o         (pc_val);
 
     cout << "Reseting...";
 
@@ -506,10 +508,12 @@ int sc_main(int argc, char* argv[]) {
         if (write_valid) {
             if (prev_cycle != NB_CYCLES){
                 prev_cycle = NB_CYCLES;
-                register_file<< "Cycle : "<<NB_CYCLES<<", register : "<<write_adr<< ", data : "<<write_data<<std::endl;
+                
+                register_file<< "Cycle : "<<dec<<NB_CYCLES<<", PC : 0x"<<setw(8)<<setfill('0') << hex<<pc_val<<", register : "<<dec<<write_adr<< ", data : 0x"<<hex<<write_data<<endl;
+                
             }
         }
     }
-
+    
     return 0;
 }

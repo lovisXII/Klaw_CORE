@@ -42,7 +42,13 @@ module exe
   output logic [XLEN-1:0]           instr_wbk_data_q_o,
   output logic [NB_REGS-1:0]        instr_write_adr_q_o,
   output logic                      flush_v_q_o,
-  output logic [XLEN-1:0]           pc_data_q_o
+  output logic [XLEN-1:0]           pc_data_q_o,
+
+// --------------------------------
+//      CHECKER
+// --------------------------------
+
+  output logic [XLEN-1:0]           pc_q_o
 
 );
 // --------------------------------
@@ -73,6 +79,12 @@ logic [XLEN-1:0]          pc_data_nxt;
 logic                     flush_v_q;
 logic                     flush_v_dly1_q;
 logic [XLEN-1:0]          pc_data_q;
+
+// --------------------------------
+//      CHECKER
+// --------------------------------
+
+logic [XLEN-1:0]          pc_q;
 
 
 // --------------------------------
@@ -163,6 +175,9 @@ always_ff @(posedge clk, negedge reset_n)
     flush_v_q         <= '0;
     flush_v_dly1_q    <= '0;
     pc_data_q         <= '0;
+
+// checker
+    pc_q              <= '0;
   end else begin
     rd_v_q            <= rd_v_nxt;
     rd_adr_q          <= rd_adr_q_i;
@@ -170,6 +185,9 @@ always_ff @(posedge clk, negedge reset_n)
     flush_v_q         <= branch_v_nxt;
     flush_v_dly1_q    <= flush_v_q;
     pc_data_q         <= pc_data_nxt;
+    
+//checker
+    pc_q              <= dec_pc0_q_i;
 end
 
 // --------------------------------
@@ -183,5 +201,8 @@ assign instr_write_adr_q_o   = rd_adr_q;
 assign instr_wbk_data_q_o    = res_data_q;
 assign flush_v_q_o           = flush_v_q;
 assign pc_data_q_o           = pc_data_q;
+
+//Checker
+assign pc_q_o                = pc_q;
 
 endmodule
