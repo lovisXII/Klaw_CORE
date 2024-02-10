@@ -18,8 +18,6 @@ module pred
     output logic                pred_v_o
 );
 
-genvar i;
-
 logic [XLEN-1:0]            branch_next     [PRED_SIZE-1:0];
 logic [XLEN-1:0]            target_next     [PRED_SIZE-1:0];
 logic [1:0]                 pred_state_next [PRED_SIZE-1:0];
@@ -50,7 +48,7 @@ assign pred_wptr_next   =   pred_wptr_q << 1'b1 & {PRED_SIZE{~pred_wptr_q[PRED_S
                         |   4'b1                & {PRED_SIZE{ pred_wptr_q[PRED_SIZE-1]}};
 
 generate
-for(i = 0; i < PRED_SIZE; i++) begin
+for(genvar i = 0; i < PRED_SIZE; i++) begin
     assign pred_hits[i]         = bu_pc_branch_i == branch_q[i] & pred_v_q[i];
     assign pred_sate_update[i]  = pred_update & pred_hits[i];
 
@@ -76,7 +74,7 @@ assign new_pred         = &pred_v_q & |pred_we;
 
 // Flops
 generate
-for(i = 0; i < PRED_SIZE; i++) begin
+for(genvar i = 0; i < PRED_SIZE; i++) begin
     always_ff @(posedge clk, negedge reset_n) begin
         if (!reset_n) begin
             branch_q[i]         <= '0;
@@ -123,9 +121,9 @@ always_comb begin
     valid     = '0;
 
     for(int j=0; j<PRED_SIZE; j++) begin
-        pc_target = pc_target   | (target_q[j]      & {XLEN{pred_hits[j]}});
-        state     = state       | (pred_state_q[j]  & {XLEN{pred_hits[j]}});
-        valid     = valid       | (pred_v_q[j]      & {XLEN{pred_hits[j]}});
+        pc_target = pc_target   | (target_q[j]      & {XLEN {pred_hits[j]}});
+        state     = state       | (pred_state_q[j]  & {2    {pred_hits[j]}});
+        valid     = valid       | (pred_v_q[j]      &        pred_hits[j]  );
     end
 
     assign pred_state   = state;
