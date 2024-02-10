@@ -28,7 +28,7 @@ module dec (
 // --------------------------------
   input logic [1:0]                  core_mode_q_i,
   // rd ff from EXE
-  input logic [XLEN-1:0]             exe_ff_res_data_q_i,
+  input logic [XLEN-1:0]             exe_ff_res_data_i,
   // csr ff from exe
   input logic [XLEN-1:0]             exe_ff_csr_data_i,
   // Fast forwards from RF
@@ -57,7 +57,7 @@ module dec (
   output logic                       mret_q_o,
   output logic                       sret_q_o,
   // Flush signals
-  input logic                        flush_v_i
+  input logic                        flush_v_q_i
 );
 // --------------------------------
 //      Signals declaration
@@ -159,21 +159,21 @@ decoder dec0(
 // --------------------------------
 //      Internal architecture
 // --------------------------------
-assign rd_v_nxt        = rd_v & ~flush_v_i;
+assign rd_v_nxt        = rd_v & ~flush_v_q_i;
 // EXE ff
-assign exe_ff_rs1_adr_match    = (rs1_adr == rd_adr_q)  & rd_v_q    & ~flush_v_i;
-assign exe_ff_rs2_adr_match    = (rs2_adr == rd_adr_q)  & rd_v_q    & ~flush_v_i;
-assign exe_ff_csr_adr_match    = (csr_adr == csr_adr_q) & csr_wbk_q & ~flush_v_i;
+assign exe_ff_rs1_adr_match    = (rs1_adr == rd_adr_q)  & rd_v_q    & ~flush_v_q_i;
+assign exe_ff_rs2_adr_match    = (rs2_adr == rd_adr_q)  & rd_v_q    & ~flush_v_q_i;
+assign exe_ff_csr_adr_match    = (csr_adr == csr_adr_q) & csr_wbk_q & ~flush_v_q_i;
 
 // RF ff
-assign rf_ff_rs1_adr_match    = (rs1_adr == rf_ff_rd_adr_q_i) & rf_write_v_q_i & ~exe_ff_rs1_adr_match & ~flush_v_i;
-assign rf_ff_rs2_adr_match    = (rs2_adr == rf_ff_rd_adr_q_i) & rf_write_v_q_i & ~exe_ff_rs2_adr_match & ~flush_v_i;
+assign rf_ff_rs1_adr_match    = (rs1_adr == rf_ff_rd_adr_q_i) & rf_write_v_q_i & ~exe_ff_rs1_adr_match & ~flush_v_q_i;
+assign rf_ff_rs2_adr_match    = (rs2_adr == rf_ff_rd_adr_q_i) & rf_write_v_q_i & ~exe_ff_rs2_adr_match & ~flush_v_q_i;
 
 // Sign extension
 assign unsign_extension_nxt = unsign_extension;
 // Operand 1 value
 assign rs1_data       = {XLEN{rs1_v}} & ({XLEN{~exe_ff_rs1_adr_match & ~rf_ff_rs1_adr_match}} & rf_rs1_data_i
-                                       | {XLEN{ exe_ff_rs1_adr_match}}                        & exe_ff_res_data_q_i
+                                       | {XLEN{ exe_ff_rs1_adr_match}}                        & exe_ff_res_data_i
                                        | {XLEN{ rf_ff_rs1_adr_match}}                         & rf_ff_res_data_q_i)
                       | {XLEN{rs1_is_immediat}}                                               & immediat
                       | {XLEN{auipc}}                                                         & pc0_q_i;
@@ -185,7 +185,7 @@ assign rs1_data_extended  = {~unsign_extension & rs1_data[31],
 assign rs1_data_nxt       = rs1_data_extended;
 // Operand 2 value
 assign rs2_data       = {XLEN{rs2_v & ~exe_ff_rs2_adr_match & ~rf_ff_rs2_adr_match}} & rf_rs2_data_i       // no ff, no imm, data from RF
-                      | {XLEN{rs2_v &  exe_ff_rs2_adr_match}}                        & exe_ff_res_data_q_i // exe ff
+                      | {XLEN{rs2_v &  exe_ff_rs2_adr_match}}                        & exe_ff_res_data_i // exe ff
                       | {XLEN{rs2_v &  rf_ff_rs2_adr_match}}                         & rf_ff_res_data_q_i  // rf ff
                       | {XLEN{rs2_is_immediat}}                                      & immediat            // immediat
                       | {XLEN{rs2_is_csr & ~exe_ff_csr_adr_match}}                   & csr_data_i

@@ -117,6 +117,7 @@ logic                     env_call_m_mode;
 logic                     pc_missaligned_nxt;
 logic                     adr_missaligned_nxt;
 logic                     instr_access_fault_nxt;
+logic                     illegal_inst_nxt;
 logic                     break_point_nxt;
 logic                     ld_adr_missaligned_nxt;
 logic                     ld_access_fault_nxt;
@@ -309,7 +310,7 @@ always_ff @(posedge clk, negedge reset_n)
     exception_q       <= exception_nxt;
     cause_q           <= cause_nxt;
     mtval_q           <= mtval_nxt;
-    mepc_q            <= dec_pc0_q_i;
+    mepc_q            <= pc_q_i;
     mstatus_q         <= mstatus_nxt;
 end
 

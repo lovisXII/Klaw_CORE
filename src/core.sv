@@ -59,7 +59,7 @@ logic [11:0]                dec_exe_csr_adr_q;
 logic [11:0]                dec_csr_adr;
 logic [XLEN-1:0]            csr_dec_data;
 // exe dec interface
-logic [XLEN-1:0]            exe_ff_res_data_q;
+logic [XLEN-1:0]            exe_ff_res_data;
 logic [XLEN-1:0]            exe_ff_csr_data;
 logic                       wbk_v_q;
 logic [NB_REGS-1:0]         wbk_adr_q;
@@ -104,9 +104,9 @@ dec u_decod(
 // --------------------------------
 //      RF Interface
 // --------------------------------
-  .rfr_rs1_adr_o        ( dec_rf_rs1_adr),
+  .rf_rs1_adr_o        ( dec_rf_rs1_adr),
   .rf_rs1_data_i        ( dec_rf_rs1_data),
-  .rfr_rs2_adr_o        ( dec_rf_rs2_adr),
+  .rf_rs2_adr_o        ( dec_rf_rs2_adr),
   .rf_rs2_data_i        ( dec_rf_rs2_data),
   .csr_adr_o            (dec_csr_adr),
   .csr_data_i           (csr_dec_data),
@@ -114,7 +114,7 @@ dec u_decod(
 //      CSR Interface
 // --------------------------------
   .core_mode_q_i        (core_mode_q),
-  .exe_ff_res_data_q_i  (exe_ff_res_data_q),
+  .exe_ff_res_data_i    (exe_ff_res_data),
   .exe_ff_csr_data_i    (exe_ff_csr_data),
   .rf_write_v_q_i       ( wbk_v_q),
   .rf_ff_rd_adr_q_i     ( wbk_adr_q),
@@ -148,7 +148,7 @@ exe u_exe(
   .rd_v_q_i             ( dec_exe_rd_v_q),
   .rd_adr_q_i           ( dec_exe_rd_adr_q),
   .csr_wbk_i            (dec_exe_csr_wbk),
-  .csr_adr_i            (dec_exe_csr_data),
+  .csr_adr_i            (dec_exe_csr_adr_q),
   .rs1_data_qual_q_i    ( dec_exe_rs1_data_q),
   .rs2_data_qual_q_i    ( dec_exe_rs2_data_q),
   .immediat_q_i         ( exe_immediat_q),
@@ -172,7 +172,7 @@ exe u_exe(
 // --------------------------------
 //      WBK
 // --------------------------------
-  .exe_ff_res_data_q_o  (exe_ff_res_data_q),
+  .exe_ff_res_data_o    (exe_ff_res_data),
   .exe_ff_csr_data_o    (exe_ff_csr_data),
   .core_mode_q_o        (core_mode_q),
   .exception_q_o        (exception_q),

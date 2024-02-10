@@ -7,7 +7,6 @@ module decoder (
   output logic                       rd_v_o,
   output logic [4:0]                 rd_adr_o,
   // Csr
-  output logic                       csr_read_v_o,
   output logic                       csr_wbk_o,
   output logic                       csr_clear_o,
   output logic [11:0]                csr_adr_o,
