@@ -508,8 +508,7 @@ int sc_main(int argc, char* argv[]) {
         if (write_valid) {
             if (prev_cycle != NB_CYCLES){
                 prev_cycle = NB_CYCLES;
-                
-                register_file<< "Cycle : "<<dec<<NB_CYCLES<<", PC : 0x"<<setw(8)<<setfill('0') << hex<<pc_val<<", register : "<<dec<<write_adr<< ", data : 0x"<<hex<<write_data<<endl;
+                register_file << std::hex <<"PC : 0x" << (pc_val.read() & 0xFFFFFFFF) <<", register : "<<dec<<write_adr<< ", data : 0x"<<setfill('0') << setw(8)<<hex<<(write_data.read()& 0xFFFFFFFF)<<endl;
                 
             }
         }
