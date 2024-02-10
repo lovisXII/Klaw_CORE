@@ -51,10 +51,10 @@ assign pc_nxt_o   = {XLEN{branch_v & ~cmd_i[JALR]}}  & pc_data_i  + immediat_i
 
 assign pred_feedback_o  = bu_en_i & pred_v_i;
 
-assign pred_success_o   = pred_v_i & (( pred_is_taken_i &  branch_v)
-                                      |(~pred_is_taken_i & ~branch_v));
+assign pred_success_o   = pred_v_i & (  pred_is_taken_i &  branch_v
+                                     | ~pred_is_taken_i & ~branch_v);
 
-assign pred_failed_o    = pred_v_i & (( pred_is_taken_i & ~branch_v)
-                                      |(~pred_is_taken_i &  branch_v));
+assign pred_failed_o    = pred_v_i & (   pred_is_taken_i & ~branch_v
+                                      | ~pred_is_taken_i &  branch_v);
 
-endmodule 
+endmodule

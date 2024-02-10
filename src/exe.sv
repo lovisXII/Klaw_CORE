@@ -48,10 +48,10 @@ module exe
   input  logic                      dec_pred_is_taken_i,
   // Ifetch - branch prediction feedback
   output logic [XLEN-1:0]           exe_pc_q_o,
-  output logic                      exe_branch_instr_o,
-  output logic                      bu_pred_feedback_o,
-  output logic                      bu_pred_success_o,
-  output logic                      bu_pred_failed_o
+  output logic                      exe_branch_instr_q_o,
+  output logic                      bu_pred_feedback_q_o,
+  output logic                      bu_pred_success_q_o,
+  output logic                      bu_pred_failed_q_o
 
 );
 // --------------------------------
@@ -210,16 +210,16 @@ end
 assign exe_ff_w_v_q_o      = rd_v_nxt;
 assign exe_ff_rd_adr_q_o   = rd_adr_q_i;
 assign exe_ff_res_data_q_o = res_data_nxt;
-assign wbk_v_q_o         = rd_v_q;
-assign wbk_adr_q_o = rd_adr_q;
-assign wbk_data_q_o  = res_data_q;
+assign wbk_v_q_o           = rd_v_q;
+assign wbk_adr_q_o         = rd_adr_q;
+assign wbk_data_q_o        = res_data_q;
 assign flush_v_q_o         = flush_v_q;
 assign pc_data_q_o         = pc_data_q;
 
 assign exe_pc_q_o           = pc_instr_q;
-assign exe_branch_instr_o   = branch_instr_q;
-assign bu_pred_feedback_o   = bu_pred_feedback_q;
-assign bu_pred_success_o    = bu_pred_success_q;
-assign bu_pred_failed_o     = bu_pred_failed_q;
+assign exe_branch_instr_q_o = branch_instr_q;
+assign bu_pred_feedback_q_o = bu_pred_feedback_q;
+assign bu_pred_success_q_o  = bu_pred_success_q;
+assign bu_pred_failed_q_o   = bu_pred_failed_q;
 
 endmodule

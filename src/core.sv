@@ -47,28 +47,31 @@ logic[XLEN-1:0]             exe_if_pc;
 
 logic [XLEN-1:0]            exe_if_pc_instr;
 logic                       exe_if_branch_instr;
+logic                       bu_pred_feedback_q;
 logic                       bu_if_pred_success;
 logic                       bu_if_pred_failed;
 logic                       if_dec_pred_v;
 logic                       if_dec_pred_is_taken;
 logic                       dec_exe_pred_v;
 logic                       dec_exe_pred_is_taken;
+
 ifetch u_ifetch (
-    .clk                ( clk),
-    .reset_n            ( reset_n),
-    .reset_adr_i        ( reset_adr_i),
-    .icache_instr_i     ( icache_instr_i),
-    .icache_adr_o       ( icache_adr_o),
-    .flush_v_q_i        ( flush_v_q),
-    .pc_data_q_i        ( exe_if_pc),
-    .exe_pc_i           ( exe_if_pc_instr),     // rename for clarity?
-    .exe_branch_instr_i ( exe_if_branch_instr),
-    .bu_pred_success_i  ( bu_if_pred_success),
-    .bu_pred_failed_i   ( bu_if_pred_failed),
-    .pred_v_o           ( if_dec_pred_v),
-    .pred_is_taken_o    ( if_dec_pred_is_taken),
-    .instr_q_o          ( if_dec_q),
-    .pc_q_o             ( if_dec_pc0_q)
+    .clk                  ( clk),
+    .reset_n              ( reset_n),
+    .reset_adr_i          ( reset_adr_i),
+    .icache_instr_i       ( icache_instr_i),
+    .icache_adr_o         ( icache_adr_o),
+    .flush_v_q_i          ( flush_v_q),
+    .pc_data_q_i          ( exe_if_pc),
+    .exe_pc_q_i           ( exe_if_pc_instr),     // rename for clarity?
+    .exe_branch_instr_q_i ( exe_if_branch_instr),
+    .bu_pred_feedback_q_i ( bu_pred_feedback_q),
+    .bu_pred_success_q_i  ( bu_if_pred_success),
+    .bu_pred_failed_q_i   ( bu_if_pred_failed),
+    .pred_v_o             ( if_dec_pred_v),
+    .pred_is_taken_o      ( if_dec_pred_is_taken),
+    .instr_q_o            ( if_dec_q),
+    .pc_q_o               ( if_dec_pc0_q)
 
 );
 dec u_decod(
@@ -134,9 +137,10 @@ exe u_exe(
   .dec_pred_v_i         ( dec_exe_pred_v),
   .dec_pred_is_taken_i  ( dec_exe_pred_is_taken),
   .exe_pc_q_o           ( exe_if_pc_instr),
-  .exe_branch_instr_o   ( exe_if_branch_instr),        
-  .bu_pred_success_o    ( bu_if_pred_success),        
-  .bu_pred_failed_o     ( bu_if_pred_failed)      
+  .exe_branch_instr_q_o   ( exe_if_branch_instr),
+  .bu_pred_feedback_q_o   ( bu_pred_feedback_q),
+  .bu_pred_success_q_o    ( bu_if_pred_success),
+  .bu_pred_failed_q_o     ( bu_if_pred_failed)
 );
 
 rf u_rf(

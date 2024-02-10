@@ -10,13 +10,13 @@ module pred
     input logic [XLEN-1:0]      bu_pc_branch_i,
     input logic [XLEN-1:0]      bu_pc_target_i,
 
-    input logic                 bu_pred_success_i,
-    input logic                 bu_pred_failed_i,
+    input logic                 bu_pred_success_q_i,
+    input logic                 bu_pred_failed_q_i,
 
     output logic [XLEN-1:0]     pred_pc_o,
     output logic                pred_taken_o,
     output logic                pred_v_o
-);  
+);
 
 genvar i;
 
@@ -54,8 +54,8 @@ for(i = 0; i < PRED_SIZE; i++) begin
     assign pred_hits[i]         = bu_pc_branch_i == branch_q[i] & pred_v_q[i];
     assign pred_sate_update[i]  = pred_update & pred_hits[i];
 
-    assign pred_state_next[i]   = (pred_state_q[i] + 1'b1) & {2{~&pred_state_q[i] & ~new_pred & pred_hits[i] & bu_pred_success_i}} 
-                                | (pred_state_q[i] - 1'b1) & {2{ |pred_state_q[i] & ~new_pred & pred_hits[i] & bu_pred_failed_i }}
+    assign pred_state_next[i]   = (pred_state_q[i] + 1'b1) & {2{~&pred_state_q[i] & ~new_pred & pred_hits[i] & bu_pred_success_q_i}}
+                                | (pred_state_q[i] - 1'b1) & {2{ |pred_state_q[i] & ~new_pred & pred_hits[i] & bu_pred_failed_q_i }}
                                 | (pred_state_q[i]       ) & {2{~^pred_state_q[i] & ~new_pred & pred_hits[i]                    }}
                                 | (PRED_WT               ) & {2{                     new_pred                                   }};
 
@@ -70,7 +70,7 @@ endgenerate
 assign pred_miss        = ~|pred_hits;
 assign pred_wptr_we     = pred_miss & pred_en_i;
 
-assign pred_update      = pred_en_i & (bu_pred_success_i | bu_pred_failed_i | pred_miss); // handle saturating cases and do nothing here ?
+assign pred_update      = pred_en_i & (bu_pred_success_q_i | bu_pred_failed_q_i | pred_miss); // handle saturating cases and do nothing here ?
 
 assign new_pred         = &pred_v_q & |pred_we;
 
@@ -82,12 +82,12 @@ for(i = 0; i < PRED_SIZE; i++) begin
             branch_q[i]         <= '0;
             target_q[i]         <= '0;
             pred_v_q[i]         <= '0;
-        end else begin 
+        end else begin
             if (pred_we[i] == 1'b1) begin
                 branch_q[i]     <= branch_next[i];
                 target_q[i]     <= target_next[i];
-                pred_v_q[i]     <= pred_v_next[i]; 
-            end    
+                pred_v_q[i]     <= pred_v_next[i];
+            end
         end
     end
 end
@@ -122,14 +122,14 @@ always_comb begin
     state     = '0;
     valid     = '0;
 
-    for(int j=0; j<PRED_SIZE; j++) begin    
+    for(int j=0; j<PRED_SIZE; j++) begin
         pc_target = pc_target   | (target_q[j]      & {XLEN{pred_hits[j]}});
         state     = state       | (pred_state_q[j]  & {XLEN{pred_hits[j]}});
         valid     = valid       | (pred_v_q[j]      & {XLEN{pred_hits[j]}});
     end
 
     assign pred_state   = state;
-    assign pred_v_o     = valid; 
+    assign pred_v_o     = valid;
     assign pred_pc_o    = pc_target;
 end
 

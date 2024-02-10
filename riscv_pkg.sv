@@ -230,7 +230,6 @@ localparam ST  = 0;
 localparam LD  = 1;
 
 /* Branch prediction */
-localparam PRED_SIZE      = 4;
 localparam PRED_WPTR_SIZE = 2; // log(PRED_SIZE)
 
 localparam PRED_SNT = 2'b00; // Strongly  Not Taken

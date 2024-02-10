@@ -1,6 +1,7 @@
 import riscv_pkg::*;
 
-module ifetch(
+module ifetch
+(
     // global interface
     input logic clk,
     input logic reset_n,
@@ -15,16 +16,16 @@ module ifetch(
     // --------------------------------
     input  logic            flush_v_q_i,
     input  logic[XLEN-1:0]  pc_data_q_i,
-    input  logic[XLEN-1:0]  exe_pc_i,
-    input  logic            exe_branch_instr_i,
-    input  logic            bu_pred_feedback_i, 
-    input  logic            bu_pred_success_i,
-    input  logic            bu_pred_failed_i,
+    input  logic[XLEN-1:0]  exe_pc_q_i,
+    input  logic            exe_branch_instr_q_i,
+    input  logic            bu_pred_feedback_q_i,
+    input  logic            bu_pred_success_q_i,
+    input  logic            bu_pred_failed_q_i,
 
     // --------------------------------
     //      DEC
     // --------------------------------
-    
+
     output logic            pred_v_o,
     output logic            pred_is_taken_o,
     output logic[31:0]      instr_q_o,
@@ -47,6 +48,7 @@ logic [XLEN-1:0] pc_nxt;
 logic [31:0]     instr_q;
 logic [XLEN-1:0] pc_q;
 
+logic            pred_en;
 logic [XLEN-1:0] pred_pc;
 logic            pred_taken;
 logic            pred_v;
@@ -58,16 +60,16 @@ logic            pred_taken_q;
 // --------------------------------
 
 pred u_pred(
-    .clk                (clk),
-    .reset_n            (reset_n),
-    .pred_en_i          (exe_branch_instr_i | bu_pred_feedback_i),
-    .bu_pc_branch_i     (exe_pc_i),
-    .bu_pc_target_i     (pc_data_q_i),
-    .bu_pred_success_i  (bu_pred_success_i),
-    .bu_pred_failed_i   (bu_pred_failed_i),
-    .pred_pc_o          (pred_pc),
-    .pred_taken_o       (pred_taken),
-    .pred_v_o           (pred_v)
+    .clk                  (clk),
+    .reset_n              (reset_n),
+    .pred_en_i            (pred_en),
+    .bu_pc_branch_i       (exe_pc_q_i),
+    .bu_pc_target_i       (pc_data_q_i),
+    .bu_pred_success_q_i  (bu_pred_success_q_i),
+    .bu_pred_failed_q_i   (bu_pred_failed_q_i),
+    .pred_pc_o            (pred_pc),
+    .pred_taken_o         (pred_taken),
+    .pred_v_o             (pred_v)
 );
 
 
@@ -99,6 +101,8 @@ assign icache_adr_o   = pc_fetched_nxt;
 assign instr_nxt   = icache_instr_i;
 assign pc_nxt      = pc_fetched_nxt;
 
+// Branch pred
+assign pred_en = exe_branch_instr_q_i | bu_pred_feedback_q_i;
 // --------------------------------
 //      Flopping outputs
 // --------------------------------
