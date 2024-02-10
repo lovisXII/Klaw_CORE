@@ -36,8 +36,14 @@ def check_spacing(file_path, categories):
                     # Check spacing between
                     elif category_name == "double" and f"  {symbol}" not in line:
                         errors.append((os.path.basename(file_path), i, f"Missing double space around '{symbol}'"))
+
+        # Check for trailing spaces after the symbol
+        if line.endswith(" "):
+            errors.append((os.path.basename(file_path), i, f"Trailing space detected"))
+        # Check all inputs end with _i
         if "input" in line and "//" not in line and not input_correct(line):
             errors.append((os.path.basename(file_path), i, f"Missing _i on input signal"))
+        # Check all ouputs end with _o
         if "output" in line and "//" not in line and not output_correct(line) :
             errors.append((os.path.basename(file_path), i, f"Missing _o on output signal"))
     return errors
@@ -95,6 +101,10 @@ if __name__ == "__main__":
         sys.exit(1)
 
     directory = "src/"  # Update the directory as needed
+    if not os.path.exists(directory):
+        print(f"The directory '{directory}' does not exist.")
+        print(f"Script located at {os.getcwd()}")
+        exit(1)
     extensions = [".sv"]
     output_file = "spacing_errors.txt"  # Update the output file name as needed
 
