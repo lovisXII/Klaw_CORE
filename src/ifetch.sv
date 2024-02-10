@@ -65,6 +65,7 @@ pred u_pred(
     .pred_en_i            (pred_en),
     .bu_pc_branch_i       (exe_pc_q_i),
     .bu_pc_target_i       (pc_data_q_i),
+    .bu_pred_feedback_q_i (bu_pred_feedback_q_i),
     .bu_pred_success_q_i  (bu_pred_success_q_i),
     .bu_pred_failed_q_i   (bu_pred_failed_q_i),
     .pred_pc_o            (pred_pc),
