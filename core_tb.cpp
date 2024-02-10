@@ -25,7 +25,6 @@ void helper(int error){
         cerr << "Usage: obj_dir/Vcore test_filename [options] ..." << endl;
         cerr << "file_name type accepted are .s, .S, .c or elf file" << endl;
         cerr << "Options:" << endl << endl;
-        cerr << "-O                          \t Compile test_filename with -O option" << endl;
         cerr << "--riscof signature_filename \t Allow to enable the riscof gestion and store the signature in the file named signature_filename" << endl ;
         cerr << "--riscof signature_filename --debug \t Allow to visualise all the store made by the cpu" << endl;
         cerr << "--stats                     \t Allow to use the statistic such as the number of cycle needed to end the program" << endl;
@@ -40,7 +39,6 @@ void helper(int error){
         cerr << "Usage: obj_dir/Vcore test_filename [options] ..." << endl;
         cerr << "file_name type accepted are .s, .S, .c or elf file" << endl;
         cerr << "Options:" << endl << endl;
-        cerr << "-O                          \t Compile test_filename with -O option" << endl;
         cerr << "--riscof signature_filename \t Allow to enable the riscof gestion and store the signature in the file named signature_filename" << endl ;
         cerr << "--riscof signature_filename --debug \t Allow to visualise all the store made by the cpu" << endl;
         cerr << "--stats                     \t Allow to use the statistic such as the number of cycle needed to end the program" << endl;
@@ -84,7 +82,6 @@ int sc_main(int argc, char* argv[]) {
     // Compiling options
 
     bool                    debug = false;
-    string                  opt;
     bool                    riscof = false;
     bool                    stats = false ;
 
@@ -117,9 +114,6 @@ int sc_main(int argc, char* argv[]) {
     for(int i = 2; i < argc; i++){
         if (std::string(argv[i])== "--help"){
                 helper(HELP);
-        }
-        if (std::string(argv[i])== "-O") {
-            opt = "-O2";
         }
         if (std::string(argv[i])== "--riscof") {
             if(argv[i + 1] == NULL)
@@ -182,14 +176,7 @@ int sc_main(int argc, char* argv[]) {
 */
     char temp_text[512];
     string extension           = path.substr(path.find_last_of(".") + 1) ;
-
-    if (extension == "s" || extension == "S" || extension == "c") {
-        char temp[512];
-        sprintf(temp,
-                "riscv32-unknown-elf-gcc -nostdlib -march=rv32im -T sw/ldscript/ldscript.ld obj_dir/reset.o obj_dir/exception.o obj_dir/exit.o %s %s",
-                opt.c_str(),
-                path.c_str());
-        system((char*)temp);
+    if (!riscof) {
         path = "a.out";
     }
     if (!reader.load(path)) {
@@ -375,7 +362,6 @@ int sc_main(int argc, char* argv[]) {
 
         unsigned int pc_adr = icache_adr0.read();
         NB_CYCLES           = sc_time_stamp().to_double()/1000;
-
         if(NB_CYCLES > MAX_CYCLES){
             // Writting signature for riscof if enabled
             if (riscof)

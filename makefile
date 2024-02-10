@@ -1,6 +1,6 @@
 # Compilers
 VERILATOR?=verilator
-RISC?=/opt/riscv/bin/riscv32-unknown-elf-gcc
+RISCV?=/opt/riscv/bin/riscv32-unknown-elf-gcc
 SV2V?=bin/sv2v
 
 # SRC RTL
@@ -32,8 +32,12 @@ RISC_FLAGS= -nostdlib -march=rv32izicsr
 
 all: core_tb
 
-# Simulation
+
+#---------------------------------------
+# Building & running simulation
+#---------------------------------------
 run:core_tb
+	spike -p1 -g -l --log=spike.log --isa=rv32izicsr --log-commits a.out
 	obj_dir/Vcore $(TEST) $(DEBUG)
 
 core_tb: build_sw
@@ -42,40 +46,53 @@ core_tb: build_sw
 	$(VERILATOR) $(PKG) -CFLAGS "$(C_ARGS)" $(VERILATOR_FLAGS) $(SRC) --top-module $(TOP)  --exe $(TB)
 	$(MAKE) -j -C obj_dir -f Vcore.mk
 
-# Building binary needed by simulation
+#---------------------------------------
+# Building programm
+#---------------------------------------
 
-build_sw : build_dir kernel_obj user_obj
+build_sw: build_dir kernel_obj user_obj
+	$(RISCV) -nostdlib -march=rv32im -T sw/ldscript/ldscript.ld obj_dir/reset.o obj_dir/exception.o obj_dir/exit.o $(TEST)
 
-build_dir :
-	mkdir -p $(ODIR)
 
 kernel_obj: build_dir $(patsubst $(SW_DIR)/kernel/%.s,$(ODIR)/%.o,$(wildcard $(SW_DIR)/kernel/*.s))
 
 user_obj  : build_dir $(patsubst $(SW_DIR)/user/%.s,$(ODIR)/%.o,$(wildcard $(SW_DIR)/user/*.s))
 
+build_dir :
+	mkdir -p $(ODIR)
+
 # build kernel
 $(ODIR)/%.o: $(SW_DIR)/kernel/%.s $(LD_DIR)/kernel.ld
-	$(RISC) $(RISC_FLAGS) -T $(LD_DIR)/kernel.ld $< -c -o $@
+	$(RISCV) $(RISC_FLAGS) -T $(LD_DIR)/kernel.ld $< -c -o $@
 
 # build user
 $(ODIR)/%.o: $(SW_DIR)/user/%.s $(LD_DIR)/app.ld
-	$(RISC) $(RISC_FLAGS) -T $(LD_DIR)/app.ld $< -c -o $@
+	$(RISCV) $(RISC_FLAGS) -T $(LD_DIR)/app.ld $< -c -o $@
 
+
+#---------------------------------------
+# Riscof
+#---------------------------------------
 
 riscof_build: core_tb
 	cd riscof && ./lanch-riscof.sh build && cd ..
 riscof_run: core_tb
 	cd riscof && ./lanch-riscof.sh build run && cd ..
-# Checker
-spike:
-	spike -p1 -g -l --log=spike.log --isa=rv32i --log-commits a.out
+
+#---------------------------------------
 # Implementation
+#---------------------------------------
+
 impl: sv2v
 	$(MAKE) -C implementation/OpenLane/ mount
 sv2v:
 	mkdir -p $(IMPL_DIR)
 	cp -rf implementation/designs/core/* $(IMPL_DIR)/
 	$(SV2V) --verbose -I --incidr=$(SRC_DIR) $(SRC) $(PKG) --write=adjacent --write=$(IMPL_DIR)/src/
+
+#---------------------------------------
+# Cleaning
+#---------------------------------------
 
 clean:
 	rm -rf obj_dir/ *.vcd *.out.txt.s \
