@@ -36,6 +36,9 @@ all: core_tb
 #---------------------------------------
 # Building & running simulation
 #---------------------------------------
+view:
+	vsim -view logs/vlt_dump.wlf
+	
 run:core_tb
 	spike -p1 -g -l --log=spike.log --isa=rv32izicsr --log-commits a.out
 	obj_dir/Vcore $(TEST) $(DEBUG)

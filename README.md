@@ -15,10 +15,15 @@ To setup all the dependencies you will need a couple of bash script. And of cour
 It should work on other Unix distributions but some modification may be needed on the scripts.\
 To setup your environment please run :
 ```bash
-source setup.sh
-source setup-riscof.sh
+./setup.sh -i 1,2,3,4,5
+source ~/.bashrc
 ```
-
+The -i flag allow you to specify what you want to install. By default we recommand to install everything :
+* Riscv cross compiler
+* SystemC
+* ModelSim
+* Riscof
+* OpenLane
 After that you're suppose to be good to go. If not please raise an issue.
 
 # How to launch the simulation
@@ -28,6 +33,7 @@ A makefile is used to build and run the simulation, here's a quick explanation o
 make run # run a default test
 make run TEST=path/test_name # run the custom test given in argument
 make core_tb      # compile the design
+make build_sw     # Compile default test
 make riscof_build # build riscof framework and needed tests
 make riscof_run   # run riscof framework
 make impl         # Open a docker that allow to run the implementation
@@ -149,7 +155,7 @@ sudo reboot # REBOOT!
 ```
 Then you will need to run the following script to setup the install :
 ```sh
-./setup-implem.sh
+./setup.sh -i 5
 ```
 ## Running the flow
 Once the flow is setup you will be able to generate the GDSII of the design using :
