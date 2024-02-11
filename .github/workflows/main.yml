@@ -38,7 +38,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install pyyaml
         if [ ! -d "/opt/riscv/bin/" ] || [ ! -d "/usr/local/systemc-2.3.3/include/" ] || [ ! -d "/usr/local/systemc-2.3.3/lib-linux64/" ]; then
-          .github/workflows/scripts/setup.sh
+          .github/workflows/scripts/setup.sh --install 1, 2
         fi
 
     - name: Compile RTL design
