@@ -57,7 +57,7 @@ module dec (
   output logic                       mret_q_o,
   output logic                       sret_q_o,
   // Flush signals
-  input logic                        flush_v_q_i
+  input logic                        branch_v_q_i
 );
 // --------------------------------
 //      Signals declaration
@@ -159,15 +159,15 @@ decoder dec0(
 // --------------------------------
 //      Internal architecture
 // --------------------------------
-assign rd_v_nxt        = rd_v & ~flush_v_q_i;
+assign rd_v_nxt        = rd_v & ~branch_v_q_i;
 // EXE ff
-assign exe_ff_rs1_adr_match    = (rs1_adr == rd_adr_q)  & rd_v_q    & ~flush_v_q_i;
-assign exe_ff_rs2_adr_match    = (rs2_adr == rd_adr_q)  & rd_v_q    & ~flush_v_q_i;
-assign exe_ff_csr_adr_match    = (csr_adr == csr_adr_q) & csr_wbk_q & ~flush_v_q_i;
+assign exe_ff_rs1_adr_match    = (rs1_adr == rd_adr_q)  & rd_v_q    & ~branch_v_q_i;
+assign exe_ff_rs2_adr_match    = (rs2_adr == rd_adr_q)  & rd_v_q    & ~branch_v_q_i;
+assign exe_ff_csr_adr_match    = (csr_adr == csr_adr_q) & csr_wbk_q & ~branch_v_q_i;
 
 // RF ff
-assign rf_ff_rs1_adr_match    = (rs1_adr == rf_ff_rd_adr_q_i) & rf_write_v_q_i & ~exe_ff_rs1_adr_match & ~flush_v_q_i;
-assign rf_ff_rs2_adr_match    = (rs2_adr == rf_ff_rd_adr_q_i) & rf_write_v_q_i & ~exe_ff_rs2_adr_match & ~flush_v_q_i;
+assign rf_ff_rs1_adr_match    = (rs1_adr == rf_ff_rd_adr_q_i) & rf_write_v_q_i & ~exe_ff_rs1_adr_match & ~branch_v_q_i;
+assign rf_ff_rs2_adr_match    = (rs2_adr == rf_ff_rd_adr_q_i) & rf_write_v_q_i & ~exe_ff_rs2_adr_match & ~branch_v_q_i;
 
 // Sign extension
 assign unsign_extension_nxt = unsign_extension;

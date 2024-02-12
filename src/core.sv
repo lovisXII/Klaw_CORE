@@ -33,7 +33,7 @@ logic [XLEN-1:0]            mepc_q;
 logic [XLEN-1:0]            mepc_reg_q;
 logic [XLEN-1:0]            mtvec_reg_q;
 // ifetch dec interface
-logic                       flush_v_q;
+logic                       branch_v_q;
 logic[31:0]                 if_dec_q;
 logic[31:0]                 if_dec_pc0_q;
 logic[XLEN-1:0]             dec_exe_pc_q;
@@ -84,7 +84,7 @@ ifetch u_ifetch (
     //      EXE
     // --------------------------------
     .core_mode_q_i  (core_mode_q),
-    .flush_v_q_i    ( flush_v_q),
+    .branch_v_q_i   ( branch_v_q),
     .pc_data_q_i    ( exe_if_pc),
     // --------------------------------
     //      DEC
@@ -135,7 +135,7 @@ dec u_decod(
   .illegal_inst_q_o     (illegal_inst_q),
   .mret_q_o             (mret_q),
   .sret_q_o             (sret_q),
-  .flush_v_q_i          ( flush_v_q)
+  .branch_v_q_i         ( branch_v_q)
 );
 
 exe u_exe(
@@ -188,7 +188,7 @@ exe u_exe(
   .csr_wbk_v_q_o        (exe_csr_wbk_v_q),
   .csr_adr_q_o          (exe_csr_adr_q),
   .csr_data_q_o         (exe_csr_data),
-  .flush_v_q_o          ( flush_v_q),
+  .branch_v_q_o         ( branch_v_q),
   .pc_data_q_o          ( exe_if_pc)
 );
 
