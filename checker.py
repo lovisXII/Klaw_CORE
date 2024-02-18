@@ -1,72 +1,78 @@
-spike = 'spike.log'
-test = 'sw/tests/I/add/add_0.S'
-veri = 'a.out.txt.s'
-result = 'result.log'
+# Function to read and process file one
+def process_sim_file(file_path):
+    entries = []
 
+    try:
+        with open(file_path, 'r') as file:
+            sim_log = []
+            for line in file:
+                # Split the line and extract values
+                pc_str, register_str, data_str = line.strip().split(', ')
+                pc                             = pc_str.split(': ')[1]
+                register                       = register_str.split(': ')[1]
+                data                           = data_str.split(': ')[1]
+                # Create a FileOneEntry object and add to the list
+                sim_log.append([pc, register, data])
 
+    except FileNotFoundError as e:
+        print(f"Error: {e}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
-def find_start(test):
-    with open(test, 'r') as file:
-        lignes = file.readlines()
+    return sim_log
 
-    for i, ligne in enumerate(lignes):
-            if '<_start>:' in ligne:
-                pc = ligne.split()[0] 
-                return pc
-    return -1
+def process_model_file(file_path):
+    entries = []
 
-def find_exit(test):
-    with open(test, 'r') as file:
-        lignes = file.readlines()
+    try:
+        with open(file_path, 'r') as file:
+            sim_log = []
 
-    for i, ligne in enumerate(lignes):
-            if '<_exit>:' in ligne:
-                pc = ligne.split()[0] 
-                return pc
-    return -1
+            for line_number, line in enumerate(file):
+                # Skip every 1st line
+                if line_number % 2 == 0 or line_number < 9:
+                    continue
+                # Split the line and extract values
+                parts    = line.strip().split()
+                if len(parts) == 5 :
+                    continue
+                if "mem" in parts :
+                    if parts[5] == "mem" :
+                        continue
+                    else :
+                        pc       = parts[3]
+                        register = parts[5]
+                        data     = parts[6]
+                else :
+                    pc       = parts[3]
+                    register = parts[-2]
+                    data     = parts[-1]
+                # Create a list with pc, register, and data and add to the entries list
+                entry = [pc, register, data]
+                entries.append(entry)
 
-def result_log(spike,start_,exit_):
-    with open(spike, 'r') as file:
-        # read spike log lines
-        lignes_log = file.readlines()
-    
-    #add "0x" behind the pc values
-    start_ = f'0x{start_.lower()}'
-    exit_ = f'0x{exit_.lower()}'
+    except FileNotFoundError as e:
+        print(f"Error: {e}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
-    #search pc in the spike log
-    for i, ligne in enumerate(lignes_log):
-        raws = ligne.split()
-        # search for the start pc value in the 3nd row
-        if len(raws) > 2 and raws[2] == start_:
-            with open(result, 'w') as output_file:
-                # write one line over two from this line 
-                for j in range(i + 1, len(lignes_log), 2):
-                    cols = lignes_log[j].split()
-                    if len(cols) >= 7:
-                        # output_file.write(f"{cols[3]} la taille de cols {len(cols)}\n")
-                        output_file.write(f"Cycle : x, register : {cols[5]} data : {cols[6]}\n")
-                        # break if exit_ found
-                        if cols[3] >= exit_:
-                            break
+    return entries
 
-            print(f"Results are written with success.")
-            return
-     
-
-   
-
-    
-
-
-
-start_ = find_start(veri)
-exit_= find_exit(veri)
-
-if start_ != -1 and exit_ != -1:
-    print(f"start found at: {start_}\n")
-    print(f"exit found at: {exit_}\n")
-    result_log(spike,start_,exit_)
-    
-else:
-    print("tags not found.")
+    return sim_log
+# Example usage
+file1 = 'register_values.txt'
+file2 = 'spike.log'
+data_sim   = process_sim_file(file1)
+data_model = process_model_file(file2)
+for i in range(len(data_sim)):
+    if data_sim[i][0] != data_model[i][0] or data_sim[i][1] != data_model[i][1] or data_sim[i][2] != data_model[i][2]:
+        print("Missmatch detected")
+        print("---------------------------------------------------------")
+        print("Pc found                      : {}".format(data_sim[i][0]))
+        print("Expected pc                   : {}".format(data_model[i][0]))
+        print("Destination found register    : {}".format(data_sim[i][1]))
+        print("Destination register expected : {}".format(data_model[i][1]))
+        print("Destination written           : {}".format(data_sim[i][2]))
+        print("Destination written expected  : {}".format(data_model[i][2]))
+        print("---------------------------------------------------------")
+        break
