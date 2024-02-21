@@ -326,6 +326,7 @@ int sc_main(int argc, char* argv[]) {
     sc_signal<sc_uint<5>>   write_adr;
     sc_signal<bool>         write_valid;
     sc_signal<sc_uint<32>>   pc_val;
+    sc_signal<sc_uint<32>>   pc_val_mem;
 
     core.clk              (clk);
     core.reset_n          (reset_n);
@@ -344,6 +345,7 @@ int sc_main(int argc, char* argv[]) {
     core.write_adr_o      (write_adr);
     core.write_data_o     (write_data);
     core.pc_val_o         (pc_val);
+    core.pc_val_mem_o     (pc_val_mem);  
 
     cout << "Reseting...";
 
@@ -369,7 +371,7 @@ int sc_main(int argc, char* argv[]) {
 
     
     std:: ofstream register_file;
-    register_file.open("register_values.txt");
+    register_file.open("SimLog.txt");
     int prev_cycle;
 
     while (1)
@@ -505,13 +507,15 @@ int sc_main(int argc, char* argv[]) {
 
 
     //Show what's been written in the destination register at each cycle
-        if (write_valid) {
-            if (prev_cycle != NB_CYCLES){
-                prev_cycle = NB_CYCLES;
-                register_file << std::hex <<"PC : 0x" << (pc_val.read() & 0xFFFFFFFF) <<", register : "<<dec<<write_adr<< ", data : 0x"<<setfill('0') << setw(8)<<hex<<(write_data.read()& 0xFFFFFFFF)<<endl;
-                
-            }
-        }
+        if (write_valid && prev_cycle != NB_CYCLES) {
+        
+            prev_cycle = NB_CYCLES;
+            if (write_adr.read() != 0)
+                register_file << std::hex <<"PC : 0x" << (pc_val.read() & 0xFFFFFFFF) <<", register : "<<dec << "x" <<write_adr<< ", data : 0x"<< setfill('0') << setw(8) << hex << (write_data.read()  & 0xFFFFFFFF)<<endl;
+            if (is_store.read() && adr_v.read())
+                register_file << std::hex <<"PC : 0x" << (pc_val_mem.read()& 0xFFFFFFFF) <<", mem adr: "<<hex << "0x" <<(mem_adr.read()& 0xFFFFFFFF)<< ", data : 0x"<< setfill('0') << setw(8) << hex << (store_data.read()  & 0xFFFFFFFF)<<endl; 
+        
+    }
     }
     
     return 0;

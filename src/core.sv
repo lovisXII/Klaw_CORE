@@ -25,7 +25,9 @@ module core (
     output logic              write_valid_o,
     output logic[31:0]        write_data_o,
     output logic[NB_REGS-1:0] write_adr_o,
-    output logic[31:0]        pc_val_o
+    output logic[31:0]        pc_val_o,
+    output logic[31:0]        pc_val_mem_o
+
 );
 logic                       flush_v_q;
 logic[31:0]                 if_dec_instr_q;
@@ -143,5 +145,6 @@ assign write_adr_o    = exe_rf_instr_write_adr;
 assign write_data_o   = exe_rf_instr_write_data;
 assign write_valid_o  = exe_rf_instr_write_valid;
 assign pc_val_o       = pc_q_o;
+assign pc_val_mem_o   = dec_exe_pc0_q;
 
 endmodule
