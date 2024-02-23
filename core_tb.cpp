@@ -373,6 +373,7 @@ int sc_main(int argc, char* argv[]) {
     std:: ofstream register_file;
     register_file.open("SimLog.txt");
     int prev_cycle;
+    int prev_cycle2;
 
     while (1)
     {
@@ -511,11 +512,13 @@ int sc_main(int argc, char* argv[]) {
         
             prev_cycle = NB_CYCLES;
             if (write_adr.read() != 0)
-                register_file << std::hex <<"PC : 0x" << (pc_val.read() & 0xFFFFFFFF) <<", register : "<<dec << "x" <<write_adr<< ", data : 0x"<< setfill('0') << setw(8) << hex << (write_data.read()  & 0xFFFFFFFF)<<endl;
-            if (is_store.read() && adr_v.read())
-                register_file << std::hex <<"PC : 0x" << (pc_val_mem.read()& 0xFFFFFFFF) <<", mem adr: "<<hex << "0x" <<(mem_adr.read()& 0xFFFFFFFF)<< ", data : 0x"<< setfill('0') << setw(8) << hex << (store_data.read()  & 0xFFFFFFFF)<<endl; 
-        
-    }
+                register_file << std::hex <<"PC : 0x" << (pc_val.read() & 0xFFFFFFFF) <<", register : "<<dec << "x" <<write_adr<< ", data : 0x"<< setfill('0') << setw(8) << hex << (write_data.read()  & 0xFFFFFFFF)<<endl; 
+        }
+
+        if (is_store.read() && adr_v.read() && prev_cycle2 != NB_CYCLES) {
+            prev_cycle2 = NB_CYCLES;
+            register_file << std::hex <<"PC : 0x" << (pc_val_mem.read()& 0xFFFFFFFF) <<", mem adr: "<<hex << "0x" <<(mem_adr.read()& 0xFFFFFFFF)<< ", data : 0x"<< setfill('0') << setw(8) << hex << (store_data.read()  & 0xFFFFFFFF)<<endl; 
+        }
     }
     
     return 0;

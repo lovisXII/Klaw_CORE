@@ -30,23 +30,28 @@ def process_model_file(file_path):
 
             for line_number, line in enumerate(file):
                 # Skip every 1st line
-                if line_number % 2 == 0 or line_number < 9:
+                if line_number % 2 == 0 or line_number < 10:
                     continue
-                # Split the line and extract values
-                parts    = line.strip().split()
-                if len(parts) == 5 :
-                    continue
-                if "mem" in parts :
-                    if parts[5] == "mem" :
-                        continue
+
+                parts = line.strip().split()
+
+                # Check if the line is related to memory writes
+                if "mem" in parts:
+                    if (len(parts) == 9 ):
+                        pc = parts[3]
+                        register = parts[5]  
+                        data = parts[6]
                     else :
-                        pc       = parts[3]
-                        register = parts[5]
-                        data     = parts[6]
+                        pc = parts[3]
+                        register = parts[6]  
+                        data = parts[7]
+                elif (len(parts) == 5 ):
+                    continue
                 else :
-                    pc       = parts[3]
+                    pc = parts[3]
                     register = parts[-2]
-                    data     = parts[-1]
+                    data = parts[-1]
+
                 # Create a list with pc, register, and data and add to the entries list
                 entry = [pc, register, data]
                 entries.append(entry)
@@ -60,7 +65,7 @@ def process_model_file(file_path):
 
     return sim_log
 # Example usage
-file1 = 'register_values.txt'
+file1 = 'SimLog.txt'
 file2 = 'spike.log'
 data_sim   = process_sim_file(file1)
 data_model = process_model_file(file2)
