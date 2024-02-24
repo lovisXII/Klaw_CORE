@@ -39,11 +39,11 @@ def process_model_file(file_path):
                 if "mem" in parts:
                     if (len(parts) == 9 ):
                         pc = parts[3]
-                        register = parts[5]  
+                        register = parts[5]
                         data = parts[6]
                     else :
                         pc = parts[3]
-                        register = parts[6]  
+                        register = parts[6]
                         data = parts[7]
                 elif (len(parts) == 5 ):
                     continue
@@ -69,15 +69,31 @@ file1 = 'SimLog.txt'
 file2 = 'spike.log'
 data_sim   = process_sim_file(file1)
 data_model = process_model_file(file2)
+error = 0
 for i in range(len(data_sim)):
     if data_sim[i][0] != data_model[i][0] or data_sim[i][1] != data_model[i][1] or data_sim[i][2] != data_model[i][2]:
-        print("Missmatch detected")
-        print("---------------------------------------------------------")
-        print("Pc found                      : {}".format(data_sim[i][0]))
-        print("Expected pc                   : {}".format(data_model[i][0]))
-        print("Destination found register    : {}".format(data_sim[i][1]))
-        print("Destination register expected : {}".format(data_model[i][1]))
-        print("Destination written           : {}".format(data_sim[i][2]))
-        print("Destination written expected  : {}".format(data_model[i][2]))
-        print("---------------------------------------------------------")
+        error = 1
+        if "0x" in data_sim[i][1] :
+            print("Missmatch in memory detected")
+            print("---------------------------------------------------------")
+            print("Pc found                      : {}".format(data_sim[i][0]))
+            print("Expected pc                   : {}".format(data_model[i][0]))
+            print("Destination found             : {}".format(data_sim[i][1]))
+            print("Destination expected          : {}".format(data_model[i][1]))
+            print("Destination written           : {}".format(data_sim[i][2]))
+            print("Destination written expected  : {}".format(data_model[i][2]))
+            print("---------------------------------------------------------")
+        else :
+            print("Missmatch in registers detected")
+            print("---------------------------------------------------------")
+            print("Pc found                      : {}".format(data_sim[i][0]))
+            print("Expected pc                   : {}".format(data_model[i][0]))
+            print("Destination found register    : {}".format(data_sim[i][1]))
+            print("Destination register expected : {}".format(data_model[i][1]))
+            print("Destination written           : {}".format(data_sim[i][2]))
+            print("Destination written expected  : {}".format(data_model[i][2]))
+            print("---------------------------------------------------------")
         break
+
+if error == 0 :
+    print("Checker ran without errors")

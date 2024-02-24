@@ -7,7 +7,7 @@ SV2V?=bin/sv2v
 SRC_DIR=src
 SRC=$(wildcard src/*.sv)
 ODIR= obj_dir
-TEST?=sw/tests/I/add/add_0.S
+TEST?=sw/tests/C/fibo.c
 DEBUG?=
 
 # Implementation
@@ -35,6 +35,12 @@ all: core_tb
 # Simulation
 run:core_tb
 	obj_dir/Vcore $(TEST) $(DEBUG)
+
+
+check:
+	obj_dir/Vcore $(TEST) $(DEBUG)
+	spike -p1 -g -l --log=spike.log --isa=rv32i --log-commits a.out
+	python3 ./checker.py
 
 core_tb: build_sw
 	export SYSTEMC_INCLUDE=/usr/local/systemc-2.3.3/include/
