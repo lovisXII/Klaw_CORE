@@ -340,7 +340,7 @@ assign wbk_data_q_o        = res_data_q;
 assign branch_v_q_o        = branch_v_q;
 assign pc_data_q_o         = pc_data_q;
 assign csr_wbk_v_q_o       = csr_wbk_v_q;
-assign csr_adr_q_o         = csr_adr_nxt;
+assign csr_adr_q_o         = csr_adr_q;
 assign csr_data_q_o        = csr_data_q;
 
 endmodule
