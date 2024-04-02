@@ -27,7 +27,7 @@ C_ARGS=$(INCLUDE_PATH) -Wl, $(LIBS) -g
 
 # RISCV
 SW_DIR=sw
-LD_DIR=sw/ldscript
+LD_DIR=sw/ldscript/
 RISC_FLAGS= -nostdlib -march=rv32izicsr
 
 all: core_tb
@@ -38,10 +38,16 @@ all: core_tb
 #---------------------------------------
 view:
 	vsim -view logs/vlt_dump.wlf
-	
-run:core_tb
+
+run: core_tb
 	spike -p1 -g -l --log=spike.log --isa=rv32izicsr --log-commits a.out
 	obj_dir/Vcore $(TEST) $(DEBUG)
+
+
+check: core_tb
+	obj_dir/Vcore $(TEST) $(DEBUG)
+	spike -p1 -g -l --log=spike.log --isa=rv32i --log-commits a.out
+	python3 ./checker.py
 
 core_tb: build_sw
 	export SYSTEMC_INCLUDE=/usr/local/systemc-2.3.3/include/
@@ -54,7 +60,9 @@ core_tb: build_sw
 #---------------------------------------
 
 build_sw: build_dir kernel_obj user_obj
-	$(RISCV) -nostdlib -march=rv32im -T sw/ldscript/ldscript.ld obj_dir/reset.o obj_dir/exception.o obj_dir/exit.o $(TEST)
+	$(RISCV) -nostdlib -march=rv32im -T $(LD_DIR)ldscript.ld obj_dir/reset.o obj_dir/exception.o obj_dir/exit.o $(TEST)
+	rm -f a.out.txt.s
+	riscv32-unknown-elf-objdump -D a.out >> a.out.txt.s
 
 
 kernel_obj: build_dir $(patsubst $(SW_DIR)/kernel/%.s,$(ODIR)/%.o,$(wildcard $(SW_DIR)/kernel/*.s))
@@ -65,12 +73,12 @@ build_dir :
 	mkdir -p $(ODIR)
 
 # build kernel
-$(ODIR)/%.o: $(SW_DIR)/kernel/%.s $(LD_DIR)/kernel.ld
-	$(RISCV) $(RISC_FLAGS) -T $(LD_DIR)/kernel.ld $< -c -o $@
+$(ODIR)/%.o: $(SW_DIR)/kernel/%.s $(LD_DIR)/ldscript.ld
+	$(RISCV) $(RISC_FLAGS) -T $(LD_DIR)/ldscript.ld $< -c -o $@
 
 # build user
-$(ODIR)/%.o: $(SW_DIR)/user/%.s $(LD_DIR)/app.ld
-	$(RISCV) $(RISC_FLAGS) -T $(LD_DIR)/app.ld $< -c -o $@
+$(ODIR)/%.o: $(SW_DIR)/user/%.s $(LD_DIR)/ldscript.ld
+	$(RISCV) $(RISC_FLAGS) -T $(LD_DIR)/ldscript.ld $< -c -o $@
 
 
 #---------------------------------------

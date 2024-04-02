@@ -72,5 +72,7 @@ _env_call_wrong_mode :
     jalr x0, 0(x1)
 
 _isr_vector :
+.align 16
+.dword 0
 # just a label to load the adresses of the isr function
 # @_isr_vector + 0 :_instruction_adress_missaligned

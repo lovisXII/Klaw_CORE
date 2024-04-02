@@ -1,5 +1,5 @@
 
-.section .text
+.section .text.init
 .global _start
 
 _start :

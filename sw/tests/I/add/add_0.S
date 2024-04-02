@@ -1,6 +1,6 @@
 
-.section .text
-.global _start
+.section .text.init.init
+.globl _start
 
 _start :
    test_0 :

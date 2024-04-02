@@ -48,7 +48,7 @@ int main(){
         // Generation of the text for the file
 
          std::string assembly = R"(
-.section .text
+.section .text.init
 .global _start
 
 _start :

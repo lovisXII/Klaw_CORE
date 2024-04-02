@@ -1,7 +1,7 @@
 extern void _bad();
 extern void _good();
 
-__asm__(".section .text") ;
+__asm__(".section .text.init") ;
 __asm__(".global _start") ;
 
 __asm__("_start:");
