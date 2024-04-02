@@ -202,7 +202,7 @@ assign adr_fault            = '0;
 assign exception_nxt        = (pc_missaligned  | instr_access_fault | illegal_inst_q_i
                             | break_point     | ld_adr_missaligned | ld_access_fault
                             | ld_access_fault | st_adr_missaligned | st_access_fault
-                            | env_call_m_mode) & ~flush_v_q & ~flush_v_dly1_q;
+                            | env_call_m_mode) & ~flush_v_q & ~flush_v_dly1_q & ~branch_v_q;
 
 assign pc_missaligned_nxt     = pc_missaligned;
 assign instr_access_fault_nxt = instr_access_fault  & ~pc_missaligned_nxt;
