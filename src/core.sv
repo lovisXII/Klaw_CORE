@@ -28,7 +28,6 @@ logic                       mret_q;
 logic                       exception_q;
 logic [XLEN-1:0]            mcause_q;
 logic [XLEN-1:0]            mtval_q;
-logic [XLEN-1:0]            mstatus_q;
 logic [XLEN-1:0]            mepc_q;
 logic [XLEN-1:0]            mepc_reg_q;
 logic [XLEN-1:0]            mtvec_reg_q;
@@ -181,7 +180,6 @@ exe u_exe(
   .mepc_q_o             (mepc_q),
   .mtvec_q_i            (mtvec_reg_q),
   .mepc_q_i             (mepc_reg_q),
-  .mstatus_q_o          (mstatus_q),
   .wbk_v_q_o            ( wbk_v_q),
   .wbk_adr_q_o          ( wbk_adr_q),
   .wbk_data_q_o         ( wbk_data_q),
@@ -213,7 +211,6 @@ csr u_csr(
   .mtval_q_i        (mtval_q),
   .mepc_q_i         (mepc_q),
   .mtvec_q_o        (mtvec_reg_q),
-  .mstatus_q_i      (mstatus_q),
   .write_v_i        (exe_csr_wbk_v_q),
   .adr_read_i       (dec_csr_adr),
   .adr_write_i      (exe_csr_adr_q),

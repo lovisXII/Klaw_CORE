@@ -8,7 +8,6 @@ module csr(
     input  logic [XLEN-1:0] mcause_q_i,
     input  logic [XLEN-1:0] mtval_q_i,
     input  logic [XLEN-1:0] mepc_q_i,
-    input  logic [XLEN-1:0] mstatus_q_i,
     input  logic            write_v_i,
     input  logic [11:0]     adr_read_i,
     input  logic [11:0]     adr_write_i,
@@ -20,7 +19,6 @@ module csr(
     output logic [XLEN-1:0] mtvec_q_o,
     output logic [XLEN-1:0] data_o
 );
-logic [XLEN-1:0] data_nxt;
 logic            mhardtid_nxt_v;
 logic [XLEN-1:0] mhardtid_q;
 logic            mvendorid_nxt_v;
@@ -35,7 +33,6 @@ logic [XLEN-1:0] misa_q;
 logic            mie_nxt_v;
 logic [XLEN-1:0] mie_q;
 logic            mtvec_nxt_v;
-logic [XLEN-1:0] mtvec_nxt;
 logic [XLEN-1:0] mtvec_q;
 logic            mstatush_nxt_v;
 logic [XLEN-1:0] mstatush_q;
@@ -72,10 +69,7 @@ assign mtval_nxt_v        = write_v_i & (CSR_MTVAL     == adr_write_i)
 assign mip_nxt_v          = write_v_i & (CSR_MIP       == adr_write_i);
 assign mscratch_nxt_v     = write_v_i & (CSR_MSCRATCH  == adr_write_i);
 
-assign data_nxt     = {XLEN{write_v_i}} & data_i;
-
-assign mstatus_nxt  = {XLEN{mstatus_nxt_v}} & data_i
-                    | {XLEN{exception_q_i}} & mstatus_q_i;
+assign mstatus_nxt  = {XLEN{mstatus_nxt_v}} & data_i;
 
 assign mepc_nxt     = {XLEN{mepc_nxt_v}}    & data_i
                     | {XLEN{exception_q_i}} & mepc_q_i;
@@ -120,7 +114,7 @@ always_ff @(posedge clk, negedge reset_n) begin
 end
 always_ff @(posedge clk, negedge reset_n) begin
     if (~reset_n) begin
-            misa_q <= {2'b1, 1'b0, 26'd8};
+            misa_q <= {2'b1, 4'b0, 26'd8};
     end else begin
         if (misa_nxt_v) begin
             misa_q <= data_i;

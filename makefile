@@ -39,14 +39,13 @@ all: core_tb
 view:
 	vsim -view logs/vlt_dump.wlf
 
-run: core_tb
-	spike -p1 -g -l --log=spike.log --isa=rv32izicsr --log-commits a.out
+run:core_tb
+	spike -p1 -g -l --log=spike.log --priv=m --isa=rv32izicsr --log-commits a.out
 	obj_dir/Vcore $(TEST) $(DEBUG)
-
 
 check: core_tb
 	obj_dir/Vcore $(TEST) $(DEBUG)
-	spike -p1 -g -l --log=spike.log --isa=rv32i --log-commits a.out
+	spike -p1 -g -l --log=spike.log --priv=m --isa=rv32izicsr --log-commits a.out
 	python3 ./checker.py
 
 core_tb: build_sw
@@ -62,7 +61,7 @@ core_tb: build_sw
 build_sw: build_dir kernel_obj user_obj
 	$(RISCV) -nostdlib -march=rv32im -T $(LD_DIR)ldscript.ld obj_dir/reset.o obj_dir/exception.o obj_dir/exit.o $(TEST)
 	rm -f a.out.txt.s
-	riscv32-unknown-elf-objdump -D a.out >> a.out.txt.s
+	/opt/riscv/bin/riscv32-unknown-elf-objdump -D a.out >> a.out.txt.s
 
 
 kernel_obj: build_dir $(patsubst $(SW_DIR)/kernel/%.s,$(ODIR)/%.o,$(wildcard $(SW_DIR)/kernel/*.s))

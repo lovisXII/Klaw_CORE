@@ -24,7 +24,7 @@ module bu
 logic            data_eq;
 logic            branch_v;
 logic [XLEN:0]   addition_res;
-logic [XLEN:0]   pc_nxt;
+logic [XLEN-1:0] pc_nxt;
 
 // Perform rs1 - rs2
 // addition_res[XLEN] = 1 <=> rs1 - rs2 < 0 <=> rs1 < rs2

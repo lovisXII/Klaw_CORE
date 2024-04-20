@@ -350,9 +350,10 @@ assign unsign_extension    = bltu | bgeu | lbu | lhu | sltiu | sltu;
 assign rd_v_o       = rd_v;
 assign rd_adr_o     = rd_adr;
 // Csr register
-assign csr_wbk_o    = csrrw | csrrwi | csrrc | csrrci | (csrrsi | csrrs) & ~&rs1_adr;
+assign csr_wbk_o    = mret | csrrw | csrrwi | csrrc | csrrci | (csrrsi | csrrs) & ~&rs1_adr;
 assign csr_clear_o  = csrrc | csrrci;
-assign csr_adr_o    = instr_i[31:20];
+assign csr_adr_o    = {12{~mret}} & instr_i[31:20]
+                    | {12{ mret}} & CSR_MSTATUS;
 // rs1
 assign rs1_v_o      = rs1_v;
 assign rs1_adr_o    = rs1_adr;
@@ -363,7 +364,7 @@ assign rs2_adr_o    = rs2_adr;
 assign auipc_o             = auipc;
 assign rs1_is_immediat_o   = csrrwi | csrrsi | csrrci;
 assign rs2_is_immediat_o   = lui | auipc | jalr | jalr | i_type | l_type;
-assign rs2_is_csr_o        = csrrw | csrrs | csrrc | csrrwi | csrrsi | csrrci;
+assign rs2_is_csr_o        = csrrw | csrrs | csrrc | csrrwi | csrrsi | csrrci | mret;
 assign immediat_o          = {32{(i_type | jalr | l_type)}}  & {{20{instr_i[31]}}, instr_i[31:20]}
                            | {32{s_type}}                    & {{20{instr_i[31]}}, instr_i[31:25],instr_i[11:7]}
                            | {32{b_type}}                    & {{19{instr_i[31]}}, instr_i[31],instr_i[7],instr_i[30:25],instr_i[11:8],1'b0}
