@@ -138,6 +138,7 @@ logic                     rd_v_q;
 logic [4:0]               rd_adr_q;
 logic [XLEN-1:0]          res_data_nxt;
 logic [XLEN-1:0]          res_data_q;
+logic                     flush;
 logic                     branch_v_nxt;
 logic                     branch_v_q;
 logic                     branch_v_dly1_q;
@@ -202,7 +203,7 @@ assign adr_fault            = '0;
 assign exception_nxt        = (pc_missaligned  | instr_access_fault | illegal_inst_q_i
                             | break_point     | ld_adr_missaligned | ld_access_fault
                             | ld_access_fault | st_adr_missaligned | st_access_fault
-                            | env_call_m_mode) & ~flush_v_q & ~flush_v_dly1_q & ~branch_v_q;
+                            | env_call_m_mode) & ~exception_q & ~branch_v_q & ~exception_dly1_q & ~branch_v_dly1_q;
 
 assign pc_missaligned_nxt     = pc_missaligned;
 assign instr_access_fault_nxt = instr_access_fault  & ~pc_missaligned_nxt;
@@ -214,7 +215,6 @@ assign st_adr_missaligned_nxt = st_adr_missaligned  & ~ld_access_fault_nxt;
 assign st_access_fault_nxt    = st_access_fault     & ~st_adr_missaligned_nxt;
 assign env_call_m_mode_nxt    = env_call_m_mode     & ~st_access_fault_nxt;
 
-assign flush_nxt        = exception_nxt | exception_q | exception_dly1_q | branch_v_q | branch_v_dly1_q;
 assign cause_nxt        = {XLEN{pc_missaligned_nxt}}     & 32'b0
                         | {XLEN{instr_access_fault_nxt}} & 32'd1
                         | {XLEN{illegal_inst_nxt}}       & 32'd2
@@ -259,19 +259,21 @@ assign access_size_o    = access_size_q_i;
 // j   :     I D E
 // If dly1 is not taken in consideration j will branch
 // but it's not suppose to branch, it should be flushed
-assign branch_v_nxt = (branch_v | mret_q_i | sret_q_i) & ~flush_nxt;
+assign flush        = exception_nxt | branch_v_q | branch_v_dly1_q | exception_q | exception_dly1_q;
+
+assign branch_v_nxt = (branch_v | mret_q_i | sret_q_i) & ~flush;
 assign pc_data_nxt  = {XLEN{~exception_nxt}} & bu_pc_res
                     | {XLEN{ exception_nxt}} & mtvec_q_i
                     | {XLEN{ mret_q_i}}      & mepc_q_i;
 
-assign rd_v_nxt     = rd_v_q_i & ~flush_nxt;
+assign rd_v_nxt     = rd_v_q_i  & ~flush;
 assign res_data_nxt = {XLEN{alu_en & ~csr_wbk_i}} & alu_res_data
                     | {XLEN{csr_wbk_i}}           & rs2_data_qual_q_i[XLEN-1:0]
                     | {XLEN{shifter_en}}          & shifter_res_data
                     | {XLEN{bu_en}}               & bu_data_res
                     | {XLEN{lsu_en}}              & lsu_res_data;
 
-assign csr_wbk_v_nxt = csr_wbk_i;
+assign csr_wbk_v_nxt = csr_wbk_i  & ~flush;
 assign csr_adr_nxt   = csr_adr_i;
 assign csr_data_nxt  = {XLEN{~csrrw_q_i}} & alu_res_data
                      | {XLEN{ csrrw_q_i}} & rs1_data_qual_q_i[XLEN-1:0];
@@ -304,8 +306,6 @@ always_ff @(posedge clk, negedge reset_n)
     res_data_q        <= res_data_nxt;
     exception_q       <= exception_nxt;
     exception_dly1_q  <= exception_q;
-    flush_v_q         <= flush_nxt;
-    flush_v_dly1_q    <= flush_v_q;
     pc_data_q         <= pc_data_nxt;
     csr_wbk_v_q       <= csr_wbk_v_nxt;
     csr_data_q        <= csr_data_nxt;
