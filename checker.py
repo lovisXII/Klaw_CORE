@@ -1,3 +1,4 @@
+import re
 # Function to translate csr address into csr register name
 def get_csr_adr(name):
     register_map = {
@@ -21,30 +22,32 @@ def get_csr_adr(name):
 
     return register_map.get(name, "None")
 
-def is_csr(line):
-    csr_instructions = ["csrr", "csrw", "csrrwi", "csrrci", "mret"]
-    return any(instruction in line for instruction in csr_instructions)
+MEM_REGEX = r'mem'
+CSR_REGEX = r'c\d+\_\w+'
+WBK_REGEX = r'x\d(|\d)\b'
 
+def mem_v(line):
+    pattern = MEM_REGEX
+    return bool(re.search(pattern, line))
 
-def is_load(line):
-    csr_instructions = ["lw", "lh", "lhu", "lb", "lbu"]
-    return any(instruction in line for instruction in csr_instructions)
+def csr_v(line) :
+    pattern = CSR_REGEX
+    return bool(re.search(pattern, line))
 
-def is_store(line):
-    csr_instructions = ["sw", "sh", "sb"]
-    return any(instruction in line for instruction in csr_instructions)
+def wbk_v(line) :
+    pattern = WBK_REGEX
+    return bool(re.search(pattern, line))
 
-def is_exception(line) :
-    return True if "exception" in line else False
+def line_empty(line) :
+    return True if not wbk_v(line) and not csr_v(line) and not mem_v(line) else False
 
-def is_arith(line) :
-    return True if not is_csr(line) and not is_load(line) and not is_store(line) and not is_exception(line) else False
-
-def rd_v(line) :
-    csr_rd   = ["csrrwi", "csrr"]
-    csr_rd_v = any(instruction in line for instruction in csr_rd)
-    return True if csr_rd_v or is_load(line) or is_arith(line) else False
-
+def index(my_list, regex, incr = 0) :
+    pattern = re.compile(regex)
+    index = next((i for i, item in enumerate(my_list) if pattern.match(item)), None)
+    if index is not None :
+        return index + incr
+    else :
+        return 0
 
 # Function to read and process file one
 def process_sim_file(file_path):
@@ -72,38 +75,33 @@ def process_model_file(file_path):
             sim_log = []
 
             for line_number, line in enumerate(file):
-                # Store previus line
-                if line_number % 2 == 0 or line_number < 10:
-                    prev_line = line
-                else :
                     parts = line.strip().split()
                     # Extend to at least 9 elements with None
                     # Used to avoid index out of range
                     while len(parts) < 9:
                         parts.append("None")
-                    # print(parts)
-                    # Check if the line is related to memory writes
-                    pc       = parts[3]
-                    register = parts[5] if rd_v(prev_line) else \
-                               "None"
-                    data     = parts[6] if rd_v(prev_line) else \
-                               "None"
-                    mem_adr  = parts[6] if is_store(prev_line) else \
-                               parts[8] if is_load(prev_line) else \
-                               "None"
-                    mem_data = parts[7] if is_store(prev_line) else \
-                               "None"
-                    csr      = parts[5] if "csrw" in prev_line or "mret" in prev_line else \
-                               parts[7] if "csrrwi" in prev_line or "csrrci" in prev_line else \
-                               "None"
-                    data_csr = parts[8] if "csrrwi" in prev_line or "csrrci" in prev_line else \
-                               parts[6] if "csrw" in prev_line or "mret" in prev_line else  \
-                               "None"
-                    entry = [pc, register, data, mem_adr, mem_data, get_csr_adr(csr), data_csr]
-                    # print(entry)
-                    # if line_number == 27 :
-                    #     exit(1)
-                    entries.append(entry)
+                    if line_number < 5 or line_empty(line):
+                        continue
+                    else :
+                        # Check if the line is related to memory writes
+                        pc       = parts[3]
+                        register = parts[5] if wbk_v(line) else \
+                                 "None"
+                        data     = parts[6] if wbk_v(line) else \
+                                 "None"
+                        mem_adr  = parts[index(parts, MEM_REGEX, 1)] if mem_v(line) else \
+                                 "None"
+                        mem_data = parts[index(parts, MEM_REGEX, 2)] if mem_v(line) else \
+                                 "None"
+                        csr      = parts[index(parts, CSR_REGEX)] if csr_v(line) else \
+                                 "None"
+                        data_csr = parts[index(parts, CSR_REGEX, 1)] if csr_v(line) else \
+                                 "None"
+                        entry = [pc, register, data, mem_adr, mem_data, get_csr_adr(csr), data_csr]
+                        # print(entry)
+                        # if line_number == 27 :
+                        #     exit(1)
+                        entries.append(entry)
 
     except FileNotFoundError as e:
         print(f"Error: {e}")
