@@ -6,6 +6,7 @@ def get_csr_adr(name):
         "marchid"      : "0xF12",
         "mimpid"       : "0xF13",
         "mstatus"      : "0x300",
+        "c768_mstatus" : "0x300",
         "misa"         : "0x301",
         "mie"          : "0x304",
         "c773_mtvec"   : "0x305",
@@ -21,7 +22,7 @@ def get_csr_adr(name):
     return register_map.get(name, "None")
 
 def is_csr(line):
-    csr_instructions = ["csrr", "csrw", "csrrwi", "csrrci"]
+    csr_instructions = ["csrr", "csrw", "csrrwi", "csrrci", "mret"]
     return any(instruction in line for instruction in csr_instructions)
 
 
@@ -90,13 +91,13 @@ def process_model_file(file_path):
                     mem_adr  = parts[6] if is_store(prev_line) else \
                                parts[8] if is_load(prev_line) else \
                                "None"
-                    mem_data = parts[8] if is_store(prev_line) else \
+                    mem_data = parts[7] if is_store(prev_line) else \
                                "None"
-                    csr      = parts[5] if "csrw" in prev_line else \
+                    csr      = parts[5] if "csrw" in prev_line or "mret" in prev_line else \
                                parts[7] if "csrrwi" in prev_line or "csrrci" in prev_line else \
                                "None"
                     data_csr = parts[8] if "csrrwi" in prev_line or "csrrci" in prev_line else \
-                               parts[6] if "csrw" in prev_line else  \
+                               parts[6] if "csrw" in prev_line or "mret" in prev_line else  \
                                "None"
                     entry = [pc, register, data, mem_adr, mem_data, get_csr_adr(csr), data_csr]
                     # print(entry)
@@ -111,43 +112,44 @@ def process_model_file(file_path):
 
     return entries
 
-    return sim_log
-# Example usage
-file1 = 'sim.log'
-file2 = 'spike.log'
-data_model = process_model_file(file2)
-data_sim   = process_sim_file(file1)
-error = 0
+if __name__ == "__main__" :
+    file1 = 'sim.log'
+    file2 = 'spike.log'
+    data_model = process_model_file(file2)
+    data_sim   = process_sim_file(file1)
+    error = 0
+    index = -1
 
-for elem_sim, elem_model in zip(data_sim, data_model) :
-    for i in range(len(elem_sim)) :
-        if elem_sim[i] != elem_model[i] :
-            print("Missmatch in registers detected")
-            print(elem_sim)
-            print(elem_model)
-            print("Sim : {}\n Model : \n {}".format(elem_sim[i],  elem_model[i]))
-            error = 1
-            index = i
-            break
-    if error == 1:
-        break  # Exit the outer loop if a mismatch is found
+    for elem_sim, elem_model in zip(data_sim, data_model) :
+        index += 1
+        for i in range(len(elem_sim)) :
+            if elem_sim[i] != elem_model[i] :
+                print("Missmatch in registers detected")
+                print(elem_sim)
+                print(elem_model)
+                print("Sim   : {}".format(elem_sim[i]))
+                print("Model : {}".format(elem_model[i]))
+                error = 1
+                break
+        if error == 1:
+            break  # Exit the outer loop if a mismatch is found
 
-if error == 0 :
-    print("Checker ran without errors")
-else :
-    print("Full log : ")
-    print("PC sim                    : ", data_sim[i][0])
-    print("PC model                  : ", data_model[i][0])
-    print("rd sim                    : ", data_sim[i][1])
-    print("rd model                  : ", data_model[i][1])
-    print("data sim                  : ", data_sim[i][2])
-    print("data model                : ", data_model[i][2])
-    print("mem_adr sim               : ", data_sim[i][3])
-    print("mem_adr model             : ", data_model[i][3])
-    print("mem_data sim              : ", data_sim[i][4])
-    print("mem_data model            : ", data_model[i][4])
-    print("csr sim                   : ", data_sim[i][5])
-    print("csr model                 : ", data_model[i][5])
-    print("csr_data sim              : ", data_sim[i][6])
-    print("csr_data model            : ", data_model[i][6])
+    if error == 0 :
+        print("Checker ran without errors")
+    else :
+        print("---Full log :---")
+        print("PC sim                    : ", data_sim  [index][0])
+        print("PC model                  : ", data_model[index][0])
+        print("rd sim                    : ", data_sim  [index][1])
+        print("rd model                  : ", data_model[index][1])
+        print("data sim                  : ", data_sim  [index][2])
+        print("data model                : ", data_model[index][2])
+        print("mem_adr sim               : ", data_sim  [index][3])
+        print("mem_adr model             : ", data_model[index][3])
+        print("mem_data sim              : ", data_sim  [index][4])
+        print("mem_data model            : ", data_model[index][4])
+        print("csr sim                   : ", data_sim  [index][5])
+        print("csr model                 : ", data_model[index][5])
+        print("csr_data sim              : ", data_sim  [index][6])
+        print("csr_data model            : ", data_model[index][6])
 

@@ -281,7 +281,9 @@ int sc_main(int argc, char* argv[]) {
         }
     }
     if(debug) signature << "RAM init end" << endl;
-    vector<string> data;
+    vector<string> rd_data_vec;
+    vector<string> mem_data_vec;
+
 /*
     ##############################################################
                     COMPONENT INSTANCIATION
@@ -480,11 +482,10 @@ int sc_main(int argc, char* argv[]) {
                     MEMORY ACCESS GESTION
     ##############################################################
 */
-        int phys_adr = adr & 0xFFFFFFFC;
+        unsigned int phys_adr = adr & 0xFFFFFFFC;
         // Store always store the lsb of the register into the proper part of the adress
         // May be done directly by the core -> to discuss
         if (is_store.read() && adr_v.read()) {
-        cout << pc_val_mem << " " << adr << " " << store_data.read() << endl;
         if(access_size.read() == 1){
             if ((adr & 0b11) == 0) ram[phys_adr] = (ram[phys_adr] & 0xFFFFFF00) | (store_data.read() & 0x000000FF);
             if ((adr & 0b11) == 1) ram[phys_adr] = (ram[phys_adr] & 0xFFFF00FF) | ((store_data.read() & 0x000000FF) << 8);
@@ -523,24 +524,42 @@ int sc_main(int argc, char* argv[]) {
 
         rd            << "x" <<  wbk_adr.read();
         data_chck     << "0x" << std::hex << setfill('0') << setw(8) << static_cast<unsigned int>(wbk_data.read());
-        mem_adr_chck  << "0x" << std::hex << setfill('0') << setw(8) << phys_adr;
-        mem_data      << "0x" << std::hex << setfill('0') << setw(8) << store_data.read();
+        mem_adr_chck  << "0x" << std::hex << setfill('0') << setw(8) << static_cast<unsigned int>(mem_adr.read());
+        mem_data      << "0x" << std::hex << setfill('0') << setw(8) << static_cast<unsigned int>(store_data.read());
         csr           << "0x" << std::hex << setfill('0') << setw(3) << static_cast<unsigned int>(wbk_csr_adr.read());
         csr_data_chck << "0x" << std::hex << setfill('0') << setw(8) << static_cast<unsigned int>(wbk_csr_data.read());
-
-        data.push_back(adr_v.read()                       ? pc_mem.str() : pc.str()        );
-        data.push_back(wbk_v.read() && wbk_adr.read() !=0 ? rd.str()               : "None");
-        data.push_back(wbk_v.read() && wbk_adr.read() !=0 ? data_chck.str()        : "None");
-        data.push_back(adr_v.read()                       ? mem_adr_chck.str(  )   : "None");
-        data.push_back(is_store.read()                    ? mem_data.str()         : "None");
-        data.push_back(wbk_csr_v.read()                   ? csr.str()              : "None");
-        data.push_back(wbk_csr_v.read()                   ? csr_data_chck.str()    : "None");
-
-        for (auto it = data.begin(); it != data.end() -1; ++it) {
-            register_file << *it << ";"; // Write data to file
+        // rd_v and adr_v may be set the same cycle
+        if(wbk_v.read()){
+            rd_data_vec.push_back(                                     pc.str()                       );
+            rd_data_vec.push_back(wbk_v.read() && wbk_adr.read() !=0 ? rd.str()               : "None");
+            rd_data_vec.push_back(wbk_v.read() && wbk_adr.read() !=0 ? data_chck.str()        : "None");
+            rd_data_vec.push_back(                                                              "None");
+            rd_data_vec.push_back(                                                              "None");
+            rd_data_vec.push_back(wbk_csr_v.read()                   ? csr.str()              : "None");
+            rd_data_vec.push_back(wbk_csr_v.read()                   ? csr_data_chck.str()    : "None");
+            // write rd
+            for (auto it = rd_data_vec.begin(); it != rd_data_vec.end() -1; ++it) {
+                register_file << *it << ";"; // Write data to file
+            }
+            register_file << *(rd_data_vec.end() -1) << endl;
         }
-        register_file << *(data.end() -1) << endl;
-        data.clear();
+        if(adr_v.read()){
+            mem_data_vec.push_back(                                     pc_mem.str()                   );
+            mem_data_vec.push_back(                                                              "None");
+            mem_data_vec.push_back(                                                              "None");
+            mem_data_vec.push_back(                                     mem_adr_chck.str()             );
+            mem_data_vec.push_back(is_store.read()                    ? mem_data.str()         : "None");
+            mem_data_vec.push_back(wbk_csr_v.read()                   ? csr.str()              : "None");
+            mem_data_vec.push_back(wbk_csr_v.read()                   ? csr_data_chck.str()    : "None");
+            // write mem
+            for (auto it = mem_data_vec.begin(); it != mem_data_vec.end() -1; ++it) {
+                register_file << *it << ";"; // Write data to file
+            }
+            register_file << *(mem_data_vec.end() -1) << endl;
+        }
+        // Clearing vectors
+        rd_data_vec.clear();
+        mem_data_vec.clear();
     }
 
     sc_start(1, SC_NS);
