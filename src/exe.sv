@@ -244,7 +244,7 @@ assign mpp_old[12:11] = mstatus_old[12:11];
 assign mpie_old       = mstatus_old[7];
 assign mie_old        = mstatus_old[3];
 
-assign mpp_new[12:11] = 2'b00;
+assign mpp_new[12:11] = 2'b11;
 assign mpie_new       = 1'b1;
 assign mie_new        = mpie_old;
 assign mstatus_nxt = {
@@ -267,7 +267,7 @@ assign shifter_en       = unit_q_i[SFT];
 // Branch Units
 assign bu_en            = unit_q_i[BU];
 // Load/Store Units
-assign lsu_en           = unit_q_i[LSU];
+assign lsu_en           = unit_q_i[LSU] & ~flush;
 assign is_store         = lsu_en & operation_q_i[ST];
 assign adr_v_o          = lsu_en;
 assign adr_o            = mem_adr;
