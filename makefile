@@ -51,7 +51,7 @@ run_risc:core_tb
 
 check: core_tb
 	obj_dir/Vcore $(TEST) $(DEBUG)
-	spike -p1 -l --log=spike.log --priv=m --isa=rv32izicsr --log-commits a.out
+	spike -p1 --log=spike.log --priv=m --isa=rv32izicsr --log-commits a.out
 	python3 ./checker.py
 
 core_tb: build_sw
