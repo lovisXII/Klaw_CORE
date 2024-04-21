@@ -21,7 +21,7 @@ module dec (
 // --------------------------------
 //      CSR Interface
 // --------------------------------
-  output logic [11:0]                 csr_adr_o,
+  output logic [11:0]                 wbk_csr_adr_q_o,
   input  logic [XLEN-1:0]             csr_data_i,
 // --------------------------------
 //      Execute Interface
@@ -135,7 +135,7 @@ decoder dec0(
     .rd_adr_o             (rd_adr_nxt),
     .csr_wbk_o            (csr_wbk_nxt),
     .csr_clear_o          (csr_clear),
-    .csr_adr_o            (csr_adr),
+    .wbk_csr_adr_q_o            (csr_adr),
     .rs1_v_o              (rs1_v),
     .rs1_adr_o            (rs1_adr),
     .rs2_v_o              (rs2_v),
@@ -198,7 +198,7 @@ assign rs2_data_nxt       = {XLEN+1{ rs2_ca2_v}} & ~rs2_data_extended + 32'b1
 
 // Csr value
 assign csr_adr_nxt      = csr_adr;
-assign csr_adr_o        = csr_adr_nxt;
+assign wbk_csr_adr_q_o        = csr_adr_nxt;
 // exception
 // if not done exception will be raised when reset is high during the first cycle
 assign illegal_inst_nxt = illegal_inst & reset_n_q;

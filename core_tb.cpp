@@ -8,6 +8,7 @@
 #include "../include/colors.h"
 #include <sys/stat.h>  // mkdir
 #include <verilated.h>
+#include <sstream>
 #include "Vcore.h"
 #define MAX_CYCLES 100000
 #if VM_TRACE
@@ -280,7 +281,7 @@ int sc_main(int argc, char* argv[]) {
         }
     }
     if(debug) signature << "RAM init end" << endl;
-
+    vector<string> data;
 /*
     ##############################################################
                     COMPONENT INSTANCIATION
@@ -309,16 +310,16 @@ int sc_main(int argc, char* argv[]) {
     sc_signal<sc_uint<3>>   access_size;
 
 
-    sc_signal<sc_uint<32>>  write_data;
-    sc_signal<sc_uint<5>>   write_adr;
-    sc_signal<bool>         write_valid;
+    sc_signal<sc_uint<32>>  wbk_data;
+    sc_signal<sc_uint<5>>   wbk_adr;
+    sc_signal<bool>         wbk_v;
     sc_signal<sc_uint<32>>   pc_val;
     sc_signal<sc_uint<32>>   pc_val_mem;
 
     //csr
-    sc_signal<sc_uint<12>>   csr_adr;
-    sc_signal<bool>          write_csr_v;
-    sc_signal<sc_uint<32>>   csr_data;
+    sc_signal<sc_uint<12>>   wbk_csr_adr;
+    sc_signal<bool>          wbk_csr_v;
+    sc_signal<sc_uint<32>>   wbk_csr_data;
 
     core.clk              (clk);
     core.reset_n          (reset_n);
@@ -332,17 +333,18 @@ int sc_main(int argc, char* argv[]) {
     core.load_data_i      (load_data);
     core.access_size_o    (access_size);
 
-    // Connecting write control signals and data from the execution unit to the core module
-    core.write_valid_o    (write_valid);
-    core.write_adr_o      (write_adr);
-    core.write_data_o     (write_data);
+    // Checkers outputs
+    // rd
+    core.wbk_v_q_o        (wbk_v);
+    core.wbk_adr_q_o      (wbk_adr);
+    core.wbk_data_q_o     (wbk_data);
+    //csr
+    core.wbk_csr_v_q_o    (wbk_csr_v);
+    core.wbk_csr_adr_q_o  (wbk_csr_adr);
+    core.wbk_csr_data_q_o (wbk_csr_data);
+
     core.pc_val_o         (pc_val);
     core.pc_val_mem_o     (pc_val_mem);
-
-    //csr
-    core.write_csr_v_o    (write_csr_v);
-    core.csr_adr_o        (csr_adr);
-    core.csr_data_o       (csr_data);
 
     cout << "Reseting...";
 
@@ -356,6 +358,7 @@ int sc_main(int argc, char* argv[]) {
     reset_n.write(false);
     sc_start(3, SC_NS);
     reset_n.write(true);
+    sc_start(500, SC_PS);
 
     cerr << "done." << endl;
 
@@ -379,90 +382,21 @@ int sc_main(int argc, char* argv[]) {
             countdown --;
 
         // Ifetch interface
-        int  if_adr        = icache_adr0.read();
-        bool if_afr_valid  = true;
-        int  adr           = mem_adr.read();
-
-
+        int  if_adr         = icache_adr0.read();
+        bool if_afr_valid   = true;
+        int  adr            = mem_adr.read();
+        unsigned int pc_adr = icache_adr0.read();
+        NB_CYCLES           = sc_time_stamp().to_double()/1000;
 /*
     ##############################################################
                     SIGNOFF
     ##############################################################
 */
-
-        unsigned int pc_adr = icache_adr0.read();
-        NB_CYCLES           = sc_time_stamp().to_double()/1000;
-        if(NB_CYCLES > MAX_CYCLES){
-            // Writting signature for riscof if enabled
-            if (riscof)
-            {
-                if (debug){
-                    for (int i = begin_signature; i < end_signature; i += 4) {
-                        signature << setfill('0') << setw(8) << hex << i << " " << setfill('0') << setw(8) << hex << ram[i] << endl;
-                    }
-                }
-                else{
-                    for (int i = begin_signature; i < end_signature; i += 4) {
-                        signature << setfill('0') << setw(8) << hex << ram[i] << endl;
-                    }
-                }
-            }
-            // Close trace if opened
-            if (tfp) {
-                tfp->close();
-                tfp = nullptr;
-            }
-            // Coverage analysis (calling write only after the test is known to pass)
-            #if VM_COVERAGE
-                Verilated::mkdir("logs");
-                VerilatedCov::write("logs/coverage.dat");
-            #endif
-            cout << "Test never end, last adress registered : " << std::hex << pc_adr << endl;
-            core.final();
-            helper(OV_CYCLES);
-        }
-        // Exit
-        if(!riscof && signature_name == "" && pc_adr == bad_adr && if_afr_valid){
-            cout << "Reaching ending point, starting countdown" << endl;
-            cout << FRED("Error ! ") << "Found bad at adr 0x" << std::hex << pc_adr << endl;
-            sc_start(3, SC_NS);
-            cleanup(core, tfp,1);
-        }
-        else if(!riscof && signature_name == "" && pc_adr == good_adr && if_afr_valid){
-            cout << "Reaching ending point, starting countdown" << endl;
-            if(stats){
-                test_stats << test_filename << " " << NB_CYCLES  << " " << "SCALAR" << endl;
-                test_stats.close();
-            }
-            cout << FGRN("Success ! ") << "Found good at adr 0x" << std::hex << pc_adr << endl;
-            sc_start(3, SC_NS);
-            cleanup(core, tfp, 0);
-        }
-        else if(!riscof && signature_name == "" && pc_adr == exception_occur && if_afr_valid){
-            cout << "Reaching ending point, starting countdown" << endl;
-            cout << FYEL("Error ! ") << "Found exception_occur at adr 0x" << std::hex << pc_adr << endl;
-            sc_start(3, SC_NS);
-            cleanup(core, tfp, 2);
-        }
-        // riscof :
-        else if(((riscof && !start_countdown && pc_adr == rvtest_code_end) || (pc_adr ==  rvtest_end)) && if_afr_valid){
-            cout << "Reaching ending point, starting countdown" << endl;
-            start_countdown = true;
-        }
-
-        if (riscof && countdown == 0)
+    if(NB_CYCLES > MAX_CYCLES){
+        // Writting signature for riscof if enabled
+        if (riscof)
         {
-            cout << "Test ended at " << std::hex << pc_adr << endl;
-            sc_start(3, SC_NS);
-
-            // Stats Gestion riscof
-            test_stats << test_filename << " " << NB_CYCLES  << " " << "SCALAR" << endl;
-            test_stats.close();
-
-            cout << "signature_name :" << signature_name << endl ;
-            cout << "begin_signature :" << begin_signature << endl ;
-            cout << "end_signature :" << end_signature << endl ;
-            if(debug){
+            if (debug){
                 for (int i = begin_signature; i < end_signature; i += 4) {
                     signature << setfill('0') << setw(8) << hex << i << " " << setfill('0') << setw(8) << hex << ram[i] << endl;
                 }
@@ -472,62 +406,144 @@ int sc_main(int argc, char* argv[]) {
                     signature << setfill('0') << setw(8) << hex << ram[i] << endl;
                 }
             }
-            cleanup(core, tfp, 0);
         }
+        // Close trace if opened
+        if (tfp) {
+            tfp->close();
+            tfp = nullptr;
+        }
+        // Coverage analysis (calling write only after the test is known to pass)
+        #if VM_COVERAGE
+            Verilated::mkdir("logs");
+            VerilatedCov::write("logs/coverage.dat");
+        #endif
+        cout << "Test never end, last adress registered : " << std::hex << pc_adr << endl;
+        core.final();
+        helper(OV_CYCLES);
+    }
+    // Exit
+    if(!riscof && signature_name == "" && pc_adr == bad_adr && if_afr_valid){
+        cout << "Reaching ending point, starting countdown" << endl;
+        cout << FRED("Error ! ") << "Found bad at adr 0x" << std::hex << pc_adr << endl;
+        sc_start(3, SC_NS);
+        cleanup(core, tfp,1);
+    }
+    else if(!riscof && signature_name == "" && pc_adr == good_adr && if_afr_valid){
+        cout << "Reaching ending point, starting countdown" << endl;
+        if(stats){
+            test_stats << test_filename << " " << NB_CYCLES  << " " << "SCALAR" << endl;
+            test_stats.close();
+        }
+        cout << FGRN("Success ! ") << "Found good at adr 0x" << std::hex << pc_adr << endl;
+        sc_start(3, SC_NS);
+        cleanup(core, tfp, 0);
+    }
+    else if(!riscof && signature_name == "" && pc_adr == exception_occur && if_afr_valid){
+        cout << "Reaching ending point, starting countdown" << endl;
+        cout << FYEL("Error ! ") << "Found exception_occur at adr 0x" << std::hex << pc_adr << endl;
+        sc_start(3, SC_NS);
+        cleanup(core, tfp, 2);
+    }
+    // riscof :
+    else if(((riscof && !start_countdown && pc_adr == rvtest_code_end) || (pc_adr ==  rvtest_end)) && if_afr_valid){
+        cout << "Reaching ending point, starting countdown" << endl;
+        start_countdown = true;
+    }
+
+    if (riscof && countdown == 0)
+    {
+        cout << "Test ended at " << std::hex << pc_adr << endl;
+        sc_start(3, SC_NS);
+
+        // Stats Gestion riscof
+        test_stats << test_filename << " " << NB_CYCLES  << " " << "SCALAR" << endl;
+        test_stats.close();
+
+        cout << "signature_name :" << signature_name << endl ;
+        cout << "begin_signature :" << begin_signature << endl ;
+        cout << "end_signature :" << end_signature << endl ;
+        if(debug){
+            for (int i = begin_signature; i < end_signature; i += 4) {
+                signature << setfill('0') << setw(8) << hex << i << " " << setfill('0') << setw(8) << hex << ram[i] << endl;
+            }
+        }
+        else{
+            for (int i = begin_signature; i < end_signature; i += 4) {
+                signature << setfill('0') << setw(8) << hex << ram[i] << endl;
+            }
+        }
+        cleanup(core, tfp, 0);
+    }
 
 /*
     ##############################################################
                     MEMORY ACCESS GESTION
     ##############################################################
 */
-  int phys_adr = adr & 0xFFFFFFFC;
-  // Store always store the lsb of the register into the proper part of the adress
-  // May be done directly by the core -> to discuss
-  if (is_store.read() && adr_v.read()) {
-    if(access_size.read() == 1){
-        if ((adr & 0b11) == 0) ram[phys_adr] = (ram[phys_adr] & 0xFFFFFF00) | (store_data.read() & 0x000000FF);
-        if ((adr & 0b11) == 1) ram[phys_adr] = (ram[phys_adr] & 0xFFFF00FF) | ((store_data.read() & 0x000000FF) << 8);
-        if ((adr & 0b11) == 2) ram[phys_adr] = (ram[phys_adr] & 0xFF00FFFF) | ((store_data.read() & 0x000000FF) << 16);
-        if ((adr & 0b11) == 3) ram[phys_adr] = (ram[phys_adr] & 0x00FFFFFF) | ((store_data.read() & 0x000000FF) << 24);
-    }
-// store half word
-    else if(access_size.read() == 2){
-        if ((adr & 0b11) == 0) ram[phys_adr] = (ram[phys_adr] & 0xFFFF0000) | (store_data.read()  & 0x0000FFFF);
-        if ((adr & 0b10) == 2) ram[phys_adr] = (ram[phys_adr] & 0x0000FFFF) | ((store_data.read() & 0x0000FFFF) << 16);
-    }
-// store word
-    else if (access_size.read() == 4) ram[phys_adr] = store_data.read();
-}
+        int phys_adr = adr & 0xFFFFFFFC;
+        // Store always store the lsb of the register into the proper part of the adress
+        // May be done directly by the core -> to discuss
+        if (is_store.read() && adr_v.read()) {
+        cout << pc_val_mem << " " << adr << " " << store_data.read() << endl;
+        if(access_size.read() == 1){
+            if ((adr & 0b11) == 0) ram[phys_adr] = (ram[phys_adr] & 0xFFFFFF00) | (store_data.read() & 0x000000FF);
+            if ((adr & 0b11) == 1) ram[phys_adr] = (ram[phys_adr] & 0xFFFF00FF) | ((store_data.read() & 0x000000FF) << 8);
+            if ((adr & 0b11) == 2) ram[phys_adr] = (ram[phys_adr] & 0xFF00FFFF) | ((store_data.read() & 0x000000FF) << 16);
+            if ((adr & 0b11) == 3) ram[phys_adr] = (ram[phys_adr] & 0x00FFFFFF) | ((store_data.read() & 0x000000FF) << 24);
+        }
+        // store half word
+        else if(access_size.read() == 2){
+            if ((adr & 0b11) == 0) ram[phys_adr] = (ram[phys_adr] & 0xFFFF0000) | (store_data.read()  & 0x0000FFFF);
+            if ((adr & 0b10) == 2) ram[phys_adr] = (ram[phys_adr] & 0x0000FFFF) | ((store_data.read() & 0x0000FFFF) << 16);
+        }
+        // store word
+        else if (access_size.read() == 4) ram[phys_adr] = store_data.read();
+        }
         load_data    = ram[phys_adr];
         icache_instr = ram[if_adr];
-        sc_start(500, SC_PS);
 
+/*
+    ##############################################################
+                    CHECKER
+    ##############################################################
+*/
     //Show what's been written in the destination register at each cycle
-    if (prev_cycle != NB_CYCLES){
-        prev_cycle = NB_CYCLES;
-        stringstream line;
+    if (wbk_v.read() | wbk_csr_v.read() | adr_v.read()){
+        std::stringstream pc;
+        std::stringstream pc_mem;
+        std::stringstream rd;
+        std::stringstream data_chck;
+        std::stringstream mem_adr_chck;
+        std::stringstream mem_data;
+        std::stringstream csr;
+        std::stringstream csr_data_chck;
 
-        if (write_valid || write_csr_v){
-            line << std::hex << "PC : 0x" << (pc_val.read() & 0xFFFFFFFF);
-        }
-        if (write_valid && write_adr.read() != 0) {
-            line << ", register : "<<dec << "x" <<write_adr<< ", data : 0x"<< setfill('0') << setw(8) << hex << (write_data.read()  & 0xFFFFFFFF);
-        }
+        pc            << "0x" << std::hex << setfill('0') << setw(8) << static_cast<unsigned int>(pc_val.read());
+        pc_mem        << "0x" << std::hex << setfill('0') << setw(8) << static_cast<unsigned int>(pc_val_mem.read());
 
-        if (write_csr_v) {
-            line <<", csr adr : "<<hex << "0x" <<(csr_adr.read()& 0xFFFFFFFF)<< ", data : 0x"<< setfill('0') << setw(8) << hex << (csr_data.read()  & 0xFFFFFFFF);
-        }
+        rd            << "x" <<  wbk_adr.read();
+        data_chck     << "0x" << std::hex << setfill('0') << setw(8) << static_cast<unsigned int>(wbk_data.read());
+        mem_adr_chck  << "0x" << std::hex << setfill('0') << setw(8) << phys_adr;
+        mem_data      << "0x" << std::hex << setfill('0') << setw(8) << store_data.read();
+        csr           << "0x" << std::hex << setfill('0') << setw(3) << static_cast<unsigned int>(wbk_csr_adr.read());
+        csr_data_chck << "0x" << std::hex << setfill('0') << setw(8) << static_cast<unsigned int>(wbk_csr_data.read());
 
-        if (!line.str().empty()) {
-            register_file << line.str() << endl;
+        data.push_back(adr_v.read()                       ? pc_mem.str() : pc.str()        );
+        data.push_back(wbk_v.read() && wbk_adr.read() !=0 ? rd.str()               : "None");
+        data.push_back(wbk_v.read() && wbk_adr.read() !=0 ? data_chck.str()        : "None");
+        data.push_back(adr_v.read()                       ? mem_adr_chck.str(  )   : "None");
+        data.push_back(is_store.read()                    ? mem_data.str()         : "None");
+        data.push_back(wbk_csr_v.read()                   ? csr.str()              : "None");
+        data.push_back(wbk_csr_v.read()                   ? csr_data_chck.str()    : "None");
+
+        for (auto it = data.begin(); it != data.end() -1; ++it) {
+            register_file << *it << ";"; // Write data to file
         }
+        register_file << *(data.end() -1) << endl;
+        data.clear();
     }
 
-    else if (is_store.read() && adr_v.read() && prev_cycle2 != NB_CYCLES){
-        prev_cycle2=NB_CYCLES;
-        register_file << std::hex <<"PC : 0x" << (pc_val_mem.read()& 0xFFFFFFFF) <<", mem adr: "<<hex << "0x" <<(mem_adr.read()& 0xFFFFFFFF)<< ", data : 0x"<< setfill('0') << setw(8) << hex << (store_data.read()  & 0xFFFFFFFF)<<endl;
-    }
-
+    sc_start(1, SC_NS);
     }
     return 0;
 }

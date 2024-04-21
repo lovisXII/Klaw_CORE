@@ -20,17 +20,19 @@ module core (
     input logic  [XLEN-1:0] load_data_i,
     output logic [2:0]      access_size_o,
 
-    //Added outputs for checking //
+    // Checker outputs
+    // rd
+    output logic              wbk_v_q_o,
+    output logic[NB_REGS-1:0] wbk_adr_q_o,
+    output logic[XLEN-1:0]    wbk_data_q_o,
+    // csr
+    output logic              wbk_csr_v_q_o,
+    output logic[11:0]        wbk_csr_adr_q_o,
+    output logic[XLEN-1:0]    wbk_csr_data_q_o,
+    // pc
+    output logic[XLEN-1:0]    pc_val_o,
+    output logic[XLEN-1:0]    pc_val_mem_o
 
-    output logic              write_valid_o,
-    output logic[31:0]        write_data_o,
-    output logic[NB_REGS-1:0] write_adr_o,
-    output logic[31:0]        pc_val_o,
-    output logic[31:0]        pc_val_mem_o,
-
-    output logic              write_csr_v_o,
-    output logic[11:0]        csr_adr_o,
-    output logic[31:0]        csr_data_o
 
 );
 // priviledge
@@ -122,7 +124,7 @@ dec u_decod(
   .rf_rs1_data_i        ( dec_rf_rs1_data),
   .rf_rs2_adr_o        ( dec_rf_rs2_adr),
   .rf_rs2_data_i        ( dec_rf_rs2_data),
-  .csr_adr_o            (dec_csr_adr),
+  .wbk_csr_adr_q_o            (dec_csr_adr),
   .csr_data_i           (csr_dec_data),
 // --------------------------------
 //      CSR Interface
@@ -234,14 +236,17 @@ csr u_csr(
   .mepc_q_o         (mepc_reg_q),
   .data_o           (csr_dec_data)
 );
-//Checker
-assign write_adr_o    = wbk_adr_q;
-assign write_data_o   = wbk_data_q;
-assign write_valid_o  = wbk_v_q;
+// Checker outputs
+// rd
+assign wbk_v_q_o        = wbk_v_q;
+assign wbk_adr_q_o      = wbk_adr_q;
+assign wbk_data_q_o     = wbk_data_q;
+// csr
+assign wbk_csr_v_q_o    = exe_csr_wbk_v_q;
+assign wbk_csr_adr_q_o  = exe_csr_adr_q;
+assign wbk_csr_data_q_o = exe_csr_data;
+
 assign pc_val_o       = pc_q_o;
 assign pc_val_mem_o   = dec_exe_pc_q;
-assign write_csr_v_o  = exe_csr_wbk_v_q;
-assign csr_adr_o      = exe_csr_adr_q;
-assign csr_data_o     = exe_csr_data;
 
 endmodule
