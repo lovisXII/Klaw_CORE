@@ -9,7 +9,7 @@ module decoder (
   // Csr
   output logic                       csr_wbk_o,
   output logic                       csr_clear_o,
-  output logic [11:0]                csr_adr_o,
+  output logic [11:0]                wbk_csr_adr_q_o,
   // rs1
   output logic                       rs1_v_o,
   output logic [4:0]                 rs1_adr_o,
@@ -354,7 +354,7 @@ assign csr_wbk_o    = mret | csrrw | csrrwi
                     | (csrrc  | csrrs ) & |rs1_adr
                     | (csrrci | csrrsi) & |imm;
 assign csr_clear_o  = csrrc | csrrci;
-assign csr_adr_o    = {12{~mret}} & instr_i[31:20]
+assign wbk_csr_adr_q_o    = {12{~mret}} & instr_i[31:20]
                     | {12{ mret}} & CSR_MSTATUS;
 // rs1
 assign rs1_v_o      = rs1_v;
