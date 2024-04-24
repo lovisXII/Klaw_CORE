@@ -153,7 +153,7 @@ logic mret;
 logic sret;
 logic fence;
 logic illegal_inst;
-
+logic [XLEN-1:0] imm;
 //-------------------------
 // Instruction decoding
 //-------------------------
@@ -350,7 +350,9 @@ assign unsign_extension    = bltu | bgeu | lbu | lhu | sltiu | sltu;
 assign rd_v_o       = rd_v;
 assign rd_adr_o     = rd_adr;
 // Csr register
-assign csr_wbk_o    = mret | csrrw | csrrwi | csrrc | csrrci | (csrrsi | csrrs) & ~&rs1_adr;
+assign csr_wbk_o    = mret | csrrw | csrrwi
+                    | (csrrc  | csrrs ) & |rs1_adr
+                    | (csrrci | csrrsi) & |imm;
 assign csr_clear_o  = csrrc | csrrci;
 assign csr_adr_o    = {12{~mret}} & instr_i[31:20]
                     | {12{ mret}} & CSR_MSTATUS;
@@ -365,12 +367,13 @@ assign auipc_o             = auipc;
 assign rs1_is_immediat_o   = csrrwi | csrrsi | csrrci;
 assign rs2_is_immediat_o   = lui | auipc | jalr | jalr | i_type | l_type;
 assign rs2_is_csr_o        = csrrw | csrrs | csrrc | csrrwi | csrrsi | csrrci | mret;
-assign immediat_o          = {32{(i_type | jalr | l_type)}}  & {{20{instr_i[31]}}, instr_i[31:20]}
+assign imm                 = {32{(i_type | jalr | l_type)}}  & {{20{instr_i[31]}}, instr_i[31:20]}
                            | {32{s_type}}                    & {{20{instr_i[31]}}, instr_i[31:25],instr_i[11:7]}
                            | {32{b_type}}                    & {{19{instr_i[31]}}, instr_i[31],instr_i[7],instr_i[30:25],instr_i[11:8],1'b0}
                            | {32{jal}}                       & {{11{instr_i[31]}}, instr_i[31],instr_i[19:12],instr_i[20],instr_i[30:21],1'b0}
                            | {32{auipc | lui}}               & {instr_i[31:12], 12'b0}
                            | {32{csrrwi | csrrsi | csrrci}}  & {27'd0, instr_i[19:15]};
+assign immediat_o          = imm;
 assign illegal_inst_o      = illegal_inst;
 assign rs2_ca2_v_o         = sub | bge | blt | bgeu | bltu | slt | sltu | slti | sltiu;
 //-------------------------
