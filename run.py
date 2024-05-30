@@ -106,6 +106,7 @@ if __name__ == "__main__" :
     parser.add_argument("--test", help="File or directory that contains the test files to run")
     parser.add_argument("--build-dir", help="Override build directory, default is obj_dir", default="obj_dir")
     parser.add_argument("--riscof", action="store_true", help="Launch the riscof toolchain")
+    parser.add_argument("--view", action="store_true", help="Launch Gtkwave")
     parser.add_argument("--impl", action="store_true", help="Launch the implementation of using OpenLane")
     parser.add_argument("--clean", action="store_true", help="Clean all the generated files")
     args = parser.parse_args()
@@ -129,10 +130,5 @@ if __name__ == "__main__" :
         cmd = "rm -rf implementation/OpenLane/designs/core/src/*.v"
         run_subprocess(cmd, "Cleaning implementation files...")
 
-    # Compilers
-    sv2v              = "bin/sv2v"
-    # Src path
-    src_dir           = "src"
-    build_dir         = "obj_dir"
-    impl_dir          = "implementation/OpenLane/designs/core/"
-    test              = "sw/tests/I/add/add_0.S"
+    if args.view :
+        gtkwave()

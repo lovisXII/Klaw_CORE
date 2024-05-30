@@ -29,6 +29,8 @@ module core (
     output logic              wbk_csr_v_q_o,
     output logic[11:0]        wbk_csr_adr_q_o,
     output logic[XLEN-1:0]    wbk_csr_data_q_o,
+    // branch
+    output logic              branch_v_q_o,
     // pc
     output logic[XLEN-1:0]    pc_val_o,
     output logic[XLEN-1:0]    pc_val_mem_o
@@ -245,8 +247,10 @@ assign wbk_data_q_o     = wbk_data_q;
 assign wbk_csr_v_q_o    = exe_csr_wbk_v_q;
 assign wbk_csr_adr_q_o  = exe_csr_adr_q;
 assign wbk_csr_data_q_o = exe_csr_data;
-
-assign pc_val_o       = pc_q_o;
-assign pc_val_mem_o   = dec_exe_pc_q;
+// branch
+assign branch_v_q_o     = branch_v_q;
+assign pc_val_o         = pc_q_o;
+// pc
+assign pc_val_mem_o     = dec_exe_pc_q;
 
 endmodule
