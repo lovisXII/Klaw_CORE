@@ -205,9 +205,8 @@ int sc_main(int argc, char* argv[]) {
         int  size = sec->get_size();
         int* data = (int*)sec->get_data();
         if (adr) {
-            cout << "Loading data";
+            cout << "Loading data ...";
             for (int j = 0; j < size; j += 4) {
-                cout << ".";
                 ram[adr + j] = data[j / 4];
                 if(debug){
                     signature << setfill('0') << setw(8) << hex << adr + j << " " << setfill('0') << setw(8) << hex << data[j / 4] << endl;
@@ -310,18 +309,17 @@ int sc_main(int argc, char* argv[]) {
     sc_signal<sc_uint<32>>  store_data;
     sc_signal<sc_uint<32>>  load_data;
     sc_signal<sc_uint<3>>   access_size;
-
-
     sc_signal<sc_uint<32>>  wbk_data;
     sc_signal<sc_uint<5>>   wbk_adr;
     sc_signal<bool>         wbk_v;
-    sc_signal<sc_uint<32>>   pc_val;
-    sc_signal<sc_uint<32>>   pc_val_mem;
-
+    sc_signal<sc_uint<32>>  pc_val;
+    sc_signal<sc_uint<32>>  pc_val_mem;
     //csr
     sc_signal<sc_uint<12>>   wbk_csr_adr;
     sc_signal<bool>          wbk_csr_v;
     sc_signal<sc_uint<32>>   wbk_csr_data;
+    // csr
+    sc_signal<bool>          branch_v;
 
     core.clk              (clk);
     core.reset_n          (reset_n);
@@ -344,7 +342,9 @@ int sc_main(int argc, char* argv[]) {
     core.wbk_csr_v_q_o    (wbk_csr_v);
     core.wbk_csr_adr_q_o  (wbk_csr_adr);
     core.wbk_csr_data_q_o (wbk_csr_data);
-
+    // branch
+    core.branch_v_q_o     (branch_v);
+    // pc
     core.pc_val_o         (pc_val);
     core.pc_val_mem_o     (pc_val_mem);
 
@@ -509,7 +509,7 @@ int sc_main(int argc, char* argv[]) {
     ##############################################################
 */
     //Show what's been written in the destination register at each cycle
-    if (wbk_v.read() | wbk_csr_v.read() | adr_v.read()){
+    if (wbk_v.read() | wbk_csr_v.read() | adr_v.read() | branch_v.read()){
         std::stringstream pc;
         std::stringstream pc_mem;
         std::stringstream rd;
@@ -529,7 +529,7 @@ int sc_main(int argc, char* argv[]) {
         csr           << "0x" << std::hex << setfill('0') << setw(3) << static_cast<unsigned int>(wbk_csr_adr.read());
         csr_data_chck << "0x" << std::hex << setfill('0') << setw(8) << static_cast<unsigned int>(wbk_csr_data.read());
         // rd_v and adr_v may be set the same cycle
-        if(wbk_v.read()){
+        if(wbk_v.read() | wbk_csr_v.read() | branch_v.read()){
             rd_data_vec.push_back(                                     pc.str()                       );
             rd_data_vec.push_back(wbk_v.read() && wbk_adr.read() !=0 ? rd.str()               : "None");
             rd_data_vec.push_back(wbk_v.read() && wbk_adr.read() !=0 ? data_chck.str()        : "None");
@@ -549,8 +549,8 @@ int sc_main(int argc, char* argv[]) {
             mem_data_vec.push_back(                                                              "None");
             mem_data_vec.push_back(                                     mem_adr_chck.str()             );
             mem_data_vec.push_back(is_store.read()                    ? mem_data.str()         : "None");
-            mem_data_vec.push_back(wbk_csr_v.read()                   ? csr.str()              : "None");
-            mem_data_vec.push_back(wbk_csr_v.read()                   ? csr_data_chck.str()    : "None");
+            mem_data_vec.push_back(                                                              "None");
+            mem_data_vec.push_back(                                                              "None");
             // write mem
             for (auto it = mem_data_vec.begin(); it != mem_data_vec.end() -1; ++it) {
                 register_file << *it << ";"; // Write data to file

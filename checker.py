@@ -80,7 +80,7 @@ def process_model_file(file_path):
                     # Used to avoid index out of range
                     while len(parts) < 9:
                         parts.append("None")
-                    if line_number < 5 or line_empty(line):
+                    if line_number < 5 :
                         continue
                     else :
                         # Check if the line is related to memory writes
@@ -122,11 +122,13 @@ if __name__ == "__main__" :
         index += 1
         for i in range(len(elem_sim)) :
             if elem_sim[i] != elem_model[i] :
+                print("--------------------------------------------")
                 print("Missmatch in registers detected")
                 print(elem_sim)
                 print(elem_model)
                 print("Sim   : {}".format(elem_sim[i]))
                 print("Model : {}".format(elem_model[i]))
+                print("--------------------------------------------")
                 error = 1
                 break
         if error == 1:
@@ -135,19 +137,20 @@ if __name__ == "__main__" :
     if error == 0 :
         print("Checker ran without errors")
     else :
-        print("---Full log :---")
-        print("PC sim                    : ", data_sim  [index][0])
-        print("PC model                  : ", data_model[index][0])
-        print("rd sim                    : ", data_sim  [index][1])
-        print("rd model                  : ", data_model[index][1])
-        print("data sim                  : ", data_sim  [index][2])
-        print("data model                : ", data_model[index][2])
-        print("mem_adr sim               : ", data_sim  [index][3])
-        print("mem_adr model             : ", data_model[index][3])
-        print("mem_data sim              : ", data_sim  [index][4])
-        print("mem_data model            : ", data_model[index][4])
-        print("csr sim                   : ", data_sim  [index][5])
-        print("csr model                 : ", data_model[index][5])
-        print("csr_data sim              : ", data_sim  [index][6])
-        print("csr_data model            : ", data_model[index][6])
+        print("-------------- Simulation ------------------------")
+        print("PC                   : ", data_sim  [index][0])
+        print("rd                   : ", data_sim  [index][1])
+        print("data                 : ", data_sim  [index][2])
+        print("mem_adr              : ", data_sim  [index][3])
+        print("mem_data             : ", data_sim  [index][4])
+        print("csr                  : ", data_sim  [index][5])
+        print("csr_data             : ", data_sim  [index][6])
+        print("----------------  Model  -------------------------")
+        print("PC                   : ", data_model[index][0])
+        print("rd                   : ", data_model[index][1])
+        print("data                 : ", data_model[index][2])
+        print("mem_adr              : ", data_model[index][3])
+        print("mem_data             : ", data_model[index][4])
+        print("csr                  : ", data_model[index][5])
+        print("csr_data             : ", data_model[index][6])
 

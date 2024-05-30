@@ -41,13 +41,14 @@ view:
 	vsim -view logs/vlt_dump.wlf
 
 run:core_tb
-	spike -p1 -l --log=spike.log --priv=m --isa=rv32izicsr --log-commits a.out
 	obj_dir/Vcore $(TEST) $(DEBUG)
+	spike -p1 --log=spike.log --priv=m --isa=rv32izicsr --log-commits a.out
 
 
-run_risc:core_tb
-	spike -p1 -l --log=spike.log --priv=m --isa=rv32izicsr --log-commits $(TEST_R)
-	obj_dir/Vcore $(TEST_R) --riscof signature.txt
+run_risc:
+	obj_dir/Vcore $(TEST) --riscof signature.txt
+	spike -p1 --log=spike.log --priv=m --isa=rv32izicsr --log-commits $(TEST)
+	python3 ./checker.py
 
 check: core_tb
 	obj_dir/Vcore $(TEST) $(DEBUG)
