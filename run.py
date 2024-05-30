@@ -86,11 +86,11 @@ def run_simu():
     run_subprocess(cmd, "Run simulation")
 # Riscof
 def run_riscof(test):
-    cmd     = f'obj_dir/Vcore test --riscof --signature signature.txt'
+    cmd     = f'obj_dir/Vcore {test} --riscof signature.txt'
     run_subprocess(cmd, "Run simulation with --riscof enable")
 
 def run_checker(test) :
-    arch        = "-march=rv32izicsr"
+    arch        = "--isa=rv32izicsr"
     spike_cmd   = f"spike -p1 --log=spike.log --priv=m {arch} --log-commits {test}"
     checker_cmd = f"python3 ./checker.py"
     run_subprocess(spike_cmd, "Run spike")
@@ -104,6 +104,7 @@ if __name__ == "__main__" :
     parser = argparse.ArgumentParser(description="Compile RTL core toolchain")
     parser.add_argument("--sim", action="store_true", help="Launch the simulation of the RTL")
     parser.add_argument("--test", help="File or directory that contains the test files to run")
+    parser.add_argument("--build-dir", help="Override build directory, default is obj_dir", default="obj_dir")
     parser.add_argument("--riscof", action="store_true", help="Launch the riscof toolchain")
     parser.add_argument("--impl", action="store_true", help="Launch the implementation of using OpenLane")
     parser.add_argument("--clean", action="store_true", help="Clean all the generated files")
@@ -111,14 +112,17 @@ if __name__ == "__main__" :
     if (args.sim or args.riscof) and not args.test:
         raise argparse.ArgumentTypeError("--test is required when --sim or --riscof is specified")
 
-    if args.sim or args.riscof:
+    if args.sim :
         compile_verilator()
         compile_c()
         compile_test(args.test)
-        if args.sim :
-            run_simu()
-        if args.riscof :
-            run_riscof(args.test)
+        run_simu()
+        run_checker("a.out")
+    elif args.riscof :
+        compile_verilator()
+        compile_c()
+        run_riscof(args.test)
+        run_checker(args.test)
     elif args.clean :
         cmd = "rm -rf obj_dir/ *.vcd *.out.txt.s *.out kernel *.txt *.o *.log obj_dir"
         run_subprocess(cmd, "Cleaning generated files...")
