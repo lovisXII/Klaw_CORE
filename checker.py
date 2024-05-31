@@ -1,4 +1,5 @@
 import re
+from termcolor import colored
 # Function to translate csr address into csr register name
 def get_csr_adr(name):
     register_map = {
@@ -135,8 +136,9 @@ if __name__ == "__main__" :
             break  # Exit the outer loop if a mismatch is found
 
     if error == 0 :
-        print("Checker ran without errors")
+        print(colored("[INFO]", "green"), "Checker ran without errors")
     else :
+        print(colored("[ERROR]", "red"), "Missmatch detected")
         print("-------------- Simulation ------------------------")
         print("PC                   : ", data_sim  [index][0])
         print("rd                   : ", data_sim  [index][1])
