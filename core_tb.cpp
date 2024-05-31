@@ -169,7 +169,7 @@ int sc_main(int argc, char* argv[]) {
     // Core instanciation
     Vcore core("u_core");
 
-    (riscof) ? cout << "[info] riscof enable" << endl : cout << "[info] riscof disable" << endl;
+    (riscof) ? cout << "[INFO] riscof enable" << endl : cout << "[INFO] riscof disable" << endl;
 /*
     ##############################################################
                     PARSING ELF/.s/.c file
