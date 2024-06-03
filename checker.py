@@ -1,3 +1,4 @@
+#! /usr/bin/env python3.10
 import re
 from termcolor import colored
 # Function to translate csr address into csr register name
@@ -43,6 +44,17 @@ def line_empty(line) :
     return True if not wbk_v(line) and not csr_v(line) and not mem_v(line) else False
 
 def index(my_list, regex, incr = 0) :
+    """
+    Finds the index of the first item in the list that matches the given regex pattern.
+
+    Args:
+        my_list (list): The list of strings to search through.
+        regex (str): The regular expression pattern to match.
+        incr (int, optional): The value to add to the found index. Defaults to 0.
+
+    Returns:
+        int: The index of the first matching item plus the increment. Returns 0 if no match is found.
+    """
     pattern = re.compile(regex)
     index = next((i for i, item in enumerate(my_list) if pattern.match(item)), None)
     if index is not None :
@@ -63,8 +75,6 @@ def process_sim_file(file_path):
                 sim_log.append(line_data)
     except FileNotFoundError as e:
         print(f"Error: {e}")
-    except Exception as e:
-        print(f"An error occurred: {e}")
 
     return sim_log
 
@@ -90,10 +100,23 @@ def process_model_file(file_path):
                                  "None"
                         data     = parts[6] if wbk_v(line) else \
                                  "None"
+                        # If idx is the index where "mem" is :
+                        # * at idx + 1 there is address
+                        # * at idx + 2 there is the data
+                        # But sometimes there is no memory access
+                        # In order to avoid overflow we check the
+                        # idx of the stored data is < lenght
+                        # to avoid overflow
                         mem_adr  = parts[index(parts, MEM_REGEX, 1)] if mem_v(line) else \
                                  "None"
-                        mem_data = parts[index(parts, MEM_REGEX, 2)] if mem_v(line) else \
-                                 "None"
+
+                        index_stored_data = index(parts, MEM_REGEX, 2)
+                        if index_stored_data < len(parts) :
+                            mem_data = parts[index_stored_data] if mem_v(line) else \
+                                     "None"
+                        else :
+                            mem_data = "None"
+
                         csr      = parts[index(parts, CSR_REGEX)] if csr_v(line) else \
                                  "None"
                         data_csr = parts[index(parts, CSR_REGEX, 1)] if csr_v(line) else \
@@ -106,12 +129,9 @@ def process_model_file(file_path):
 
     except FileNotFoundError as e:
         print(f"Error: {e}")
-    except Exception as e:
-        print(f"An error occurred: {e}")
-
     return entries
 
-if __name__ == "__main__" :
+def run_checker() :
     file1 = 'sim.log'
     file2 = 'spike.log'
     data_model = process_model_file(file2)
@@ -156,3 +176,5 @@ if __name__ == "__main__" :
         print("csr                  : ", data_model[index][5])
         print("csr_data             : ", data_model[index][6])
 
+if __name__ == "__main__" :
+    run_checker()
