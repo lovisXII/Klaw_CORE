@@ -11,6 +11,7 @@ if [ $# -lt 1 ]; then
   usage
 fi
 
+cd $KLAW_ROOT
 # Iterate through the arguments using a for loop
 for arg in "$@"; do
   case "$arg" in

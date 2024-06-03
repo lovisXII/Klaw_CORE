@@ -56,8 +56,6 @@ check: core_tb
 	python3 ./checker.py
 
 core_tb: build_sw
-	export SYSTEMC_INCLUDE=/usr/local/systemc-2.3.3/include/
-	export SYSTEMC_LIBDIR=/usr/local/systemc-2.3.3/lib-linux64/
 	$(VERILATOR) $(PKG) -CFLAGS "$(C_ARGS)" $(VERILATOR_FLAGS) $(SRC) --top-module $(TOP)  --exe $(TB)
 	$(MAKE) -j -C obj_dir -f Vcore.mk
 
