@@ -114,7 +114,7 @@ always_ff @(posedge clk, negedge reset_n) begin
 end
 always_ff @(posedge clk, negedge reset_n) begin
     if (~reset_n) begin
-            misa_q <= {2'b1, 4'b0, 26'd8};
+            misa_q <= {2'b1, 4'b0, 26'b1_0000_0000};
     end else begin
         if (misa_nxt_v) begin
             misa_q <= data_i;
