@@ -280,7 +280,7 @@ assign wbk_csr_data_q_o = exe_csr_data;
 assign branch_v_q_o     = branch_v_q;
 assign pc_val_o         = pc_q_o;
 // memory access
-assign val_adr_q_o        = val_adr_v_q;
+assign val_adr_v_q_o        = val_adr_v_q;
 assign val_adr_q_o        = val_adr_q;
 assign val_store_v_q_o    = val_store_v_q;
 assign val_store_data_q_o = val_store_data_q;
