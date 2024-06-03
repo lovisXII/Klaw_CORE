@@ -98,6 +98,7 @@ logic              val_adr_v_q;
 logic [XLEN-1:0]   val_adr_q;
 logic              val_store_v_q;
 logic [XLEN-1:0]   val_store_data_q;
+
 ifetch u_ifetch (
     // global interface
     .clk            ( clk),
@@ -113,6 +114,7 @@ ifetch u_ifetch (
     // --------------------------------
     .core_mode_q_i  (core_mode_q),
     .branch_v_q_i   ( branch_v_q),
+    .exception_q_i  (exception_q),
     .pc_data_q_i    ( exe_if_pc),
     // --------------------------------
     //      DEC
@@ -284,5 +286,4 @@ assign val_adr_v_q_o        = val_adr_v_q;
 assign val_adr_q_o        = val_adr_q;
 assign val_store_v_q_o    = val_store_v_q;
 assign val_store_data_q_o = val_store_data_q;
-
 endmodule

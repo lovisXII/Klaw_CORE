@@ -280,7 +280,7 @@ assign bu_en            = unit_q_i[BU];
 // Load/Store Units
 assign lsu_en           = unit_q_i[LSU] & ~flush_v;
 assign is_store         = lsu_en & operation_q_i[ST];
-assign adr_v_o          = lsu_en;
+assign adr_v_o          = lsu_en & ~exception_nxt;
 assign adr_o            = mem_adr;
 assign is_store_o       = is_store;
 assign store_data_o     = rs2_data_qual_q_i[XLEN-1:0] ;
@@ -382,5 +382,4 @@ assign csr_adr_q_o         = csr_adr_q;
 assign csr_data_q_o        = csr_data_q;
 //Checker
 assign pc_q_o              = pc_q;
-
 endmodule
