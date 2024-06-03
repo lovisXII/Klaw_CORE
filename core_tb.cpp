@@ -534,40 +534,24 @@ int sc_main(int argc, char* argv[]) {
         mem_data      << "0x" << std::hex << setfill('0') << setw(8) << static_cast<unsigned int>(val_store_data.read());
         csr           << "0x" << std::hex << setfill('0') << setw(3) << static_cast<unsigned int>(wbk_csr_adr.read());
         csr_data_chck << "0x" << std::hex << setfill('0') << setw(8) << static_cast<unsigned int>(wbk_csr_data.read());
-        cout << "pc.read() : "     << pc.str()     << endl;
+        cout << "pc.read() : "        << pc.str()     << endl;
         cout << "wbk_v.read() : "     << wbk_v.read()     << endl;
         cout << "wbk_csr_v.read() : " << wbk_csr_v.read() << endl;
-        cout << "adr_v.read() : "     << adr_v.read()     << endl;
+        cout << "adr_v.read() : "     << val_adr_v.read()     << endl;
         cout << "branch_v.read() : "  << branch_v.read()  << endl;
         // rd_v and adr_v may be set the same cycle
-        if((wbk_v.read() | wbk_csr_v.read() | branch_v.read()) & ~val_adr_v.read()){
-            rd_data_vec.push_back(                                     pc.str()                       ); // pc
-            rd_data_vec.push_back(wbk_v.read() && wbk_adr.read() !=0 ? rd.str()               : "None"); // rd
-            rd_data_vec.push_back(wbk_v.read() && wbk_adr.read() !=0 ? data_chck.str()        : "None"); // data
-            rd_data_vec.push_back(                                                              "None"); // mem adr
-            rd_data_vec.push_back(                                                              "None"); // mem data
-            rd_data_vec.push_back(wbk_csr_v.read()                   ? csr.str()              : "None"); // csr adr
-            rd_data_vec.push_back(wbk_csr_v.read()                   ? csr_data_chck.str()    : "None"); // csr data
-            // write rd
-            for (auto it = rd_data_vec.begin(); it != rd_data_vec.end() -1; ++it) {
-                register_file << *it << ";"; // Write data to file
-            }
-            register_file << *(rd_data_vec.end() -1) << endl;
+        rd_data_vec.push_back(                                     pc.str()                       ); // pc
+        rd_data_vec.push_back(wbk_v.read() && wbk_adr.read() !=0 ? rd.str()               : "None"); // rd
+        rd_data_vec.push_back(wbk_v.read() && wbk_adr.read() !=0 ? data_chck.str()        : "None"); // data
+        rd_data_vec.push_back(val_adr_v.read()                   ? mem_adr_chck.str()     : "None"); // mem adr
+        rd_data_vec.push_back(val_store_v.read()                 ? mem_data.str()         : "None"); // mem data
+        rd_data_vec.push_back(wbk_csr_v.read()                   ? csr.str()              : "None"); // csr adr
+        rd_data_vec.push_back(wbk_csr_v.read()                   ? csr_data_chck.str()    : "None"); // csr data
+        // write rd
+        for (auto it = rd_data_vec.begin(); it != rd_data_vec.end() -1; ++it) {
+            register_file << *it << ";"; // Write data to file
         }
-        if(val_adr_v.read()){
-            mem_data_vec.push_back(                                     pc.str()                       ); // pc
-            mem_data_vec.push_back(                                                              "None"); // rd
-            mem_data_vec.push_back(                                                              "None"); // data
-            mem_data_vec.push_back(adr_v.read()                       ? mem_adr_chck.str()     : "None"); // mem adr
-            mem_data_vec.push_back(val_store_v.read()                 ? mem_data.str()         : "None"); // mem data
-            mem_data_vec.push_back(                                                              "None"); // csr adr
-            mem_data_vec.push_back(                                                              "None"); // csr data
-            // write mem
-            for (auto it = mem_data_vec.begin(); it != mem_data_vec.end() -1; ++it) {
-                register_file << *it << ";"; // Write data to file
-            }
-            register_file << *(mem_data_vec.end() -1) << endl;
-        }
+        register_file << *(rd_data_vec.end() -1) << endl;
         // Clearing vectors
         rd_data_vec.clear();
         mem_data_vec.clear();
