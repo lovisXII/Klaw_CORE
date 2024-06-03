@@ -313,7 +313,10 @@ int sc_main(int argc, char* argv[]) {
     sc_signal<sc_uint<5>>   wbk_adr;
     sc_signal<bool>         wbk_v;
     sc_signal<sc_uint<32>>  pc_val;
-    sc_signal<sc_uint<32>>  pc_val_mem;
+    sc_signal<bool>         val_adr_v;
+    sc_signal<sc_uint<32>>  val_adr;
+    sc_signal<bool>         val_store_v;
+    sc_signal<sc_uint<32>>  val_store_data;
     //csr
     sc_signal<sc_uint<12>>   wbk_csr_adr;
     sc_signal<bool>          wbk_csr_v;
@@ -343,10 +346,14 @@ int sc_main(int argc, char* argv[]) {
     core.wbk_csr_adr_q_o  (wbk_csr_adr);
     core.wbk_csr_data_q_o (wbk_csr_data);
     // branch
-    core.branch_v_q_o     (branch_v);
+    core.branch_v_q_o       (branch_v);
+    // mem access checker
+    core.val_adr_v_q_o      (val_adr_v);
+    core.val_adr_q_o        (val_adr);
+    core.val_store_v_q_o    (val_store_v);
+    core.val_store_data_q_o (val_store_data);
     // pc
     core.pc_val_o         (pc_val);
-    core.pc_val_mem_o     (pc_val_mem);
 
     cout << "Reseting...";
 
@@ -509,7 +516,7 @@ int sc_main(int argc, char* argv[]) {
     ##############################################################
 */
     //Show what's been written in the destination register at each cycle
-    if (wbk_v.read() | wbk_csr_v.read() | adr_v.read() | branch_v.read()){
+    if (wbk_v.read() | wbk_csr_v.read() | val_adr_v.read() | branch_v.read()){
         std::stringstream pc;
         std::stringstream pc_mem;
         std::stringstream rd;
@@ -520,37 +527,41 @@ int sc_main(int argc, char* argv[]) {
         std::stringstream csr_data_chck;
 
         pc            << "0x" << std::hex << setfill('0') << setw(8) << static_cast<unsigned int>(pc_val.read());
-        pc_mem        << "0x" << std::hex << setfill('0') << setw(8) << static_cast<unsigned int>(pc_val_mem.read());
 
         rd            << "x" <<  wbk_adr.read();
         data_chck     << "0x" << std::hex << setfill('0') << setw(8) << static_cast<unsigned int>(wbk_data.read());
-        mem_adr_chck  << "0x" << std::hex << setfill('0') << setw(8) << static_cast<unsigned int>(mem_adr.read());
-        mem_data      << "0x" << std::hex << setfill('0') << setw(8) << static_cast<unsigned int>(store_data.read());
+        mem_adr_chck  << "0x" << std::hex << setfill('0') << setw(8) << static_cast<unsigned int>(val_adr.read());
+        mem_data      << "0x" << std::hex << setfill('0') << setw(8) << static_cast<unsigned int>(val_store_data.read());
         csr           << "0x" << std::hex << setfill('0') << setw(3) << static_cast<unsigned int>(wbk_csr_adr.read());
         csr_data_chck << "0x" << std::hex << setfill('0') << setw(8) << static_cast<unsigned int>(wbk_csr_data.read());
+        cout << "pc.read() : "     << pc.str()     << endl;
+        cout << "wbk_v.read() : "     << wbk_v.read()     << endl;
+        cout << "wbk_csr_v.read() : " << wbk_csr_v.read() << endl;
+        cout << "adr_v.read() : "     << adr_v.read()     << endl;
+        cout << "branch_v.read() : "  << branch_v.read()  << endl;
         // rd_v and adr_v may be set the same cycle
-        if(wbk_v.read() | wbk_csr_v.read() | branch_v.read()){
-            rd_data_vec.push_back(                                     pc.str()                       );
-            rd_data_vec.push_back(wbk_v.read() && wbk_adr.read() !=0 ? rd.str()               : "None");
-            rd_data_vec.push_back(wbk_v.read() && wbk_adr.read() !=0 ? data_chck.str()        : "None");
-            rd_data_vec.push_back(                                                              "None");
-            rd_data_vec.push_back(                                                              "None");
-            rd_data_vec.push_back(wbk_csr_v.read()                   ? csr.str()              : "None");
-            rd_data_vec.push_back(wbk_csr_v.read()                   ? csr_data_chck.str()    : "None");
+        if((wbk_v.read() | wbk_csr_v.read() | branch_v.read()) & ~val_adr_v.read()){
+            rd_data_vec.push_back(                                     pc.str()                       ); // pc
+            rd_data_vec.push_back(wbk_v.read() && wbk_adr.read() !=0 ? rd.str()               : "None"); // rd
+            rd_data_vec.push_back(wbk_v.read() && wbk_adr.read() !=0 ? data_chck.str()        : "None"); // data
+            rd_data_vec.push_back(                                                              "None"); // mem adr
+            rd_data_vec.push_back(                                                              "None"); // mem data
+            rd_data_vec.push_back(wbk_csr_v.read()                   ? csr.str()              : "None"); // csr adr
+            rd_data_vec.push_back(wbk_csr_v.read()                   ? csr_data_chck.str()    : "None"); // csr data
             // write rd
             for (auto it = rd_data_vec.begin(); it != rd_data_vec.end() -1; ++it) {
                 register_file << *it << ";"; // Write data to file
             }
             register_file << *(rd_data_vec.end() -1) << endl;
         }
-        if(adr_v.read()){
-            mem_data_vec.push_back(                                     pc_mem.str()                   );
-            mem_data_vec.push_back(                                                              "None");
-            mem_data_vec.push_back(                                                              "None");
-            mem_data_vec.push_back(                                     mem_adr_chck.str()             );
-            mem_data_vec.push_back(is_store.read()                    ? mem_data.str()         : "None");
-            mem_data_vec.push_back(                                                              "None");
-            mem_data_vec.push_back(                                                              "None");
+        if(val_adr_v.read()){
+            mem_data_vec.push_back(                                     pc.str()                       ); // pc
+            mem_data_vec.push_back(                                                              "None"); // rd
+            mem_data_vec.push_back(                                                              "None"); // data
+            mem_data_vec.push_back(adr_v.read()                       ? mem_adr_chck.str()     : "None"); // mem adr
+            mem_data_vec.push_back(val_store_v.read()                 ? mem_data.str()         : "None"); // mem data
+            mem_data_vec.push_back(                                                              "None"); // csr adr
+            mem_data_vec.push_back(                                                              "None"); // csr data
             // write mem
             for (auto it = mem_data_vec.begin(); it != mem_data_vec.end() -1; ++it) {
                 register_file << *it << ";"; // Write data to file

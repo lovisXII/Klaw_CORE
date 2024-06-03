@@ -31,11 +31,13 @@ module core (
     output logic[XLEN-1:0]    wbk_csr_data_q_o,
     // branch
     output logic              branch_v_q_o,
+    // memory access
+    output logic              val_adr_v_q_o,
+    output logic [XLEN-1:0]   val_adr_q_o,
+    output logic              val_store_v_q_o,
+    output logic [XLEN-1:0]   val_store_data_q_o,
     // pc
-    output logic[XLEN-1:0]    pc_val_o,
-    output logic[XLEN-1:0]    pc_val_mem_o
-
-
+    output logic[XLEN-1:0]    pc_val_o
 );
 // priviledge
 logic [1:0]                 core_mode_q;
@@ -87,7 +89,15 @@ logic [11:0]                exe_csr_adr_q;
 logic [XLEN-1:0]            exe_csr_data;
 logic [XLEN-1:0]            pc_q_o;
 
-
+// Mem checker
+logic              adr_v;
+logic [XLEN-1:0]   adr;
+logic              store_v;
+logic [XLEN-1:0]   store_data;
+logic              val_adr_v_q;
+logic [XLEN-1:0]   val_adr_q;
+logic              val_store_v_q;
+logic [XLEN-1:0]   val_store_data_q;
 ifetch u_ifetch (
     // global interface
     .clk            ( clk),
@@ -181,10 +191,10 @@ exe u_exe(
 // --------------------------------
 //      MEM
 // --------------------------------
-  .adr_v_o              ( adr_v_o),
-  .adr_o                ( adr_o),
-  .is_store_o           ( is_store_o),
-  .store_data_o         ( store_data_o),
+  .adr_v_o              ( adr_v),
+  .adr_o                ( adr),
+  .is_store_o           ( is_store),
+  .store_data_o         ( store_data),
   .load_data_i          ( load_data_i),
   .access_size_o        ( access_size_o),
 // --------------------------------
@@ -238,6 +248,25 @@ csr u_csr(
   .mepc_q_o         (mepc_reg_q),
   .data_o           (csr_dec_data)
 );
+// Memory access
+assign adr_v_o        = adr_v;
+assign adr_o          = adr;
+assign is_store_o     = is_store;
+assign store_data_o   = store_data;
+
+always_ff @(posedge clk, negedge reset_n)
+  if (!reset_n) begin
+    val_adr_v_q      <= '0;
+    val_adr_q        <= '0;
+    val_store_v_q   <= '0;
+    val_store_data_q <= '0;
+  end else begin
+    val_adr_v_q      <= adr_v;
+    val_adr_q        <= adr;
+    val_store_v_q   <= is_store;
+    val_store_data_q <= store_data;
+end
+
 // Checker outputs
 // rd
 assign wbk_v_q_o        = wbk_v_q;
@@ -250,7 +279,10 @@ assign wbk_csr_data_q_o = exe_csr_data;
 // branch
 assign branch_v_q_o     = branch_v_q;
 assign pc_val_o         = pc_q_o;
-// pc
-assign pc_val_mem_o     = dec_exe_pc_q;
+// memory access
+assign val_adr_q_o        = val_adr_v_q;
+assign val_adr_q_o        = val_adr_q;
+assign val_store_v_q_o    = val_store_v_q;
+assign val_store_data_q_o = val_store_data_q;
 
 endmodule
