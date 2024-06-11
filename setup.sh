@@ -1,9 +1,24 @@
-if ! [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
-    echo "Error: This script must be sourced, not executed."
-    echo "Use: source ${BASH_SOURCE[0]} or . ${BASH_SOURCE[0]}"
-    exit 1
-fi
+#! /bin/bash
+IS_SOURCE=false
 
-export SYSTEMC_INCLUDE=/usr/local/systemc-2.3.3/include/
-export SYSTEMC_LIBDIR=/usr/local/systemc-2.3.3/lib-linux64/
-export KLAW_ROOT=$PWD
+if [ -n "$ZSH_VERSION" ]; then
+    case $ZSH_EVAL_CONTEXT in
+    toplevel:file)
+    IS_SOURCE=true;; # Script is sourced
+     *) IS_SOURCE=false
+     esac
+else  # Add additional POSIX-compatible shell names here, if needed.
+    case ${0##*/} in
+    dash|-dash|bash|-bash|ksh|-ksh|sh|-sh) IS_SOURCE=true;; # Script is sourced
+    *) IS_SOURCE=false
+    esac
+fi
+if [ "$IS_SOURCE" = true ]; then
+    # Export environment variables
+    export SYSTEMC_INCLUDE=/usr/local/systemc-2.3.3/include/
+    export SYSTEMC_LIBDIR=/usr/local/systemc-2.3.3/lib-linux64/
+    export KLAW_ROOT=$PWD
+else
+    echo "[ERROR] This script must be source, please run : "
+    echo "source setup.sh"
+fi
