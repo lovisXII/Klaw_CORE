@@ -28,3 +28,4 @@ riscof/sail_cSim/__pycache__/*
 riscof/spike/__pycache__/*
 implementation/open_pdks/*
 *.DS_Store
+__pycache__/
