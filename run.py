@@ -28,7 +28,8 @@ class Config:
     def __init__(self):
         parser = argparse.ArgumentParser(description="Compile RTL core toolchain")
         parser.add_argument("--sim"       , action="store_true", help="Launch the simulation of the RTL")
-        parser.add_argument("--build"     , action="store_true", help="Build the the RTL")
+        parser.add_argument("--build"     , action="store_true", help="Build and run the simulation")
+        parser.add_argument("--build-only", action="store_true", help="Build the the RTL")
         parser.add_argument("--test"                           , help="File or directory that contains the test files to run")
         parser.add_argument("--riscof-reg", action="store_true", help="Launch the toolchain riscof")
         parser.add_argument("--riscof"    , action="store_true", help="Launch the riscof toolchain")
@@ -50,8 +51,9 @@ class Config:
         verilator_path    = "verilator"
         pkg               = ["riscv_pkg.sv"]
         include_lib       = ["../include/ELFIO/"]
-        cflags            = "-lsystemc -lm -g"
-        verilog_flags     = "-sc -Wno-fatal -Wall --trace --pins-sc-uint"
+        defines           = "-DVALIDATION"
+        cflags            = f"-lsystemc -lm -g {defines}"
+        verilog_flags     = f"-sc -Wno-fatal -Wall --trace --pins-sc-uint {defines}"
         src_dir           = ["src"]
         top_module        = "core"
         tb                = "core_tb.cpp"
@@ -141,7 +143,9 @@ if __name__ == "__main__":
         config.compile_c()
     elif config.args.build and config.args.riscof_reg :
         config.build_reg()
-
+    elif config.args.build_only :
+        config.compile_verilator()
+        config.compile_c()
     # Run simulation
     if config.args.sim:
         config.run_simu()
