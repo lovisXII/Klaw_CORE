@@ -74,8 +74,9 @@ input  logic [XLEN-1:0]           mtvec_q_i,
 // --------------------------------
 //      CHECKER
 // --------------------------------
-
+  `ifdef VALIDATION
   output logic [XLEN-1:0]           pc_q_o
+  `endif
 );
 // --------------------------------
 //      Signals declaration
@@ -143,11 +144,11 @@ logic [11:0]              csr_adr_nxt;
 logic [11:0]              csr_adr_q;
 logic [XLEN-1:0]          csr_data_nxt;
 logic [XLEN-1:0]          csr_data_q;
-logic                     rd_v_nxt;
-logic                     rd_v_q;
-logic [4:0]               rd_adr_q;
-logic [XLEN-1:0]          res_data_nxt;
-logic [XLEN-1:0]          res_data_q;
+logic                     wbk_v_nxt;
+logic                     wbk_v_q;
+logic [4:0]               wbk_adr_q;
+logic [XLEN-1:0]          wbk_data_nxt;
+logic [XLEN-1:0]          wbk_data_q;
 logic                     flush_v;
 logic                     branch_v_nxt;
 logic                     branch_v_q;
@@ -158,11 +159,12 @@ logic                     flush_v_dly1_q;
 logic [XLEN-1:0]          pc_data_q;
 
 // --------------------------------
-//      CHECKER
+//      VALIDATION
 // --------------------------------
 
+`ifdef VALIDATION
 logic [XLEN-1:0]          pc_q;
-
+`endif
 
 // --------------------------------
 //      Unit instanciation
@@ -304,8 +306,8 @@ assign pc_data_nxt  = {XLEN{~exception_nxt}} & bu_pc_res
                     | {XLEN{ exception_nxt}} & mtvec_q_i
                     | {XLEN{ mret_q_i}}      & mepc_q_i;
 
-assign rd_v_nxt     = rd_v_q_i  & ~flush_v & ~exception_nxt;
-assign res_data_nxt = {XLEN{alu_en & ~csr_wbk_i}} & alu_res_data
+assign wbk_v_nxt     = rd_v_q_i  & ~flush_v & ~exception_nxt;
+assign wbk_data_nxt = {XLEN{alu_en & ~csr_wbk_i}} & alu_res_data
                     | {XLEN{csr_wbk_i}}           & rs2_data_qual_q_i[XLEN-1:0]
                     | {XLEN{shifter_en}}          & shifter_res_data
                     | {XLEN{bu_en}}               & bu_data_res
@@ -321,9 +323,9 @@ assign csr_data_nxt  = {XLEN{~csrrw_q_i & ~mret_q_i}} & alu_res_data
 // --------------------------------
 always_ff @(posedge clk, negedge reset_n)
   if (!reset_n) begin
-    rd_v_q            <= '0;
-    rd_adr_q          <= '0;
-    res_data_q        <= '0;
+    wbk_v_q            <= '0;
+    wbk_adr_q          <= '0;
+    wbk_data_q        <= '0;
     exception_q       <= '0;
     flush_v_q         <= '0;
     flush_v_dly1_q    <= '0;
@@ -339,9 +341,9 @@ always_ff @(posedge clk, negedge reset_n)
     branch_v_q        <= '0;
     branch_v_dly1_q   <= '0;
   end else begin
-    rd_v_q            <= rd_v_nxt;
-    rd_adr_q          <= rd_adr_q_i;
-    res_data_q        <= res_data_nxt;
+    wbk_v_q           <= wbk_v_nxt;
+    wbk_adr_q         <= rd_adr_q_i;
+    wbk_data_q        <= wbk_data_nxt;
     exception_q       <= exception_nxt;
     exception_dly1_q  <= exception_q;
     pc_data_q         <= pc_data_nxt;
@@ -354,15 +356,16 @@ always_ff @(posedge clk, negedge reset_n)
     mepc_q            <= pc_q_i;
     branch_v_q        <= branch_v_nxt;
     branch_v_dly1_q   <= branch_v_q;
-//checker
+`ifdef VALIDATION
     pc_q              <= pc_q_i;
+`endif
 end
 
 // --------------------------------
 //      Ouputs
 // --------------------------------
 // rd ff
-assign exe_ff_res_data_o  = res_data_nxt;
+assign exe_ff_res_data_o  = wbk_data_nxt;
 // csr ff
 assign exe_ff_csr_data_o  = csr_data_nxt;
 // exceptions
@@ -372,14 +375,15 @@ assign mtval_q_o        = mtval_q;
 assign mepc_q_o         = mepc_q;
 assign core_mode_q_o    = core_mode_q;
 // wbk
-assign wbk_v_q_o           = rd_v_q;
-assign wbk_adr_q_o         = rd_adr_q;
-assign wbk_data_q_o        = res_data_q;
+assign wbk_v_q_o           = wbk_v_q;
+assign wbk_adr_q_o         = wbk_adr_q;
+assign wbk_data_q_o        = wbk_data_q;
 assign branch_v_q_o        = branch_v_q;
 assign pc_data_q_o         = pc_data_q;
 assign csr_wbk_v_q_o       = csr_wbk_v_q;
 assign csr_adr_q_o         = csr_adr_q;
 assign csr_data_q_o        = csr_data_q;
-//Checker
+`ifdef VALIDATION
 assign pc_q_o              = pc_q;
+`endif
 endmodule

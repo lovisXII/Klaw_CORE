@@ -153,7 +153,9 @@ int sc_main(int argc, char* argv[]) {
             }
         }
     }
-
+    #ifdef VALIDATION
+    cout << FGRN("[INFO]") << " Validation enable" << endl;
+    #endif
     /*
     ##############################################################
                     Waves setup
@@ -169,7 +171,7 @@ int sc_main(int argc, char* argv[]) {
     // Core instanciation
     Vcore core("u_core");
 
-    (riscof) ? cout << "[INFO] riscof enable" << endl : cout << "[INFO] riscof disable" << endl;
+    (riscof) ? cout << FGRN("[INFO]") << " riscof enable" << endl : cout << FGRN("[INFO]") << " riscof disable" << endl;
 /*
     ##############################################################
                     PARSING ELF/.s/.c file
@@ -336,25 +338,25 @@ int sc_main(int argc, char* argv[]) {
     core.load_data_i      (load_data);
     core.access_size_o    (access_size);
 
-    // Checkers outputs
+    #ifdef VALIDATION
     // rd
-    core.wbk_v_q_o        (wbk_v);
-    core.wbk_adr_q_o      (wbk_adr);
-    core.wbk_data_q_o     (wbk_data);
+    core.val_wbk_v_q_o        (wbk_v);
+    core.val_wbk_adr_q_o      (wbk_adr);
+    core.val_wbk_data_q_o     (wbk_data);
     //csr
-    core.wbk_csr_v_q_o    (wbk_csr_v);
-    core.wbk_csr_adr_q_o  (wbk_csr_adr);
-    core.wbk_csr_data_q_o (wbk_csr_data);
+    core.val_wbk_csr_v_q_o    (wbk_csr_v);
+    core.val_wbk_csr_adr_q_o  (wbk_csr_adr);
+    core.val_wbk_csr_data_q_o (wbk_csr_data);
     // branch
-    core.branch_v_q_o       (branch_v);
+    core.val_branch_v_q_o     (branch_v);
     // mem access checker
-    core.val_adr_v_q_o      (val_adr_v);
-    core.val_adr_q_o        (val_adr);
-    core.val_store_v_q_o    (val_store_v);
-    core.val_store_data_q_o (val_store_data);
+    core.val_adr_v_q_o        (val_adr_v);
+    core.val_adr_q_o          (val_adr);
+    core.val_store_v_q_o      (val_store_v);
+    core.val_store_data_q_o   (val_store_data);
     // pc
-    core.pc_val_o         (pc_val);
-
+    core.val_pc_o             (pc_val);
+    #endif
     cout << "Reseting...";
 
     if (riscof){
@@ -534,11 +536,7 @@ int sc_main(int argc, char* argv[]) {
         mem_data      << "0x" << std::hex << setfill('0') << setw(8) << static_cast<unsigned int>(val_store_data.read());
         csr           << "0x" << std::hex << setfill('0') << setw(3) << static_cast<unsigned int>(wbk_csr_adr.read());
         csr_data_chck << "0x" << std::hex << setfill('0') << setw(8) << static_cast<unsigned int>(wbk_csr_data.read());
-        cout << "pc.read() : "        << pc.str()     << endl;
-        cout << "wbk_v.read() : "     << wbk_v.read()     << endl;
-        cout << "wbk_csr_v.read() : " << wbk_csr_v.read() << endl;
-        cout << "adr_v.read() : "     << val_adr_v.read()     << endl;
-        cout << "branch_v.read() : "  << branch_v.read()  << endl;
+
         // rd_v and adr_v may be set the same cycle
         rd_data_vec.push_back(                                     pc.str()                       ); // pc
         rd_data_vec.push_back(wbk_v.read() && wbk_adr.read() !=0 ? rd.str()               : "None"); // rd
