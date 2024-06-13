@@ -33,7 +33,6 @@ class Config:
         parser.add_argument("--test"                           , help="File or directory that contains the test files to run")
         parser.add_argument("--riscof-reg", action="store_true", help="Launch the toolchain riscof")
         parser.add_argument("--riscof"    , action="store_true", help="Launch the riscof toolchain")
-        parser.add_argument("--impl"      , action="store_true", help="Launch the implementation of using OpenLane")
         parser.add_argument("--clean"     , action="store_true", help="Clean all the generated files")
 
         args = parser.parse_args()
@@ -44,27 +43,25 @@ class Config:
         if args.sim and args.riscof and not args.test and not args.run_reg:
             raise argparse.ArgumentTypeError("--sim, --riscof and --riscof-reg are exclusive")
 
-        self.args = args
-        self.arch = "rv32izicsr"
-
-    def compile_verilator(self):
-        verilator_path    = "verilator"
-        pkg               = ["riscv_pkg.sv"]
-        include_lib       = ["../include/ELFIO/"]
-        defines           = "-DVALIDATION"
-        cflags            = f"-lsystemc -lm -g {defines}"
-        verilog_flags     = f"-sc -Wno-fatal -Wall --trace --pins-sc-uint {defines}"
-        src_dir           = ["src"]
-        top_module        = "core"
-        tb                = "core_tb.cpp"
-        src_files         = []
-        for dir in src_dir:
+        self.args              = args
+        self.arch              = "rv32izicsr"
+        self.verilator_path    = "verilator"
+        self.pkg               = ["riscv_pkg.sv"]
+        self.include_lib       = ["../include/ELFIO/"]
+        self.defines           = "-DVALIDATION"
+        self.cflags            = f"-lsystemc -lm -g {self.defines}"
+        self.verilog_flags     = f"-sc -Wno-fatal -Wall --trace --pins-sc-uint {self.defines}"
+        self.src_dir           = ["src"]
+        self.top_module        = "core"
+        self.tb                = "core_tb.cpp"
+        self.src_files         = []
+        for dir in self.src_dir:
             with os.scandir(dir) as entries:
                 for entry in entries:
                     if entry.is_file() and entry.name.endswith("sv"):
-                        src_files.append(os.path.join(dir, entry.name))
-
-        verilator_cmd             = f'{verilator_path} {" ".join(pkg)} -CFLAGS "-I{" ".join(include_lib)} {cflags}" {verilog_flags} {" ".join(src_files)} --top-module {top_module} --exe {tb}'
+                        self.src_files.append(os.path.join(dir, entry.name))
+    def compile_verilator(self):
+        verilator_cmd             = f'{self.verilator_path} {" ".join(self.pkg)} -CFLAGS "-I{" ".join(self.include_lib)} {self.cflags}" {self.verilog_flags} {" ".join(self.src_files)} --top-module {self.top_module} --exe {self.tb}'
         env                       = os.environ.copy()
         env["SYSTEMC_INCLUDE"]    = "/usr/local/systemc-2.3.3/include/"
         env["SYSTEMC_LIBDIR"]     = "/usr/local/systemc-2.3.3/lib-linux64/"
@@ -158,5 +155,3 @@ if __name__ == "__main__":
     elif config.args.clean:
         cmd = "rm -rf obj_dir/ *.vcd *.out.txt.s *.out kernel *.txt *.o *.log obj_dir"
         run_subprocess(cmd, "Cleaning generated files...")
-        cmd = "rm -rf implementation/OpenLane/designs/core/src/*.v"
-        run_subprocess(cmd, "Cleaning implementation files...")
