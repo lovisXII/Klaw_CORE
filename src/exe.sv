@@ -22,6 +22,7 @@ module exe
   input logic [XLEN:0]              rs2_data_qual_q_i,
   // Additionnal informations
   input logic                       ecall_q_i,
+  input logic                       ebreak_q_i,
   input logic [XLEN-1:0]            immediat_q_i,
   input logic [2:0]                 access_size_q_i,
   input logic                       unsign_extension_q_i,
@@ -129,7 +130,7 @@ logic                     pc_missaligned_nxt;
 logic                     adr_missaligned_nxt;
 logic                     instr_access_fault_nxt;
 logic                     illegal_inst_nxt;
-logic                     break_point_nxt;
+logic                     breakpoint_nxt;
 logic                     ld_adr_missaligned_nxt;
 logic                     ld_access_fault_nxt;
 logic                     st_adr_missaligned_nxt;
@@ -236,8 +237,8 @@ assign exception_nxt        = ~exception_q & ~branch_v_q & ~exception_dly1_q & ~
 
 assign pc_missaligned_nxt     = pc_missaligned;
 assign illegal_inst_nxt       = illegal_inst_q_i    & ~instr_access_fault_nxt;
-assign break_point_nxt        = break_point         & ~illegal_inst_nxt;
-assign ld_adr_missaligned_nxt = ld_adr_missaligned  & ~break_point_nxt;
+assign breakpoint_nxt         = ebreak_q_i          & ~illegal_inst_nxt;
+assign ld_adr_missaligned_nxt = ld_adr_missaligned  & ~breakpoint_nxt;
 assign ld_access_fault_nxt    = ld_access_fault     & ~ld_adr_missaligned_nxt;
 assign st_adr_missaligned_nxt = st_adr_missaligned  & ~ld_access_fault_nxt;
 assign st_access_fault_nxt    = st_access_fault     & ~st_adr_missaligned_nxt;
@@ -249,7 +250,7 @@ assign env_call_m_mode_nxt    = ecall_q_i           & ~st_access_fault_nxt;
 assign cause_nxt        = {XLEN{pc_missaligned_nxt    }} & 32'b0
                         | {XLEN{instr_access_fault_nxt}} & 32'd1
                         | {XLEN{illegal_inst_nxt      }} & 32'd2
-                        | {XLEN{break_point_nxt       }} & 32'd3
+                        | {XLEN{breakpoint_nxt        }} & 32'd3
                         | {XLEN{ld_adr_missaligned_nxt}} & 32'd4
                         | {XLEN{ld_access_fault_nxt   }} & 32'd5
                         | {XLEN{st_adr_missaligned_nxt}} & 32'd6

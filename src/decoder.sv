@@ -18,6 +18,7 @@ module decoder (
   output logic [4:0]                 rs2_adr_o,
   // Additionnal informations
   output logic                       ecall_o,
+  output logic                       ebreak_o,
   output logic                       auipc_o,
   output logic                       rs1_is_immediat_o,
   output logic                       rs2_is_immediat_o,
@@ -366,6 +367,7 @@ assign rs2_v_o      = rs2_v;
 assign rs2_adr_o    = rs2_adr;
 // additionnal informations
 assign ecall_o             = ecall;
+assign ebreak_o            = ebreak;
 assign auipc_o             = auipc;
 assign rs1_is_immediat_o   = csrrwi | csrrsi | csrrci;
 assign rs2_is_immediat_o   = lui | auipc | jalr | jalr | i_type | l_type;
