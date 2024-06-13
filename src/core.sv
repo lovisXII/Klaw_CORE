@@ -232,8 +232,8 @@ exe u_exe(
   .csr_wbk_v_q_o        (exe__csr_wbk_v_q),
   .csr_adr_q_o          (exe__csr_adr_q),
   .csr_data_q_o         (exe__csr_data),
-  `ifdef VALIDATION
   .branch_v_q_o         (exe__branch_v_q),
+  `ifdef VALIDATION
   .pc_q_o               (exe__pc_q),
   `endif
   .pc_data_q_o          (exe__if__pc)

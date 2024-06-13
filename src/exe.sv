@@ -120,21 +120,16 @@ logic [XLEN-1:0]          mepc_q;
 logic                     adr_fault;
 logic                     pc_missaligned;
 logic                     adr_missaligned;
-logic                     break_point;
 logic                     ld_adr_missaligned;
 logic                     ld_access_fault;
 logic                     st_adr_missaligned;
-logic                     st_access_fault;
 logic                     env_call_m_mode;
 logic                     pc_missaligned_nxt;
 logic                     adr_missaligned_nxt;
-logic                     instr_access_fault_nxt;
 logic                     illegal_inst_nxt;
 logic                     breakpoint_nxt;
 logic                     ld_adr_missaligned_nxt;
-logic                     ld_access_fault_nxt;
 logic                     st_adr_missaligned_nxt;
-logic                     st_access_fault_nxt;
 logic                     env_call_m_mode_nxt;
 logic [1:0]               core_mode_nxt;
 logic [1:0]               core_mode_q;
@@ -226,35 +221,27 @@ assign exception_nxt        = ~exception_q & ~branch_v_q & ~exception_dly1_q & ~
                             & (
                                  pc_missaligned
                                | illegal_inst_q_i
-                               | break_point
+                               | ebreak_q_i
                                | ld_adr_missaligned
-                               | ld_access_fault
-                               | ld_access_fault
                                | st_adr_missaligned
-                               | st_access_fault
-                               | env_call_m_mode_nxt
+                               | ecall_q_i
                                );
 
 assign pc_missaligned_nxt     = pc_missaligned;
-assign illegal_inst_nxt       = illegal_inst_q_i    & ~instr_access_fault_nxt;
+assign illegal_inst_nxt       = illegal_inst_q_i    & ~pc_missaligned_nxt;
 assign breakpoint_nxt         = ebreak_q_i          & ~illegal_inst_nxt;
 assign ld_adr_missaligned_nxt = ld_adr_missaligned  & ~breakpoint_nxt;
-assign ld_access_fault_nxt    = ld_access_fault     & ~ld_adr_missaligned_nxt;
-assign st_adr_missaligned_nxt = st_adr_missaligned  & ~ld_access_fault_nxt;
-assign st_access_fault_nxt    = st_access_fault     & ~st_adr_missaligned_nxt;
-assign env_call_m_mode_nxt    = ecall_q_i           & ~st_access_fault_nxt;
+assign st_adr_missaligned_nxt = st_adr_missaligned  & ~ld_adr_missaligned_nxt;
+assign env_call_m_mode_nxt    = ecall_q_i           & ~st_adr_missaligned_nxt;
 
 //---------------------------
 // System registers update
 //---------------------------
 assign cause_nxt        = {XLEN{pc_missaligned_nxt    }} & 32'b0
-                        | {XLEN{instr_access_fault_nxt}} & 32'd1
                         | {XLEN{illegal_inst_nxt      }} & 32'd2
                         | {XLEN{breakpoint_nxt        }} & 32'd3
                         | {XLEN{ld_adr_missaligned_nxt}} & 32'd4
-                        | {XLEN{ld_access_fault_nxt   }} & 32'd5
                         | {XLEN{st_adr_missaligned_nxt}} & 32'd6
-                        | {XLEN{st_access_fault_nxt   }} & 32'd7
                         | {XLEN{env_call_m_mode_nxt   }} & 32'd11;
 
 assign mtval_nxt        = {XLEN{pc_missaligned             }} & bu_pc_res
