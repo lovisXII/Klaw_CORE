@@ -11,8 +11,8 @@ module exe
   input logic [XLEN-1:0]            pc_q_i,
   // Registers
   // Destination
-  input logic                       rd_v_q_i,
-  input logic [4:0]                 rd_adr_q_i,
+  input logic                       wbk_v_q_i,
+  input logic [4:0]                 wbk_adr_q_i,
   // Csr
   input logic                       csr_wbk_i,
   input logic [11:0]                csr_adr_i,
@@ -21,6 +21,7 @@ module exe
   // Source 2
   input logic [XLEN:0]              rs2_data_qual_q_i,
   // Additionnal informations
+  input logic                       ecall_q_i,
   input logic [XLEN-1:0]            immediat_q_i,
   input logic [2:0]                 access_size_q_i,
   input logic                       unsign_extension_q_i,
@@ -118,7 +119,6 @@ logic [XLEN-1:0]          mepc_q;
 logic                     adr_fault;
 logic                     pc_missaligned;
 logic                     adr_missaligned;
-logic                     instr_access_fault;
 logic                     break_point;
 logic                     ld_adr_missaligned;
 logic                     ld_access_fault;
@@ -221,36 +221,43 @@ assign st_adr_missaligned   = adr_missaligned &  is_store;
 
 assign adr_fault            = '0;
 
-assign exception_nxt        = (pc_missaligned  | instr_access_fault | illegal_inst_q_i
-                            | break_point     | ld_adr_missaligned | ld_access_fault
-                            | ld_access_fault | st_adr_missaligned | st_access_fault
-                            | env_call_m_mode) & ~exception_q & ~branch_v_q & ~exception_dly1_q & ~branch_v_dly1_q;
+assign exception_nxt        = ~exception_q & ~branch_v_q & ~exception_dly1_q & ~branch_v_dly1_q
+                            & (
+                                 pc_missaligned
+                               | illegal_inst_q_i
+                               | break_point
+                               | ld_adr_missaligned
+                               | ld_access_fault
+                               | ld_access_fault
+                               | st_adr_missaligned
+                               | st_access_fault
+                               | env_call_m_mode_nxt
+                               );
 
 assign pc_missaligned_nxt     = pc_missaligned;
-assign instr_access_fault_nxt = instr_access_fault  & ~pc_missaligned_nxt;
 assign illegal_inst_nxt       = illegal_inst_q_i    & ~instr_access_fault_nxt;
 assign break_point_nxt        = break_point         & ~illegal_inst_nxt;
 assign ld_adr_missaligned_nxt = ld_adr_missaligned  & ~break_point_nxt;
 assign ld_access_fault_nxt    = ld_access_fault     & ~ld_adr_missaligned_nxt;
 assign st_adr_missaligned_nxt = st_adr_missaligned  & ~ld_access_fault_nxt;
 assign st_access_fault_nxt    = st_access_fault     & ~st_adr_missaligned_nxt;
-assign env_call_m_mode_nxt    = env_call_m_mode     & ~st_access_fault_nxt;
+assign env_call_m_mode_nxt    = ecall_q_i           & ~st_access_fault_nxt;
 
 //---------------------------
 // System registers update
 //---------------------------
-assign cause_nxt        = {XLEN{pc_missaligned_nxt}}     & 32'b0
+assign cause_nxt        = {XLEN{pc_missaligned_nxt    }} & 32'b0
                         | {XLEN{instr_access_fault_nxt}} & 32'd1
-                        | {XLEN{illegal_inst_nxt}}       & 32'd2
-                        | {XLEN{break_point_nxt}}        & 32'd3
+                        | {XLEN{illegal_inst_nxt      }} & 32'd2
+                        | {XLEN{break_point_nxt       }} & 32'd3
                         | {XLEN{ld_adr_missaligned_nxt}} & 32'd4
-                        | {XLEN{ld_access_fault_nxt}}    & 32'd5
+                        | {XLEN{ld_access_fault_nxt   }} & 32'd5
                         | {XLEN{st_adr_missaligned_nxt}} & 32'd6
-                        | {XLEN{st_access_fault_nxt}}    & 32'd7
-                        | {XLEN{env_call_m_mode_nxt}}    & 32'd11;
+                        | {XLEN{st_access_fault_nxt   }} & 32'd7
+                        | {XLEN{env_call_m_mode_nxt   }} & 32'd11;
 
-assign mtval_nxt        = {XLEN{pc_missaligned  | instr_access_fault}} & pc_data_nxt
-                        | {XLEN{adr_missaligned | adr_fault}}          & mem_adr;
+assign mtval_nxt        = {XLEN{pc_missaligned             }} & bu_pc_res
+                        | {XLEN{adr_missaligned | adr_fault}} & mem_adr;
 
 assign mstatus_old    = rs2_data_qual_q_i[XLEN-1:0];
 assign mpp_old[12:11] = mstatus_old[12:11];
@@ -270,10 +277,10 @@ assign mstatus_nxt = {
                         mstatus_old[2:0]
                       };
 
-assign core_mode_nxt        = {2{exception_nxt}}                          & 2'b11
-                            | {2{mret_q_i}}                               & mpp_old[12:11]
-                            | {2{sret_q_i}}                               & 2'b01
-                            | {2{~exception_nxt & ~mret_q_i & ~sret_q_i}} & core_mode_q;
+assign core_mode_nxt  = {2{exception_nxt}}                          & 2'b11
+                      | {2{mret_q_i}}                               & mpp_old[12:11]
+                      | {2{sret_q_i}}                               & 2'b01
+                      | {2{~exception_nxt & ~mret_q_i & ~sret_q_i}} & core_mode_q;
 // ALU
 assign alu_en           = unit_q_i[ALU];
 assign shifter_en       = unit_q_i[SFT];
@@ -306,7 +313,7 @@ assign pc_data_nxt  = {XLEN{~exception_nxt}} & bu_pc_res
                     | {XLEN{ exception_nxt}} & mtvec_q_i
                     | {XLEN{ mret_q_i}}      & mepc_q_i;
 
-assign wbk_v_nxt     = rd_v_q_i  & ~flush_v & ~exception_nxt;
+assign wbk_v_nxt     = wbk_v_q_i  & ~flush_v & ~exception_nxt;
 assign wbk_data_nxt = {XLEN{alu_en & ~csr_wbk_i}} & alu_res_data
                     | {XLEN{csr_wbk_i}}           & rs2_data_qual_q_i[XLEN-1:0]
                     | {XLEN{shifter_en}}          & shifter_res_data
@@ -342,7 +349,7 @@ always_ff @(posedge clk, negedge reset_n)
     branch_v_dly1_q   <= '0;
   end else begin
     wbk_v_q           <= wbk_v_nxt;
-    wbk_adr_q         <= rd_adr_q_i;
+    wbk_adr_q         <= wbk_adr_q_i;
     wbk_data_q        <= wbk_data_nxt;
     exception_q       <= exception_nxt;
     exception_dly1_q  <= exception_q;
@@ -375,15 +382,15 @@ assign mtval_q_o        = mtval_q;
 assign mepc_q_o         = mepc_q;
 assign core_mode_q_o    = core_mode_q;
 // wbk
-assign wbk_v_q_o           = wbk_v_q;
-assign wbk_adr_q_o         = wbk_adr_q;
-assign wbk_data_q_o        = wbk_data_q;
-assign branch_v_q_o        = branch_v_q;
-assign pc_data_q_o         = pc_data_q;
-assign csr_wbk_v_q_o       = csr_wbk_v_q;
-assign csr_adr_q_o         = csr_adr_q;
-assign csr_data_q_o        = csr_data_q;
+assign wbk_v_q_o        = wbk_v_q;
+assign wbk_adr_q_o      = wbk_adr_q;
+assign wbk_data_q_o     = wbk_data_q;
+assign branch_v_q_o     = branch_v_q;
+assign pc_data_q_o      = pc_data_q;
+assign csr_wbk_v_q_o    = csr_wbk_v_q;
+assign csr_adr_q_o      = csr_adr_q;
+assign csr_data_q_o     = csr_data_q;
 `ifdef VALIDATION
-assign pc_q_o              = pc_q;
+assign pc_q_o           = pc_q;
 `endif
 endmodule

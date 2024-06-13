@@ -4,12 +4,12 @@ module decoder (
   input logic [XLEN-1:0]             instr_i,
   // Exception
   // Rd
-  output logic                       rd_v_o,
-  output logic [4:0]                 rd_adr_o,
+  output logic                       wbk_v_o,
+  output logic [4:0]                 wbk_adr_o,
   // Csr
   output logic                       csr_wbk_o,
   output logic                       csr_clear_o,
-  output logic [11:0]                wbk_csr_adr_q_o,
+  output logic [11:0]                wbk_csr_adr_o,
   // rs1
   output logic                       rs1_v_o,
   output logic [4:0]                 rs1_adr_o,
@@ -17,6 +17,7 @@ module decoder (
   output logic                       rs2_v_o,
   output logic [4:0]                 rs2_adr_o,
   // Additionnal informations
+  output logic                       ecall_o,
   output logic                       auipc_o,
   output logic                       rs1_is_immediat_o,
   output logic                       rs2_is_immediat_o,
@@ -52,10 +53,10 @@ module decoder (
   i64_type 1000000000000
 */
 // Registers
-logic rd_v;
+logic wbk_v;
 logic rs1_v;
 logic rs2_v;
-logic [4:0] rd_adr;
+logic [4:0] wbk_adr;
 logic [4:0] rs1_adr;
 logic [4:0] rs2_adr;
 // instr id parts
@@ -320,8 +321,9 @@ end
 // Register affectation
 //-------------------------
 // rd
-assign rd_v      = r_type | i_type | l_type | fence | p_type & ~(ecall | ebreak) | lui | auipc | jal | jalr;
-assign rd_adr    = {5{rd_v}} & instr_i[11:7];
+// Clamp rd as not valid
+assign wbk_v      = (r_type | i_type | l_type | fence | p_type & ~(ecall | ebreak) | lui | auipc | jal | jalr) & |wbk_adr;
+assign wbk_adr    = instr_i[11:7];
 // src1
 assign rs1_v     = (r_type | i_type | jalr | b_type | s_type | l_type | fence
                   | csrrw | csrrc | csrrs | jalr) & |rs1_adr;
@@ -347,15 +349,15 @@ assign unsign_extension    = bltu | bgeu | lbu | lhu | sltiu | sltu;
 // Outputs
 //-------------------------
 // rd
-assign rd_v_o       = rd_v;
-assign rd_adr_o     = rd_adr;
+assign wbk_v_o             = wbk_v;
+assign wbk_adr_o           = wbk_adr;
 // Csr register
-assign csr_wbk_o    = mret | csrrw | csrrwi
-                    | (csrrc  | csrrs ) & |rs1_adr
-                    | (csrrci | csrrsi) & |imm;
-assign csr_clear_o  = csrrc | csrrci;
-assign wbk_csr_adr_q_o    = {12{~mret}} & instr_i[31:20]
-                    | {12{ mret}} & CSR_MSTATUS;
+assign csr_wbk_o          = mret | csrrw | csrrwi
+                          | (csrrc  | csrrs ) & |rs1_adr
+                          | (csrrci | csrrsi) & |imm;
+assign csr_clear_o        = csrrc | csrrci;
+assign wbk_csr_adr_o      = {12{~mret}} & instr_i[31:20]
+                          | {12{ mret}} & CSR_MSTATUS;
 // rs1
 assign rs1_v_o      = rs1_v;
 assign rs1_adr_o    = rs1_adr;
@@ -363,6 +365,7 @@ assign rs1_adr_o    = rs1_adr;
 assign rs2_v_o      = rs2_v;
 assign rs2_adr_o    = rs2_adr;
 // additionnal informations
+assign ecall_o             = ecall;
 assign auipc_o             = auipc;
 assign rs1_is_immediat_o   = csrrwi | csrrsi | csrrci;
 assign rs2_is_immediat_o   = lui | auipc | jalr | jalr | i_type | l_type;

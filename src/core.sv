@@ -30,8 +30,6 @@ module core (
     output logic              val_wbk_csr_v_q_o,
     output logic[11:0]        val_wbk_csr_adr_q_o,
     output logic[XLEN-1:0]    val_wbk_csr_data_q_o,
-    // branch
-    output logic              val_branch_v_q_o,
     // memory access
     output logic              val_adr_v_q_o,
     output logic [XLEN-1:0]   val_adr_q_o,
@@ -54,6 +52,7 @@ module core (
 logic [1:0]                 exe__core_mode_q;
 logic                       dec__illegal_inst_q;
 logic                       exe__sret_q;
+logic                       dec__ecall_q;
 logic                       exe__mret_q;
 logic                       exe__exception_q;
 logic [XLEN-1:0]            exe__mcause_q;
@@ -176,6 +175,7 @@ dec u_decod(
   .illegal_inst_q_o     (dec__illegal_inst_q),
   .mret_q_o             (exe__mret_q),
   .sret_q_o             (exe__sret_q),
+  .ecall_q_o            (dec__ecall_q),
   .branch_v_q_i         (exe__branch_v_q)
 );
 
@@ -186,12 +186,13 @@ exe u_exe(
   //      DEC
   // --------------------------------
   .pc_q_i               (dec__pc_q),
-  .rd_v_q_i             (dec__rd_v_q),
-  .rd_adr_q_i           (dec__rd_adr_q),
+  .wbk_v_q_i            (dec__rd_v_q),
+  .wbk_adr_q_i          (dec__rd_adr_q),
   .csr_wbk_i            (dec__csr_wbk),
   .csr_adr_i            (dec__csr_adr_q),
   .rs1_data_qual_q_i    (dec__rs1_data_q),
   .rs2_data_qual_q_i    (dec__rs2_data_q),
+  .ecall_q_i            (dec__ecall_q),
   .immediat_q_i         (dec__immediat_q),
   .access_size_q_i      (dec__access_size_q),
   .unsign_extension_q_i (dec__unsign_extension_q),
@@ -298,13 +299,12 @@ assign val_wbk_csr_v_q_o      = exe__csr_wbk_v_q;
 assign val_wbk_csr_adr_q_o    = exe__csr_adr_q;
 assign val_wbk_csr_data_q_o   = exe__csr_data;
 // branch
-assign val_branch_v_q_o       = exe__branch_v_q;
-assign val_pc_o           = exe__pc_q;
+assign val_pc_o               = exe__pc_q;
 // memory access
-assign val_adr_v_q_o      = val_adr_v_q;
-assign val_adr_q_o        = val_adr_q;
-assign val_store_v_q_o    = val_store_v_q;
-assign val_store_data_q_o = val_store_data_q;
+assign val_adr_v_q_o          = val_adr_v_q;
+assign val_adr_q_o            = val_adr_q;
+assign val_store_v_q_o        = val_store_v_q;
+assign val_store_data_q_o     = val_store_data_q;
 `endif
 
 endmodule

@@ -56,6 +56,7 @@ module dec (
   output logic                       illegal_inst_q_o,
   output logic                       mret_q_o,
   output logic                       sret_q_o,
+  output logic                       ecall_q_o,
   // Flush signals
   input logic                        branch_v_q_i
 );
@@ -64,10 +65,10 @@ module dec (
 // --------------------------------
   logic                       reset_n_q;
   // rd
-  logic                       rd_v;
+  logic                       wbk_v;
   logic                       rd_v_nxt;
   logic [4:0]                 rd_adr_nxt;
-  logic [4:0]                 rd_adr_q;
+  logic [4:0]                 wbk_adr_q;
   // rs1
   logic                       rs1_v;
   logic [4:0]                 rs1_adr;
@@ -88,6 +89,10 @@ module dec (
   logic [11:0]                csr_adr;
   logic [11:0]                csr_adr_nxt;
   logic [11:0]                csr_adr_q;
+  logic                       ecall;
+  logic                       ecall_q;
+  logic                       ebreak;
+  logic                       ebreak_q;
   // Exceptions
   logic                       illegal_inst;
   logic                       illegal_inst_nxt;
@@ -115,7 +120,7 @@ module dec (
   logic [NB_OPERATION-1:0]    operation;
   logic                       rs2_ca2_v;
   // Flops
-  logic                       rd_v_q;
+  logic                       wbk_v_q;
   logic [XLEN:0]              rs1_data_q;
   logic [XLEN:0]              rs2_data_q;
   logic [XLEN-1:0]            immediat;
@@ -131,15 +136,16 @@ module dec (
 // --------------------------------
 decoder dec0(
     .instr_i              (instr_q_i),
-    .rd_v_o               (rd_v),
-    .rd_adr_o             (rd_adr_nxt),
+    .wbk_v_o              (wbk_v),
+    .wbk_adr_o            (rd_adr_nxt),
     .csr_wbk_o            (csr_wbk_nxt),
     .csr_clear_o          (csr_clear),
-    .wbk_csr_adr_q_o            (csr_adr),
+    .wbk_csr_adr_o        (csr_adr),
     .rs1_v_o              (rs1_v),
     .rs1_adr_o            (rs1_adr),
     .rs2_v_o              (rs2_v),
     .rs2_adr_o            (rs2_adr),
+    .ecall_o              (ecall),
     .auipc_o              (auipc),
     .rs1_is_immediat_o    (rs1_is_immediat),
     .rs2_is_immediat_o    (rs2_is_immediat),
@@ -159,10 +165,10 @@ decoder dec0(
 // --------------------------------
 //      Internal architecture
 // --------------------------------
-assign rd_v_nxt        = rd_v & ~branch_v_q_i;
+assign rd_v_nxt        = wbk_v & ~branch_v_q_i;
 // EXE ff
-assign exe_ff_rs1_adr_match    = (rs1_adr == rd_adr_q)  & rd_v_q    & ~branch_v_q_i;
-assign exe_ff_rs2_adr_match    = (rs2_adr == rd_adr_q)  & rd_v_q    & ~branch_v_q_i;
+assign exe_ff_rs1_adr_match    = (rs1_adr == wbk_adr_q)  & wbk_v_q  & ~branch_v_q_i;
+assign exe_ff_rs2_adr_match    = (rs2_adr == wbk_adr_q)  & wbk_v_q  & ~branch_v_q_i;
 assign exe_ff_csr_adr_match    = (csr_adr == csr_adr_q) & csr_wbk_q & ~branch_v_q_i;
 
 // RF ff
@@ -209,8 +215,8 @@ assign illegal_inst_nxt = illegal_inst & reset_n_q;
 always_ff @(posedge clk, negedge reset_n)
   if (!reset_n) begin
               reset_n_q                <= '0;
-              rd_v_q                   <= '0;
-              rd_adr_q                 <= '0;
+              wbk_v_q                   <= '0;
+              wbk_adr_q                 <= '0;
               rs1_data_q               <= '0;
               rs2_data_q               <= '0;
               instr_access_size_q      <= '0;
@@ -224,10 +230,11 @@ always_ff @(posedge clk, negedge reset_n)
               illegal_inst_q           <= '0;
               mret_q                   <= '0;
               sret_q                   <= '0;
+              ecall_q                  <= '0;
   end else begin
               reset_n_q                <= reset_n;
-              rd_v_q                   <= rd_v_nxt;
-              rd_adr_q                 <= rd_adr_nxt;
+              wbk_v_q                   <= rd_v_nxt;
+              wbk_adr_q                 <= rd_adr_nxt;
               rs1_data_q               <= rs1_data_nxt;
               rs2_data_q               <= rs2_data_nxt;
               immediat_q               <= immediat;
@@ -242,15 +249,16 @@ always_ff @(posedge clk, negedge reset_n)
               illegal_inst_q           <= illegal_inst_nxt;
               mret_q                   <= mret_nxt;
               sret_q                   <= sret_nxt;
+              ecall_q                  <= ecall;
   end
 
 // --------------------------------
 //      Ouputs
 // --------------------------------
-assign rf_rs1_adr_o     = rs1_adr;
-assign rf_rs2_adr_o     = rs2_adr;
-assign rd_v_q_o          = rd_v_q;
-assign rd_adr_q_o        = rd_adr_q;
+assign rf_rs1_adr_o      = rs1_adr;
+assign rf_rs2_adr_o      = rs2_adr;
+assign rd_v_q_o          = wbk_v_q;
+assign rd_adr_q_o        = wbk_adr_q;
 assign rs1_data_qual_q_o = rs1_data_q;
 assign rs2_data_qual_q_o = rs2_data_q;
 assign branch_imm_q_o    = immediat_q;
@@ -264,5 +272,6 @@ assign csr_wbk_q_o       = csr_wbk_q;
 assign illegal_inst_q_o  = illegal_inst_q;
 assign mret_q_o          = mret_q;
 assign sret_q_o          = sret_q;
+assign ecall_q_o         = ecall_q;
 
 endmodule
