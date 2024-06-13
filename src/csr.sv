@@ -108,7 +108,7 @@ always_ff @(posedge clk, negedge reset_n) begin
             mstatus_q <= 32'h0;
     end else begin
         if (mstatus_nxt_v) begin
-            mstatus_q <= mstatus_nxt;
+            mstatus_q <= {19'b0, 2'b11, 11'b0};
         end
     end
 end
