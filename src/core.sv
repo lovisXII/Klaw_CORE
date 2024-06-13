@@ -53,6 +53,7 @@ logic [1:0]                 exe__core_mode_q;
 logic                       dec__illegal_inst_q;
 logic                       exe__sret_q;
 logic                       dec__ecall_q;
+logic                       dec__ebreak_q;
 logic                       exe__mret_q;
 logic                       exe__exception_q;
 logic [XLEN-1:0]            exe__mcause_q;
@@ -176,6 +177,7 @@ dec u_decod(
   .mret_q_o             (exe__mret_q),
   .sret_q_o             (exe__sret_q),
   .ecall_q_o            (dec__ecall_q),
+  .ebreak_q_o           (dec__ebreak_q),
   .branch_v_q_i         (exe__branch_v_q)
 );
 
@@ -193,6 +195,7 @@ exe u_exe(
   .rs1_data_qual_q_i    (dec__rs1_data_q),
   .rs2_data_qual_q_i    (dec__rs2_data_q),
   .ecall_q_i            (dec__ecall_q),
+  .ebreak_q_i           (dec__ebreak_q),
   .immediat_q_i         (dec__immediat_q),
   .access_size_q_i      (dec__access_size_q),
   .unsign_extension_q_i (dec__unsign_extension_q),

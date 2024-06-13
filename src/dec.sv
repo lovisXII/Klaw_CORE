@@ -57,6 +57,7 @@ module dec (
   output logic                       mret_q_o,
   output logic                       sret_q_o,
   output logic                       ecall_q_o,
+  output logic                       ebreak_q_o,
   // Flush signals
   input logic                        branch_v_q_i
 );
@@ -146,6 +147,7 @@ decoder dec0(
     .rs2_v_o              (rs2_v),
     .rs2_adr_o            (rs2_adr),
     .ecall_o              (ecall),
+    .ebreak_o             (ebreak),
     .auipc_o              (auipc),
     .rs1_is_immediat_o    (rs1_is_immediat),
     .rs2_is_immediat_o    (rs2_is_immediat),
@@ -231,6 +233,7 @@ always_ff @(posedge clk, negedge reset_n)
               mret_q                   <= '0;
               sret_q                   <= '0;
               ecall_q                  <= '0;
+              ebreak_q                 <= '0;
   end else begin
               reset_n_q                <= reset_n;
               wbk_v_q                   <= rd_v_nxt;
@@ -250,6 +253,7 @@ always_ff @(posedge clk, negedge reset_n)
               mret_q                   <= mret_nxt;
               sret_q                   <= sret_nxt;
               ecall_q                  <= ecall;
+              ebreak_q                 <= ebreak;
   end
 
 // --------------------------------
@@ -273,5 +277,6 @@ assign illegal_inst_q_o  = illegal_inst_q;
 assign mret_q_o          = mret_q;
 assign sret_q_o          = sret_q;
 assign ecall_q_o         = ecall_q;
+assign ebreak_q_o        = ebreak_q;
 
 endmodule
