@@ -94,38 +94,39 @@ def process_model_file(file_path):
                     if line_number < 5 :
                         continue
                     else :
-                        # Check if the line is related to memory writes
-                        pc       = parts[3]
-                        register = parts[5] if wbk_v(line) else \
-                                 "None"
-                        data     = parts[6] if wbk_v(line) else \
-                                 "None"
-                        # If idx is the index where "mem" is :
-                        # * at idx + 1 there is address
-                        # * at idx + 2 there is the data
-                        # But sometimes there is no memory access
-                        # In order to avoid overflow we check the
-                        # idx of the stored data is < lenght
-                        # to avoid overflow
-                        mem_adr  = parts[index(parts, MEM_REGEX, 1)] if mem_v(line) else \
-                                 "None"
+                        if not line_empty(line) :
+                            # Check if the line is related to memory writes
+                            pc       = parts[3]
+                            register = parts[5] if wbk_v(line) else \
+                                    "None"
+                            data     = parts[6] if wbk_v(line) else \
+                                    "None"
+                            # If idx is the index where "mem" is :
+                            # * at idx + 1 there is address
+                            # * at idx + 2 there is the data
+                            # But sometimes there is no memory access
+                            # In order to avoid overflow we check the
+                            # idx of the stored data is < lenght
+                            # to avoid overflow
+                            mem_adr  = parts[index(parts, MEM_REGEX, 1)] if mem_v(line) else \
+                                    "None"
 
-                        index_stored_data = index(parts, MEM_REGEX, 2)
-                        if index_stored_data < len(parts) :
-                            mem_data = parts[index_stored_data] if mem_v(line) else \
-                                     "None"
-                        else :
-                            mem_data = "None"
+                            index_stored_data = index(parts, MEM_REGEX, 2)
+                            if index_stored_data < len(parts) :
+                                mem_data = parts[index_stored_data] if mem_v(line) else \
+                                        "None"
+                            else :
+                                mem_data = "None"
 
-                        csr      = parts[index(parts, CSR_REGEX)] if csr_v(line) else \
-                                 "None"
-                        data_csr = parts[index(parts, CSR_REGEX, 1)] if csr_v(line) else \
-                                 "None"
-                        entry = [pc, register, data, mem_adr, mem_data, get_csr_adr(csr), data_csr]
-                        # print(entry)
-                        # if line_number == 27 :
-                        #     exit(1)
-                        entries.append(entry)
+                            csr      = parts[index(parts, CSR_REGEX)] if csr_v(line) else \
+                                    "None"
+                            data_csr = parts[index(parts, CSR_REGEX, 1)] if csr_v(line) else \
+                                    "None"
+                            entry = [pc, register, data, mem_adr, mem_data, get_csr_adr(csr), data_csr]
+                            # print(entry)
+                            # if line_number == 27 :
+                            #     exit(1)
+                            entries.append(entry)
 
     except FileNotFoundError as e:
         print(f"Error: {e}")
