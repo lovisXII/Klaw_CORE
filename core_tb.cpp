@@ -324,7 +324,6 @@ int sc_main(int argc, char* argv[]) {
     sc_signal<bool>          wbk_csr_v;
     sc_signal<sc_uint<32>>   wbk_csr_data;
     // csr
-    sc_signal<bool>          branch_v;
 
     core.clk              (clk);
     core.reset_n          (reset_n);
@@ -347,8 +346,6 @@ int sc_main(int argc, char* argv[]) {
     core.val_wbk_csr_v_q_o    (wbk_csr_v);
     core.val_wbk_csr_adr_q_o  (wbk_csr_adr);
     core.val_wbk_csr_data_q_o (wbk_csr_data);
-    // branch
-    core.val_branch_v_q_o     (branch_v);
     // mem access checker
     core.val_adr_v_q_o        (val_adr_v);
     core.val_adr_q_o          (val_adr);
@@ -518,7 +515,7 @@ int sc_main(int argc, char* argv[]) {
     ##############################################################
 */
     //Show what's been written in the destination register at each cycle
-    if (wbk_v.read() | wbk_csr_v.read() | val_adr_v.read() | branch_v.read()){
+    if (wbk_v.read() | wbk_csr_v.read() | val_adr_v.read()){
         std::stringstream pc;
         std::stringstream pc_mem;
         std::stringstream rd;
