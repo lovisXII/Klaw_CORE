@@ -203,16 +203,13 @@ int sc_main(int argc, char* argv[]) {
     for (int i = 0; i < n_sec; i++) {
         section* sec = reader.sections[i];
         cout << "Section " << sec->get_name() << " at address 0x" << std::hex << sec->get_address() << endl;
-        int  adr  = sec->get_address();
-        int  size = sec->get_size();
-        int* data = (int*)sec->get_data();
-        if (adr) {
+        unsigned int  adr  = sec->get_address();
+        unsigned int  size = sec->get_size();
+        unsigned int* data = (unsigned int*)sec->get_data();
+        if (adr && data) {
             cout << "Loading data ...";
             for (int j = 0; j < size; j += 4) {
                 ram[adr + j] = data[j / 4];
-                if(debug){
-                    signature << setfill('0') << setw(8) << hex << adr + j << " " << setfill('0') << setw(8) << hex << data[j / 4] << endl;
-                }
             }
             cout << endl;
         }
