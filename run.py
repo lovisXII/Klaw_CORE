@@ -31,6 +31,7 @@ class Config:
         parser.add_argument("--build"     , action="store_true", help="Build and run the simulation")
         parser.add_argument("--build-only", action="store_true", help="Build the the RTL")
         parser.add_argument("--test"                           , help="File or directory that contains the test files to run")
+        parser.add_argument("--checker"   , action="store_true", help="Run checker to compare rtl log and model log")
         parser.add_argument("--riscof-reg", action="store_true", help="Launch the toolchain riscof")
         parser.add_argument("--riscof"    , action="store_true", help="Launch the riscof toolchain")
         parser.add_argument("--clean"     , action="store_true", help="Clean all the generated files")
@@ -49,7 +50,7 @@ class Config:
         self.pkg               = ["riscv_pkg.sv"]
         self.include_lib       = ["../include/ELFIO/"]
         self.defines           = "-DVALIDATION"
-        self.cflags            = f"-lsystemc -lm -g {self.defines}"
+        self.cflags            = f"-lsystemc -lm -g {self.defines} -O0"
         self.verilog_flags     = f"-sc -Wno-fatal -Wall --trace --pins-sc-uint {self.defines}"
         self.src_dir           = ["src"]
         self.top_module        = "core"
@@ -61,7 +62,7 @@ class Config:
                     if entry.is_file() and entry.name.endswith("sv"):
                         self.src_files.append(os.path.join(dir, entry.name))
     def compile_verilator(self):
-        verilator_cmd             = f'{self.verilator_path} {" ".join(self.pkg)} -CFLAGS "-I{" ".join(self.include_lib)} {self.cflags}" {self.verilog_flags} {" ".join(self.src_files)} --top-module {self.top_module} --exe {self.tb}'
+        verilator_cmd             = f'{self.verilator_path} {" ".join(self.pkg)} -CFLAGS "{self.cflags} -I{" ".join(self.include_lib)}" {self.verilog_flags} {" ".join(self.src_files)} --top-module {self.top_module} --exe {self.tb}'
         env                       = os.environ.copy()
         env["SYSTEMC_INCLUDE"]    = "/usr/local/systemc-2.3.3/include/"
         env["SYSTEMC_LIBDIR"]     = "/usr/local/systemc-2.3.3/lib-linux64/"
@@ -146,12 +147,14 @@ if __name__ == "__main__":
     # Run simulation
     if config.args.sim:
         config.run_simu()
-        config.run_checker()
     elif config.args.riscof:
         config.run_riscof()
-        config.run_checker()
     elif config.args.riscof_reg :
         config.run_reg()
-    elif config.args.clean:
+
+    # Run checker
+    if config.args.checker:
+        config.run_checker()
+    if config.args.clean:
         cmd = "rm -rf obj_dir/ *.vcd *.out.txt.s *.out kernel *.txt *.o *.log obj_dir"
         run_subprocess(cmd, "Cleaning generated files...")
