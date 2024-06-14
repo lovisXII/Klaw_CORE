@@ -13,7 +13,7 @@ def get_csr_adr(name):
         "misa"         : "0x301",
         "mie"          : "0x304",
         "c773_mtvec"   : "0x305",
-        "mstatush"     : "0x310",
+        "c784_mstatush": "0x310",
         "mepc"         : "0x341",
         "c833_mepc"    : "0x341",
         "mcause"       : "0x342",
@@ -118,10 +118,10 @@ def process_model_file(file_path):
                             else :
                                 mem_data = "None"
 
-                            csr      = parts[index(parts, CSR_REGEX)] if csr_v(line) else \
-                                    "None"
-                            data_csr = parts[index(parts, CSR_REGEX, 1)] if csr_v(line) else \
-                                    "None"
+                            csr      = parts[index(parts, CSR_REGEX, 2)] if (csr_v(line) and "c784_mstatush" in parts) else (parts[index(parts, CSR_REGEX)] if csr_v(line) else \
+                                    "None")
+                            data_csr = parts[index(parts, CSR_REGEX, 3)] if (csr_v(line) and "c784_mstatush" in parts) else (parts[index(parts, CSR_REGEX, 1)] if csr_v(line) else \
+                                    "None")
                             entry = [pc, register, data, mem_adr, mem_data, get_csr_adr(csr), data_csr]
                             # print(entry)
                             # if line_number == 27 :
