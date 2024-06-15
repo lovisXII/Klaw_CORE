@@ -60,6 +60,12 @@ output logic [XLEN-1:0]           mepc_q_o,
 input  logic [XLEN-1:0]           mepc_q_i,
 input  logic [XLEN-1:0]           mtvec_q_i,
 // --------------------------------
+//      CHECKER
+// --------------------------------
+  `ifdef VALIDATION
+  output logic [XLEN-1:0]           pc_q_o,
+  `endif
+// --------------------------------
 //      WBK
 // --------------------------------
   // RF interface
@@ -71,14 +77,7 @@ input  logic [XLEN-1:0]           mtvec_q_i,
   output logic [11:0]               csr_adr_q_o,
   output logic [XLEN-1:0]           csr_data_q_o,
   output logic                      branch_v_q_o,
-  output logic [XLEN-1:0]           pc_data_q_o,
-
-// --------------------------------
-//      CHECKER
-// --------------------------------
-  `ifdef VALIDATION
-  output logic [XLEN-1:0]           pc_q_o
-  `endif
+  output logic [XLEN-1:0]           pc_data_q_o
 );
 // --------------------------------
 //      Signals declaration
@@ -245,6 +244,7 @@ assign cause_nxt        = {XLEN{pc_missaligned_nxt    }} & 32'b0
                         | {XLEN{env_call_m_mode_nxt   }} & 32'd11;
 
 assign mtval_nxt        = {XLEN{pc_missaligned             }} & bu_pc_res
+                        | {XLEN{breakpoint_nxt             }} & pc_q_i
                         | {XLEN{adr_missaligned | adr_fault}} & mem_adr;
 
 assign mstatus_old    = rs2_data_qual_q_i[XLEN-1:0];

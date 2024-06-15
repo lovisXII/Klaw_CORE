@@ -54,108 +54,108 @@ module decoder (
   i64_type 1000000000000
 */
 // Registers
-logic wbk_v;
-logic rs1_v;
-logic rs2_v;
-logic [4:0] wbk_adr;
-logic [4:0] rs1_adr;
-logic [4:0] rs2_adr;
+ logic            wbk_v;
+ logic            rs1_v;
+ logic            rs2_v;
+ logic [4:0]      wbk_adr;
+ logic [4:0]      rs1_adr;
+ logic [4:0]      rs2_adr;
 // instr id parts
-logic[6:0]  opcode;
-logic[2:0]  funct3;
-logic[6:0]  funct7;
+ logic [6:0]      opcode;
+ logic [2:0]      funct3;
+ logic [6:0]      funct7;
 // Additionnal informations
-logic is_csr;
-logic is_store;
-logic is_load;
-logic is_branch;
-logic is_mul;
-logic is_div;
-logic is_arithm;
-logic is_shift;
-logic unsign_extension;
+ logic            is_csr;
+ logic            is_store;
+ logic            is_load;
+ logic            is_branch;
+ logic            is_mul;
+ logic            is_div;
+ logic            is_arithm;
+ logic            is_shift;
+ logic            unsign_extension;
 // Instruction type
-logic r_type;
-logic i_type;
-logic l_type;
-logic s_type;
-logic b_type;
-logic u_type;
-logic p_type;
-logic r64_type;
-logic i64_type;
+ logic            r_type;
+ logic            i_type;
+ logic            l_type;
+ logic            s_type;
+ logic            b_type;
+ logic            u_type;
+ logic            p_type;
+ logic            r64_type;
+ logic            i64_type;
 // Illegal instruction
-logic unknow_opc;
+ logic            unknow_opc;
 // Instructions
 // R-Type
-logic add;
-logic sub;
-logic sll;
-logic slt;
-logic sltu;
-logic xorr;
-logic srl;
-logic sra;
-logic orr;
-logic andd;
-logic mul;
-logic mulh;
-logic mulhsu;
-logic mulhu;
-logic div;
-logic divu;
-logic rem;
-logic remu;
+ logic            add;
+ logic            sub;
+ logic            sll;
+ logic            slt;
+ logic            sltu;
+ logic            xorr;
+ logic            srl;
+ logic            sra;
+ logic            orr;
+ logic            andd;
+ logic            mul;
+ logic            mulh;
+ logic            mulhsu;
+ logic            mulhu;
+ logic            div;
+ logic            divu;
+ logic            rem;
+ logic            remu;
 // I-type
-logic addi;
-logic slti;
-logic sltiu;
-logic xori;
-logic ori;
-logic andi;
-logic slli;
-logic srli;
-logic srai;
+ logic            addi;
+ logic            slti;
+ logic            sltiu;
+ logic            xori;
+ logic            ori;
+ logic            andi;
+ logic            slli;
+ logic            srli;
+ logic            srai;
 // B-type
-logic beq;
-logic bne;
-logic blt;
-logic bge;
-logic bltu;
-logic bgeu;
+ logic            beq;
+ logic            bne;
+ logic            blt;
+ logic            bge;
+ logic            bltu;
+ logic            bgeu;
 // U-type
-logic lui;
-logic auipc;
+ logic            lui;
+ logic            auipc;
 // J-type
-logic jal;
-logic jalr;
+ logic            jal;
+ logic            jalr;
 // L-type
-logic lw;
-logic lh;
-logic lhu;
-logic lb;
-logic lbu;
-logic lwu;
-logic ld;
+ logic            lw;
+ logic            lh;
+ logic            lhu;
+ logic            lb;
+ logic            lbu;
+ logic            lwu;
+ logic            ld;
 // S-type
-logic sw;
-logic sh;
-logic sb;
-logic sd;
+ logic            sw;
+ logic            sh;
+ logic            sb;
+ logic            sd;
 // P-type
-logic ecall;
-logic ebreak;
-logic csrrw;
-logic csrrs;
-logic csrrc;
-logic csrrwi;
-logic csrrsi;
-logic csrrci;
-logic mret;
-logic sret;
-logic fence;
-logic illegal_inst;
-logic [XLEN-1:0] imm;
+ logic            ecall;
+ logic            ebreak;
+ logic            csrrw;
+ logic            csrrs;
+ logic            csrrc;
+ logic            csrrwi;
+ logic            csrrsi;
+ logic            csrrci;
+ logic            mret;
+ logic            sret;
+ logic            fence;
+ logic            illegal_inst;
+ logic [XLEN-1:0] imm;
 //-------------------------
 // Instruction decoding
 //-------------------------
@@ -247,73 +247,73 @@ always_comb begin
     default  :
               unknow_opc = 1'b1;
   endcase
-  casez({opcode, funct3, funct7})
+  casez({funct7, instr_i[20], funct3, opcode})
     // R-Type
-    {R_TYPE, 3'b000, 7'b0000000}        : add    = 1'b1;
-    {R_TYPE, 3'b000, 7'b0100000}        : sub    = 1'b1;
-    {R_TYPE, 3'b001, 7'b0000000}        : sll    = 1'b1;
-    {R_TYPE, 3'b010, 7'b0000000}        : slt    = 1'b1;
-    {R_TYPE, 3'b011, 7'b0000000}        : sltu   = 1'b1;
-    {R_TYPE, 3'b100, 7'b0000000}        : xorr   = 1'b1;
-    {R_TYPE, 3'b101, 7'b0000000}        : srl    = 1'b1;
-    {R_TYPE, 3'b101, 7'b0100000}        : sra    = 1'b1;
-    {R_TYPE, 3'b110, 7'b0000000}        : orr    = 1'b1;
-    {R_TYPE, 3'b111, 7'b0000000}        : andd   = 1'b1;
-    {R_TYPE, 3'b000, 7'b0000001}        : mul    = 1'b1;
-    {R_TYPE, 3'b001, 7'b0000001}        : mulh   = 1'b1;
-    {R_TYPE, 3'b010, 7'b0000001}        : mulhsu = 1'b1;
-    {R_TYPE, 3'b011, 7'b0000001}        : mulhu  = 1'b1;
-    {R_TYPE, 3'b100, 7'b0000001}        : div    = 1'b1;
-    {R_TYPE, 3'b101, 7'b0000001}        : divu   = 1'b1;
-    {R_TYPE, 3'b110, 7'b0000001}        : rem    = 1'b1;
-    {R_TYPE, 3'b111, 7'b0000001}        : remu   = 1'b1;
+    {7'b0000000, 1'b?, 3'b000, R_TYPE}        : add    = 1'b1;
+    {7'b0100000, 1'b?, 3'b000, R_TYPE}        : sub    = 1'b1;
+    {7'b0000000, 1'b?, 3'b001, R_TYPE}        : sll    = 1'b1;
+    {7'b0000000, 1'b?, 3'b010, R_TYPE}        : slt    = 1'b1;
+    {7'b0000000, 1'b?, 3'b011, R_TYPE}        : sltu   = 1'b1;
+    {7'b0000000, 1'b?, 3'b100, R_TYPE}        : xorr   = 1'b1;
+    {7'b0000000, 1'b?, 3'b101, R_TYPE}        : srl    = 1'b1;
+    {7'b0100000, 1'b?, 3'b101, R_TYPE}        : sra    = 1'b1;
+    {7'b0000000, 1'b?, 3'b110, R_TYPE}        : orr    = 1'b1;
+    {7'b0000000, 1'b?, 3'b111, R_TYPE}        : andd   = 1'b1;
+    {7'b0000001, 1'b?, 3'b000, R_TYPE}        : mul    = 1'b1;
+    {7'b0000001, 1'b?, 3'b001, R_TYPE}        : mulh   = 1'b1;
+    {7'b0000001, 1'b?, 3'b010, R_TYPE}        : mulhsu = 1'b1;
+    {7'b0000001, 1'b?, 3'b011, R_TYPE}        : mulhu  = 1'b1;
+    {7'b0000001, 1'b?, 3'b100, R_TYPE}        : div    = 1'b1;
+    {7'b0000001, 1'b?, 3'b101, R_TYPE}        : divu   = 1'b1;
+    {7'b0000001, 1'b?, 3'b110, R_TYPE}        : rem    = 1'b1;
+    {7'b0000001, 1'b?, 3'b111, R_TYPE}        : remu   = 1'b1;
     // I-type
-    {I_TYPE, 3'b000, 7'b???????}        : addi   = 1'b1;
-    {I_TYPE, 3'b010, 7'b???????}        : slti   = 1'b1;
-    {I_TYPE, 3'b011, 7'b???????}        : sltiu  = 1'b1;
-    {I_TYPE, 3'b100, 7'b???????}        : xori   = 1'b1;
-    {I_TYPE, 3'b110, 7'b???????}        : ori    = 1'b1;
-    {I_TYPE, 3'b111, 7'b???????}        : andi   = 1'b1;
-    {I_TYPE, 3'b001, 7'b0000000}        : slli   = 1'b1;
-    {I_TYPE, 3'b101, 7'b0000000}        : srli   = 1'b1;
-    {I_TYPE, 3'b101, 7'b0100000}        : srai   = 1'b1;
+    {7'b???????, 1'b?, 3'b000, I_TYPE}        : addi   = 1'b1;
+    {7'b???????, 1'b?, 3'b010, I_TYPE}        : slti   = 1'b1;
+    {7'b???????, 1'b?, 3'b011, I_TYPE}        : sltiu  = 1'b1;
+    {7'b???????, 1'b?, 3'b100, I_TYPE}        : xori   = 1'b1;
+    {7'b???????, 1'b?, 3'b110, I_TYPE}        : ori    = 1'b1;
+    {7'b???????, 1'b?, 3'b111, I_TYPE}        : andi   = 1'b1;
+    {7'b0000000, 1'b?, 3'b001, I_TYPE}        : slli   = 1'b1;
+    {7'b0000000, 1'b?, 3'b101, I_TYPE}        : srli   = 1'b1;
+    {7'b0100000, 1'b?, 3'b101, I_TYPE}        : srai   = 1'b1;
     // B-type
-    {B_TYPE, 3'b000, 7'b???????}        : beq    = 1'b1;
-    {B_TYPE, 3'b001, 7'b???????}        : bne    = 1'b1;
-    {B_TYPE, 3'b100, 7'b???????}        : blt    = 1'b1;
-    {B_TYPE, 3'b101, 7'b???????}        : bge    = 1'b1;
-    {B_TYPE, 3'b110, 7'b???????}        : bltu   = 1'b1;
-    {B_TYPE, 3'b111, 7'b???????}        : bgeu   = 1'b1;
+    {7'b???????, 1'b?, 3'b000, B_TYPE}        : beq    = 1'b1;
+    {7'b???????, 1'b?, 3'b001, B_TYPE}        : bne    = 1'b1;
+    {7'b???????, 1'b?, 3'b100, B_TYPE}        : blt    = 1'b1;
+    {7'b???????, 1'b?, 3'b101, B_TYPE}        : bge    = 1'b1;
+    {7'b???????, 1'b?, 3'b110, B_TYPE}        : bltu   = 1'b1;
+    {7'b???????, 1'b?, 3'b111, B_TYPE}        : bgeu   = 1'b1;
     // U-type
-    {U_TYPE, 3'b???, 7'b???????}        : lui    = 1'b1;
-    {AUIPC_TYPE, 3'b???, 7'b???????}    : auipc  = 1'b1;
+    {7'b???????, 1'b?, 3'b???, U_TYPE}        : lui    = 1'b1;
+    {7'b???????, 1'b?, 3'b???, AUIPC_TYPE}    : auipc  = 1'b1;
     // J-type
-    {JAL_TYPE, 3'b???, 7'b???????}      : jal    = 1'b1;
-    {JALR_TYPE, 3'b???, 7'b???????}     : jalr   = 1'b1;
+    {7'b???????, 1'b?, 3'b???, JAL_TYPE}      : jal    = 1'b1;
+    {7'b???????, 1'b?, 3'b???, JALR_TYPE}     : jalr   = 1'b1;
     // L-type
-    {L_TYPE, 3'b010, 7'b???????}        : lw     = 1'b1;
-    {L_TYPE, 3'b001, 7'b???????}        : lh     = 1'b1;
-    {L_TYPE, 3'b101, 7'b???????}        : lhu    = 1'b1;
-    {L_TYPE, 3'b000, 7'b???????}        : lb     = 1'b1;
-    {L_TYPE, 3'b100, 7'b???????}        : lbu    = 1'b1;
-    {L_TYPE, 3'b011, 7'b???????}        : ld     = 1'b1;
+    {7'b???????, 1'b?, 3'b010, L_TYPE}        : lw     = 1'b1;
+    {7'b???????, 1'b?, 3'b001, L_TYPE}        : lh     = 1'b1;
+    {7'b???????, 1'b?, 3'b101, L_TYPE}        : lhu    = 1'b1;
+    {7'b???????, 1'b?, 3'b000, L_TYPE}        : lb     = 1'b1;
+    {7'b???????, 1'b?, 3'b100, L_TYPE}        : lbu    = 1'b1;
+    {7'b???????, 1'b?, 3'b011, L_TYPE}        : ld     = 1'b1;
     // S-type
-    {S_TYPE, 3'b010, 7'b???????}        : sw     = 1'b1;
-    {S_TYPE, 3'b001, 7'b???????}        : sh     = 1'b1;
-    {S_TYPE, 3'b000, 7'b???????}        : sb     = 1'b1;
-    {S_TYPE, 3'b011, 7'b???????}        : sd     = 1'b1;
+    {7'b???????, 1'b?, 3'b010, S_TYPE}        : sw     = 1'b1;
+    {7'b???????, 1'b?, 3'b001, S_TYPE}        : sh     = 1'b1;
+    {7'b???????, 1'b?, 3'b000, S_TYPE}        : sb     = 1'b1;
+    {7'b???????, 1'b?, 3'b011, S_TYPE}        : sd     = 1'b1;
     // P-type
-    {P_TYPE, 3'b000, 7'b0000000}        : ecall  = ~instr_i[20];
-    {P_TYPE, 3'b000, 7'b0000000}        : ebreak =  instr_i[20];
-    {P_TYPE, 3'b001, 7'b???????}        : csrrw  = 1'b1;
-    {P_TYPE, 3'b010, 7'b???????}        : csrrs  = 1'b1;
-    {P_TYPE, 3'b011, 7'b???????}        : csrrc  = 1'b1;
-    {P_TYPE, 3'b101, 7'b???????}        : csrrwi = 1'b1;
-    {P_TYPE, 3'b110, 7'b???????}        : csrrsi = 1'b1;
-    {P_TYPE, 3'b111, 7'b???????}        : csrrci = 1'b1;
-    {P_TYPE, 3'b000, 7'b0011000}        : mret   = instr_i[21];
-    {P_TYPE, 3'b000, 7'b0001000}        : sret   = instr_i[21];
-    {FENCE_TYPE , 3'b000, 7'b???????}   : fence  = 1'b1;
+    {7'b0000000, 1'b0, 3'b000, P_TYPE}        : ecall  = 1'b1;
+    {7'b0000000, 1'b1, 3'b000, P_TYPE}        : ebreak =  1'b1;
+    {7'b???????, 1'b?, 3'b001, P_TYPE}        : csrrw  = 1'b1;
+    {7'b???????, 1'b?, 3'b010, P_TYPE}        : csrrs  = 1'b1;
+    {7'b???????, 1'b?, 3'b011, P_TYPE}        : csrrc  = 1'b1;
+    {7'b???????, 1'b?, 3'b101, P_TYPE}        : csrrwi = 1'b1;
+    {7'b???????, 1'b?, 3'b110, P_TYPE}        : csrrsi = 1'b1;
+    {7'b???????, 1'b?, 3'b111, P_TYPE}        : csrrci = 1'b1;
+    {7'b0011000, 1'b?, 3'b000, P_TYPE}        : mret   = instr_i[21];
+    {7'b0001000, 1'b?, 3'b000, P_TYPE}        : sret   = instr_i[21];
+    {7'b???????, 1'b?, 3'b000, FENCE_TYPE}    : fence  = 1'b1;
     default : illegal_inst = 1'b1;
   endcase
 end

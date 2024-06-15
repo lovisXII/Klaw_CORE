@@ -398,7 +398,6 @@ always_ff @(posedge clk, negedge reset_n) begin
     end
 end
 
-
 assign rs1_data_o   = 32'b0
                     | {XLEN{5'd0 == rs1_adr_i}} & reg0_q
                     | {XLEN{5'd1 == rs1_adr_i}} & reg1_q
