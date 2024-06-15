@@ -115,10 +115,6 @@ class Config:
         run_subprocess(spike_cmd, "Run spike")
         checker.run_checker()
 
-    def gtkwave(self):
-        cmd = f"gtkwave {config.waves_dir}/vlt_dump.vcd &"
-        run_subprocess(cmd, "Running Gtkwave")
-
     def build_reg(self) :
         cmd = "./riscof/lanch-riscof.sh build"
         run_subprocess(cmd, "Building riscof")
