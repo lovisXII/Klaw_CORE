@@ -6,7 +6,7 @@ from subprocess import run, CalledProcessError, PIPE
 from termcolor import colored
 import checker
 
-def run_subprocess(cmd, message, env = None):
+def run_subprocess(cmd, message, env = None, exit_on_fail=False):
     print(colored("[INFO]", "green"), message, ":\n", cmd)
     try:
         result = run(cmd, capture_output=True, text=True, shell=True, env=env)
@@ -22,7 +22,8 @@ def run_subprocess(cmd, message, env = None):
             sys.exit(1)
     except CalledProcessError as e:
         print(colored(f"Error: {e}", "red"))
-        sys.exit(1)
+        if exit_on_fail :
+            sys.exit(1)
 
 class Config:
     def __init__(self):
@@ -66,12 +67,12 @@ class Config:
         env                       = os.environ.copy()
         env["SYSTEMC_INCLUDE"]    = "/usr/local/systemc-2.3.3/include/"
         env["SYSTEMC_LIBDIR"]     = "/usr/local/systemc-2.3.3/lib-linux64/"
-        run_subprocess(verilator_cmd, "Compile RTL using verilator", env)
+        run_subprocess(verilator_cmd, "Compile RTL using verilator", env, True)
 
     def compile_c(self):
         num_cores   = os.cpu_count()
         make_cmd    = f'make -j {str(num_cores)} -C obj_dir -f Vcore.mk'
-        run_subprocess(make_cmd, "Compile c++")
+        run_subprocess(make_cmd, "Compile c++", None, True)
 
     def compile_test(self):
         riscv_gcc   = "/opt/riscv/bin/riscv32-unknown-elf-gcc"
@@ -94,7 +95,7 @@ class Config:
             run_subprocess(cmd, "Compile {}".format(file))
         # Build test file
         bin_cmd = f'{riscv_gcc} -nostdlib {arch} -T {ld_dir}/ldscript.ld {build_dir}/reset.o {build_dir}/exception.o {build_dir}/exit.o {config.args.test}'
-        run_subprocess(bin_cmd, "Build final binary")
+        run_subprocess(bin_cmd, "Build final binary", None, True)
 
     def run_simu(self):
         cmd = f'obj_dir/Vcore a.out'
@@ -117,7 +118,7 @@ class Config:
 
     def build_reg(self) :
         cmd = "./riscof/lanch-riscof.sh build"
-        run_subprocess(cmd, "Building riscof")
+        run_subprocess(cmd, "Building riscof", None, True)
 
     def run_reg(self) :
         cmd = "./riscof/lanch-riscof.sh run"
