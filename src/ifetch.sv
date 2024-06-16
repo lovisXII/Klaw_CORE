@@ -5,7 +5,6 @@ module ifetch(
     input logic clk,
     input logic reset_n,
     input logic [XLEN-1:0] reset_adr_i,
-    input logic [1:0]     core_mode_q_i,
     // --------------------------------
     //     Icache
     // --------------------------------

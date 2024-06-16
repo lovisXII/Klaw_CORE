@@ -7,6 +7,7 @@ module csr(
     input  logic            exception_q_i,
     input  logic [XLEN-1:0] mcause_q_i,
     input  logic [XLEN-1:0] mtval_q_i,
+    input  logic [XLEN-1:0] mstatus_q_i,
     input  logic [XLEN-1:0] mepc_q_i,
     input  logic            write_v_i,
     input  logic [11:0]     adr_read_i,
@@ -17,6 +18,7 @@ module csr(
     // --------------------------------
     output logic [XLEN-1:0] mepc_q_o,
     output logic [XLEN-1:0] mtvec_q_o,
+    output logic [XLEN-1:0] mstatus_q_o,
     output logic [XLEN-1:0] data_o
 );
 logic            mhardtid_nxt_v;
@@ -69,7 +71,8 @@ assign mtval_nxt_v        = write_v_i & (CSR_MTVAL     == adr_write_i)
 assign mip_nxt_v          = write_v_i & (CSR_MIP       == adr_write_i);
 assign mscratch_nxt_v     = write_v_i & (CSR_MSCRATCH  == adr_write_i);
 
-assign mstatus_nxt  = {XLEN{mstatus_nxt_v}} & data_i;
+assign mstatus_nxt  = {XLEN{mstatus_nxt_v}} & data_i
+                    | {XLEN{exception_q_i}} & mstatus_q_i;
 
 assign mepc_nxt     = {XLEN{mepc_nxt_v}}    & data_i
                     | {XLEN{exception_q_i}} & mepc_q_i;
@@ -105,10 +108,10 @@ assign mimpid_q  = 32'h0;
 
 always_ff @(posedge clk, negedge reset_n) begin
     if (~reset_n) begin
-            mstatus_q <= 32'h0;
+            mstatus_q <= {19'b0, 2'b11, 11'b0};
     end else begin
         if (mstatus_nxt_v) begin
-            mstatus_q <= {19'b0, 2'b11, 11'b0};
+            mstatus_q <= mstatus_nxt;
         end
     end
 end
@@ -220,4 +223,5 @@ assign data_o = 32'b0
 // --------------------------------
 assign mepc_q_o  = mepc_q;
 assign mtvec_q_o = mtvec_q;
+assign mstatus_q_o = mstatus_q;
 endmodule

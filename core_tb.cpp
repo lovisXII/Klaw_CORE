@@ -371,7 +371,7 @@ int sc_main(int argc, char* argv[]) {
     // When it arrives to the end of the code it will start the countdown before exiting
 
     int NB_CYCLES           = 0;
-    int countdown           = 100 ;
+    int countdown           = 200 ;
     bool start_countdown    = false;
 
 

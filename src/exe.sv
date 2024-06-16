@@ -51,23 +51,25 @@ module exe
 // --------------------------------
 //      exception_nxt/Interruptions
 // --------------------------------
-output logic [1:0]                core_mode_q_o,
-output logic                      exception_q_o,
-output logic [XLEN-1:0]           mcause_q_o,
-output logic [XLEN-1:0]           mtval_q_o,
-output logic [XLEN-1:0]           mepc_q_o,
+  output logic [1:0]                core_mode_q_o,
+ output logic                      exception_q_o,
+ output logic [XLEN-1:0]           mstatus_q_o,
+ output logic [XLEN-1:0]           mcause_q_o,
+ output logic [XLEN-1:0]           mtval_q_o,
+ output logic [XLEN-1:0]           mepc_q_o,
 
-input  logic [XLEN-1:0]           mepc_q_i,
-input  logic [XLEN-1:0]           mtvec_q_i,
-// --------------------------------
-//      CHECKER
-// --------------------------------
+ input  logic [XLEN-1:0]           mepc_q_i,
+ input  logic [XLEN-1:0]           mtvec_q_i,
+ input  logic [XLEN-1:0]           mstatus_q_i,
+ // --------------------------------
+ //      CHECKER
+ // --------------------------------
   `ifdef VALIDATION
   output logic [XLEN-1:0]           pc_q_o,
   `endif
-// --------------------------------
-//      WBK
-// --------------------------------
+ // --------------------------------
+ //      WBK
+ // --------------------------------
   // RF interface
   output logic                      wbk_v_q_o,
   output logic [XLEN-1:0]           wbk_data_q_o,
@@ -102,7 +104,7 @@ logic                     is_store;
 logic                     exception_nxt;
 logic                     exception_q;
 logic                     exception_dly1_q;
-logic                     flush_nxt;
+logic                     exception_dly2_q;
 logic [XLEN-1:0]          cause_nxt;
 logic [XLEN-1:0]          mtval_nxt;
 logic [XLEN-1:0]          mstatus_old;
@@ -114,15 +116,14 @@ logic                     mpie_new;
 logic                     mie_new;
 logic [XLEN-1:0]          mstatus_nxt;
 logic [XLEN-1:0]          cause_q;
+logic [XLEN-1:0]          mstatus_q;
 logic [XLEN-1:0]          mtval_q;
 logic [XLEN-1:0]          mepc_q;
 logic                     adr_fault;
 logic                     pc_missaligned;
 logic                     adr_missaligned;
 logic                     ld_adr_missaligned;
-logic                     ld_access_fault;
 logic                     st_adr_missaligned;
-logic                     env_call_m_mode;
 logic                     pc_missaligned_nxt;
 logic                     adr_missaligned_nxt;
 logic                     illegal_inst_nxt;
@@ -148,9 +149,8 @@ logic                     flush_v;
 logic                     branch_v_nxt;
 logic                     branch_v_q;
 logic                     branch_v_dly1_q;
+logic                     branch_v_dly2_q;
 logic [XLEN-1:0]          pc_data_nxt;
-logic                     flush_v_q;
-logic                     flush_v_dly1_q;
 logic [XLEN-1:0]          pc_data_q;
 
 // --------------------------------
@@ -216,7 +216,7 @@ assign st_adr_missaligned   = adr_missaligned &  is_store;
 
 assign adr_fault            = '0;
 
-assign exception_nxt        = ~exception_q & ~branch_v_q & ~exception_dly1_q & ~branch_v_dly1_q
+assign exception_nxt        = ~exception_q & ~branch_v_q & ~exception_dly1_q & ~branch_v_dly1_q & ~exception_dly2_q & ~branch_v_dly2_q
                             & (
                                  pc_missaligned
                                | illegal_inst_q_i
@@ -247,13 +247,14 @@ assign mtval_nxt        = {XLEN{pc_missaligned             }} & bu_pc_res
                         | {XLEN{breakpoint_nxt             }} & pc_q_i
                         | {XLEN{adr_missaligned | adr_fault}} & mem_adr;
 
-assign mstatus_old    = rs2_data_qual_q_i[XLEN-1:0];
+assign mstatus_old    = mstatus_q_i[XLEN-1:0];
 assign mpp_old[12:11] = mstatus_old[12:11];
 assign mpie_old       = mstatus_old[7];
 assign mie_old        = mstatus_old[3];
 
 assign mpp_new[12:11] = 2'b11;
-assign mpie_new       = 1'b1;
+assign mpie_new       =  mret_q_i & 1'b1
+                      | ~mret_q_i & 1'b0;
 assign mie_new        = mpie_old;
 assign mstatus_nxt = {
                         mstatus_old[31:13],
@@ -294,7 +295,7 @@ assign access_size_o    = access_size_q_i;
 // j   :     I D E
 // If dly1 is not taken in consideration j will branch
 // but it's not suppose to branch, it should be flushed
-assign flush_v        = branch_v_q | branch_v_dly1_q |  exception_q | exception_dly1_q;
+assign flush_v        = branch_v_q | branch_v_dly1_q | branch_v_dly2_q |  exception_q | exception_dly1_q | exception_dly2_q;
 
 assign branch_v_nxt = (branch_v | mret_q_i | sret_q_i) & ~flush_v & ~exception_nxt;
 assign pc_data_nxt  = {XLEN{~exception_nxt}} & bu_pc_res
@@ -322,8 +323,6 @@ always_ff @(posedge clk, negedge reset_n)
     wbk_adr_q          <= '0;
     wbk_data_q        <= '0;
     exception_q       <= '0;
-    flush_v_q         <= '0;
-    flush_v_dly1_q    <= '0;
     pc_data_q         <= '0;
     csr_wbk_v_q       <= '0;
     csr_data_q        <= '0;
@@ -335,22 +334,26 @@ always_ff @(posedge clk, negedge reset_n)
     mepc_q            <= '0;
     branch_v_q        <= '0;
     branch_v_dly1_q   <= '0;
+    branch_v_dly2_q   <= '0;
   end else begin
     wbk_v_q           <= wbk_v_nxt;
     wbk_adr_q         <= wbk_adr_q_i;
     wbk_data_q        <= wbk_data_nxt;
     exception_q       <= exception_nxt;
     exception_dly1_q  <= exception_q;
+    exception_dly2_q  <= exception_dly1_q;
     pc_data_q         <= pc_data_nxt;
     csr_wbk_v_q       <= csr_wbk_v_nxt;
     csr_data_q        <= csr_data_nxt;
     csr_adr_q         <= csr_adr_nxt;
     core_mode_q       <= core_mode_nxt;
+    mstatus_q         <= mstatus_nxt;
     cause_q           <= cause_nxt;
     mtval_q           <= mtval_nxt;
     mepc_q            <= pc_q_i;
     branch_v_q        <= branch_v_nxt;
     branch_v_dly1_q   <= branch_v_q;
+    branch_v_dly2_q   <= branch_v_dly1_q;
 `ifdef VALIDATION
     pc_q              <= pc_q_i;
 `endif
@@ -365,6 +368,7 @@ assign exe_ff_res_data_o  = wbk_data_nxt;
 assign exe_ff_csr_data_o  = csr_data_nxt;
 // exceptions
 assign exception_q_o    = exception_q;
+assign mstatus_q_o      = mstatus_q;
 assign mcause_q_o       = cause_q;
 assign mtval_q_o        = mtval_q;
 assign mepc_q_o         = mepc_q;
