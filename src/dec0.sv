@@ -96,6 +96,7 @@ module dec0 (
   logic                       rs2_is_csr;
   logic                       csr_clear;
   logic                       csr_wbk_nxt;
+  logic                       csr_data_clk_en;
   logic [11:0]                csr_adr;
   logic [11:0]                csr_adr_nxt;
   logic                       ecall;
@@ -212,7 +213,7 @@ assign csr_data_nxt = {32{ dec0_exe_csr_adr_match}} & exe_csr_data_q_i
 
 // Validity flops
 // --------------------------------
-always_ff @(posedge clk, negedge reset_n) begin
+always_ff @(posedge clk, negedge reset_n)
   if (!reset_n) begin
               wbk_v_q    <= '0;
               csr_wbk_q  <= '0;
@@ -224,40 +225,55 @@ always_ff @(posedge clk, negedge reset_n) begin
               rs1_v_q     <= rs1_v;
               rs2_v_q     <= rs2_v;
   end
-end
 
-always_ff @(posedge clk) begin
-  if (wbk_v_nxt) begin
+always_ff @(posedge clk, negedge reset_n)
+  if (!reset_n) begin
+              wbk_adr_q <= '0;
+  end else begin
+    if (wbk_v_nxt) begin
               wbk_adr_q <= wbk_adr_nxt;
+    end
   end
-end
 
 // rs1 flops
 // --------------------------------
-always_ff @(posedge clk, negedge reset_n) begin
-  if (rs1_v) begin
+always_ff @(posedge clk, negedge reset_n)
+  if (!reset_n) begin
+              rs1_adr_q <= '0;
+              rs1_data_q <= '0;
+  end else begin
+    if (rs1_v) begin
               rs1_adr_q  <= rs1_adr;
               rs1_data_q <= rs1_data_nxt;
 
+    end
   end
-end
 
 // rs2 flops
 // --------------------------------
-always_ff @(posedge clk, negedge reset_n) begin
-  if (rs2_v) begin
+always_ff @(posedge clk, negedge reset_n)
+  if (!reset_n) begin
+              rs2_adr_q <= '0;
+              rs2_data_q <= '0;
+  end else begin
+    if (rs2_v) begin
               rs2_adr_q  <= rs2_adr;
               rs2_data_q <= rs2_data_nxt;
+    end
   end
-end
 
 // csr flops
 // --------------------------------
-always_ff @(posedge clk, negedge reset_n) begin
-  if (csr_wbk_nxt | rs2_is_csr) begin
+assign csr_data_clk_en = csr_wbk_nxt | rs2_is_csr;
+
+always_ff @(posedge clk, negedge reset_n)
+  if (!reset_n) begin
+              csr_data_q <= '0;
+  end else begin
+    if (csr_data_clk_en) begin
               csr_data_q  <= csr_data_nxt;
+    end
   end
-end
 
 // other flops
 // --------------------------------
