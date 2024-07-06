@@ -22,7 +22,7 @@ function display_help() {
 function install_dependencies(){
     sudo apt update
     sudo apt install build-essential make wget git gcc g++ automake gtkwave verilator
-    pip install pyyaml
+    pip install pyyaml python3-sphinx
 }
 
 # Installing riscv cross-compiler
@@ -178,6 +178,14 @@ function install_openlane(){
     sudo make
 }
 
+function install_openlane2(){
+    cd $project_root
+    cd implementation/
+    sudo rm -rf OpenLane2
+    git clone https://github.com/efabless/openlane2 OpenLane2
+    cd OpenLane
+    sudo make
+}
 # Menu
 # If no options are provided, display the help and exit
 if [[ $# -eq 0 ]]; then
