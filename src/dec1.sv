@@ -1,8 +1,8 @@
 import riscv_pkg::*;
 
 module dec1 (
-  input logic                 clk,
-  input logic                 reset_n,
+  input logic                       clk,
+  input logic                       reset_n,
 // --------------------------------
 //      dec0 Interface
 // --------------------------------

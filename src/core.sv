@@ -2,7 +2,8 @@
 // Each internal signal follow the following convention :
 // stage_description where stage is the name of the stage where the signal is coming from.
 // - if  : ifetch
-// - dec : decode
+// - dec0 : decode0
+// - dec1 : decode1
 // - exe : execute
 // - csr : csr register bank
 // - rf  : register file
@@ -43,7 +44,7 @@ module core (
     // --------------------------------
     output logic            adr_v_o,
     output logic [XLEN-1:0] adr_o,
-    output logic            is_store_o,
+    output logic            store_v_o,
     output logic [XLEN-1:0] store_data_o,
     input logic  [XLEN-1:0] load_data_i,
     output logic [2:0]      access_size_o
@@ -119,8 +120,8 @@ logic                    dec1__ebreak_q;
 //    EXE-CORE INTERFACE
 //----------------------------
 logic                    exe__adr_v;
-logic [XLEN-1:0]         adr;
-logic                    is_store;
+logic [XLEN-1:0]         exe__adr;
+logic                    exe__store_v;
 logic [XLEN-1:0]         store_data;
 //----------------------------
 //    EXE-RF INTERFACE
@@ -346,8 +347,8 @@ exe u_exe(
   //      MEM
   // --------------------------------
   .adr_v_o              (exe__adr_v),
-  .adr_o                (adr),
-  .is_store_o           (is_store),
+  .adr_o                (exe__adr),
+  .store_v_o            (exe__store_v),
   .store_data_o         (store_data),
   .load_data_i          (load_data_i),
   .access_size_o        (access_size_o),
@@ -414,8 +415,8 @@ csr u_csr(
 // --------------------------------
 
 assign adr_v_o        = exe__adr_v;
-assign adr_o          = adr;
-assign is_store_o     = is_store;
+assign adr_o          = exe__adr;
+assign store_v_o      = exe__store_v;
 assign store_data_o   = store_data;
 
 // --------------------------------
@@ -426,12 +427,12 @@ always_ff @(posedge clk, negedge reset_n)
   if (!reset_n) begin
     val_adr_v_q      <= '0;
     val_adr_q        <= '0;
-    val_store_v_q   <= '0;
+    val_store_v_q    <= '0;
     val_store_data_q <= '0;
   end else begin
     val_adr_v_q      <= exe__adr_v;
-    val_adr_q        <= adr;
-    val_store_v_q    <= is_store;
+    val_adr_q        <= exe__adr;
+    val_store_v_q    <= exe__store_v;
     val_store_data_q <= store_data;
 end
 // rd

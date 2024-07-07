@@ -2,8 +2,8 @@ import riscv_pkg::*;
 
 module exe
 (
-  input logic                 clk,
-  input logic                 reset_n,
+  input logic                       clk,
+  input logic                       reset_n,
 // --------------------------------
 //      DEC
 // --------------------------------
@@ -37,7 +37,7 @@ module exe
 // --------------------------------
   output logic                     adr_v_o,
   output logic [XLEN-1:0]          adr_o,
-  output logic                     is_store_o,
+  output logic                     store_v_o,
   output logic [XLEN-1:0]          store_data_o,
   input  logic  [XLEN-1:0]         load_data_i,
   output logic [2:0]               access_size_o,
@@ -52,20 +52,20 @@ module exe
 //      exception_nxt/Interruptions
 // --------------------------------
   output logic [1:0]                core_mode_q_o,
- output logic                      exception_q_o,
- output logic [XLEN-1:0]           mstatus_q_o,
- output logic [XLEN-1:0]           mcause_q_o,
- output logic [XLEN-1:0]           mtval_q_o,
- output logic [XLEN-1:0]           mepc_q_o,
+ output logic                       exception_q_o,
+ output logic [XLEN-1:0]            mstatus_q_o,
+ output logic [XLEN-1:0]            mcause_q_o,
+ output logic [XLEN-1:0]            mtval_q_o,
+ output logic [XLEN-1:0]            mepc_q_o,
 
- input  logic [XLEN-1:0]           mepc_q_i,
- input  logic [XLEN-1:0]           mtvec_q_i,
- input  logic [XLEN-1:0]           mstatus_q_i,
+ input  logic [XLEN-1:0]            mepc_q_i,
+ input  logic [XLEN-1:0]            mtvec_q_i,
+ input  logic [XLEN-1:0]            mstatus_q_i,
  // --------------------------------
  //      CHECKER
  // --------------------------------
   `ifdef VALIDATION
-  output logic [XLEN-1:0]           pc_q_o,
+  output logic [XLEN-1:0]            pc_q_o,
   `endif
  // --------------------------------
  //      WBK
@@ -99,7 +99,7 @@ logic [XLEN-1:0]          bu_data_res;
 logic                     lsu_en;
 logic [XLEN-1:0]          lsu_res_data;
 logic [XLEN-1:0]          mem_adr;
-logic                     is_store;
+logic                     store_v;
 // exception_nxt
 logic                     exception_nxt;
 logic                     exception_q;
@@ -211,8 +211,8 @@ lsu u_lsu(
 //--------------
 // Exceptions
 //--------------
-assign ld_adr_missaligned   = adr_missaligned & ~is_store;
-assign st_adr_missaligned   = adr_missaligned &  is_store;
+assign ld_adr_missaligned   = adr_missaligned & ~store_v;
+assign st_adr_missaligned   = adr_missaligned &  store_v;
 
 assign adr_fault            = '0;
 
@@ -277,22 +277,22 @@ assign shifter_en       = unit_q_i[SFT];
 assign bu_en            = unit_q_i[BU];
 // Load/Store Units
 assign lsu_en           = unit_q_i[LSU] & ~flush_v;
-assign is_store         = lsu_en & operation_q_i[ST];
+assign store_v         = lsu_en & operation_q_i[ST];
 assign adr_v_o          = lsu_en & ~exception_nxt;
 assign adr_o            = mem_adr;
-assign is_store_o       = is_store;
+assign store_v_o       = store_v;
 assign store_data_o     = rs2_data_qual_q_i[XLEN-1:0] ;
 assign access_size_o    = access_size_q_i;
 // --------------------------------
 //      Write back data
 // --------------------------------
-// dly1 added to avoid an branch instrcution to succeed
+// dly1 and dly2 added to avoid an branch instrcution to succeed
 // After another branch, the wbk/mem access is disabled
 // in decod cycle but a branch after branch must be canceled here
 // Example :
-// beq : I D E
-// add :   I D E
-// j   :     I D E
+// beq : I D0 D1 E
+// add :   I D0 D1 E
+// j   :     I D0 D1 E
 // If dly1 is not taken in consideration j will branch
 // but it's not suppose to branch, it should be flushed
 assign flush_v        = branch_v_q | branch_v_dly1_q | branch_v_dly2_q |  exception_q | exception_dly1_q | exception_dly2_q;

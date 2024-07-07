@@ -2,9 +2,9 @@ import riscv_pkg::*;
 
 module ifetch(
     // global interface
-    input logic clk,
-    input logic reset_n,
-    input logic [XLEN-1:0] reset_adr_i,
+    input logic             clk,
+    input logic             reset_n,
+    input logic [XLEN-1:0]  reset_adr_i,
     // --------------------------------
     //     Icache
     // --------------------------------

@@ -1,8 +1,8 @@
 import riscv_pkg::*;
 
 module dec0 (
-  input logic                 clk,
-  input logic                 reset_n,
+  input logic                        clk,
+  input logic                        reset_n,
 // --------------------------------
 //      Ifetch Interface
 // --------------------------------

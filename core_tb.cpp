@@ -304,7 +304,7 @@ int sc_main(int argc, char* argv[]) {
     sc_signal<sc_uint<32>>  icache_instr;
     sc_signal<bool>         adr_v;
     sc_signal<sc_uint<32>>  mem_adr;
-    sc_signal<bool>         is_store;
+    sc_signal<bool>         store_v;
     sc_signal<sc_uint<32>>  store_data;
     sc_signal<sc_uint<32>>  load_data;
     sc_signal<sc_uint<3>>   access_size;
@@ -329,7 +329,7 @@ int sc_main(int argc, char* argv[]) {
     core.icache_instr_i   (icache_instr);
     core.adr_v_o          (adr_v);
     core.adr_o            (mem_adr);
-    core.is_store_o       (is_store);
+    core.store_v_o       (store_v);
     core.store_data_o     (store_data);
     core.load_data_i      (load_data);
     core.access_size_o    (access_size);
@@ -488,7 +488,7 @@ int sc_main(int argc, char* argv[]) {
         unsigned int phys_adr = adr & 0xFFFFFFFC;
         // Store always store the lsb of the register into the proper part of the adress
         // May be done directly by the core -> to discuss
-        if (is_store.read() && adr_v.read()) {
+        if (store_v.read() && adr_v.read()) {
         if(access_size.read() == 1){
             if ((adr & 0b11) == 0) ram[phys_adr] = (ram[phys_adr] & 0xFFFFFF00) | (store_data.read() & 0x000000FF);
             if ((adr & 0b11) == 1) ram[phys_adr] = (ram[phys_adr] & 0xFFFF00FF) | ((store_data.read() & 0x000000FF) << 8);

@@ -66,7 +66,7 @@ module decoder (
  logic [6:0]      funct7;
 // Additionnal informations
  logic            is_csr;
- logic            is_store;
+ logic            store_v;
  logic            is_load;
  logic            is_branch;
  logic            is_mul;
@@ -337,7 +337,7 @@ assign rs2_adr   = instr_i[24:20];
 // Additionnal informations
 //-------------------------
 assign is_csr              = csrrw | csrrs | csrrc | csrrwi | csrrsi | csrrci;
-assign is_store            = s_type ;
+assign store_v            = s_type ;
 assign is_load             = lb | lh | lw | lbu | lhu;
 assign is_branch           = b_type | jal | jalr;
 assign is_mul              = mul | mulh | mulhsu | mulhu;
@@ -413,7 +413,7 @@ assign rs2_ca2_v_o         = sub | bge | blt | bgeu | bltu | slt | sltu | slti |
   // 01000 000001 : store
   // 01000 000010 : load
 
-assign unit_o           = {1'b0, 1'b0, is_load | is_store, is_branch, is_shift, is_arithm | is_csr};
+assign unit_o           = {1'b0, 1'b0, is_load | store_v, is_branch, is_shift, is_arithm | is_csr};
 assign operation_o[5]   = jalr;
 assign operation_o[4]   = slt  | sltu | slti | sltiu | jal;
 assign operation_o[3]   = xorr | xori | bge  | bgeu;
